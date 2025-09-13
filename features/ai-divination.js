@@ -844,30 +844,172 @@ async function submitMasterDivinationRequest(questionType) {
         return;
     }
     
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('請輸入正確的電子郵件格式');
+        return;
+    }
+    
+    const submitBtn = document.querySelector('#master-divination-modal .btn-primary');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '正在產生卦表截圖...';
+    
     try {
-        const hexagramData = extractHexagramData();
+        // 先載入 html2canvas 庫
+        if (!window.html2canvas) {
+            await loadHtml2Canvas();
+        }
         
-        const requestData = {
-            questionType: questionType,
+        // 產生卦表截圖
+        const hexagramImage = await captureHexagramTable();
+        
+        submitBtn.textContent = '送出中...';
+        
+        const hexagramData = extractHexagramData();
+        const formattedHexagramData = formatHexagramDataForEmail(hexagramData);
+        
+        const emailParams = {
+            user_email: email,
+            question_type: aiDivination.getQuestionText(questionType),
             question: question,
-            email: email,
-            hexagramData: hexagramData,
-            timestamp: new Date().toISOString(),
-            status: 'pending'
+            hexagram_data: formattedHexagramData,
+            hexagram_image: hexagramImage, // Base64 圖片
+            timestamp: new Date().toLocaleString('zh-TW', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
         };
         
-        // 暫時先用 localStorage 儲存，之後改成後端 API
-        const requests = JSON.parse(localStorage.getItem('master_divination_requests') || '[]');
-        requests.push(requestData);
-        localStorage.setItem('master_divination_requests', JSON.stringify(requests));
+        const result = await emailjs.send(
+            'YOUR_SERVICE_ID',
+            'YOUR_TEMPLATE_ID',
+            emailParams
+        );
+        
+        console.log('郵件發送成功:', result);
+        
+        saveToLocalStorage({
+            id: Date.now().toString(),
+            ...emailParams,
+            status: 'sent',
+            emailResult: result
+        });
         
         closeMasterDivinationModal();
-        alert('您的解卦請求已送出！馬克老師將於 24 小時內將解卦結果寄至您的信箱。');
+        showSuccessModal(email);
         
     } catch (error) {
-        console.error('提交請求失敗:', error);
-        alert('提交失敗，請稍後再試');
+        console.error('發送郵件失敗:', error);
+        
+        let errorMessage = '系統忙碌中，請稍後再試';
+        if (error.message.includes('截圖')) {
+            errorMessage = '卦表截圖失敗，請重新嘗試';
+        } else if (error.status === 422) {
+            errorMessage = '郵件格式錯誤，請檢查電子郵件地址';
+        }
+        
+        alert(errorMessage);
+        
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
     }
+}
+
+// 載入 html2canvas 庫
+function loadHtml2Canvas() {
+    return new Promise((resolve, reject) => {
+        if (window.html2canvas) {
+            resolve();
+            return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('html2canvas 載入失敗'));
+        document.head.appendChild(script);
+    });
+}
+
+// 截取卦表
+async function captureHexagramTable() {
+    try {
+        // 尋找卦表元素
+        const tableElement = document.querySelector('.main-table') || 
+                            document.querySelector('table') || 
+                            document.querySelector('.hexagram-table');
+        
+        if (!tableElement) {
+            throw new Error('找不到卦表元素');
+        }
+        
+        // 暫時調整樣式以改善截圖效果
+        const originalStyle = tableElement.style.cssText;
+        tableElement.style.backgroundColor = '#ffffff';
+        tableElement.style.padding = '20px';
+        tableElement.style.border = '2px solid #333';
+        tableElement.style.borderRadius = '8px';
+        
+        // 確保表格完全顯示
+        tableElement.scrollIntoView({ behavior: 'instant', block: 'center' });
+        
+        // 等待一點時間確保樣式套用
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // 截圖
+        const canvas = await html2canvas(tableElement, {
+            backgroundColor: '#ffffff',
+            scale: 2, // 提高解析度
+            useCORS: true,
+            allowTaint: false,
+            scrollX: 0,
+            scrollY: 0,
+            width: tableElement.offsetWidth,
+            height: tableElement.offsetHeight
+        });
+        
+        // 恢復原始樣式
+        tableElement.style.cssText = originalStyle;
+        
+        // 轉換為 Base64
+        const base64Image = canvas.toDataURL('image/png', 0.9);
+        
+        return base64Image;
+        
+    } catch (error) {
+        console.error('卦表截圖失敗:', error);
+        throw new Error('卦表截圖失敗: ' + error.message);
+    }
+}
+// 成功提示模組
+function showSuccessModal(email) {
+    const successModal = `
+        <div id="success-modal" class="modal" style="display: flex;">
+            <div class="modal-content">
+                <h3>申請送出成功！</h3>
+                <div class="success-content">
+                    <p>您的解卦請求（包含卦表截圖）已經成功送出至馬克老師。</p>
+                    <p><strong>請注意：</strong></p>
+                    <ul>
+                        <li>馬克老師將於 24 小時內親自解卦</li>
+                        <li>解卦結果將寄送至：<strong>${email}</strong></li>
+                        <li>請留意您的信箱（包含垃圾郵件資料夾）</li>
+                        <li>卦表截圖已一併送出，便於老師解卦</li>
+                    </ul>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="closeSuccessModal()">確認</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', successModal);
 }
 async function generateAIInterpretation(questionType, customQuestion = '') {
     const contentDiv = document.getElementById('simple-interpretation-content');
