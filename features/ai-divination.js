@@ -885,8 +885,8 @@ async function submitMasterDivinationRequest(questionType) {
         };
         
         const result = await emailjs.send(
-            'YOUR_SERVICE_ID',
-            'YOUR_TEMPLATE_ID',
+            'service_h23ly0m',
+            'template_fc17e8f',
             emailParams
         );
         
