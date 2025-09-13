@@ -1341,15 +1341,8 @@ function extractHexagramCodesAlternative() {
 }
 // 更新主要提取函數
 function extractHexagramCodesMain() {
-    // 先嘗試第三欄
-    let codes = extractHexagramCodes();
-    
-    if (!codes || codes.length !== 6) {
-        console.log('第三欄方法失敗，嘗試其他欄位');
-        codes = extractHexagramCodesAlternative();
-    }
-    
-    return codes;
+    // 使用新的卦名推算方法
+    return extractHexagramCodesByName();
 }
 
 // 分析單個爻的代碼
@@ -1507,4 +1500,167 @@ function formatHexagramCodes(codes) {
     });
     
     return formatted;
+}
+// 用卦名推算六爻代碼的函數
+function extractHexagramCodesByName() {
+    console.log('=== 使用卦名推算六爻代碼 ===');
+    
+    try {
+        // 獲取本卦和變卦名稱
+        const mainGuaName = getMainGuaName();
+        const changeGuaName = getChangeGuaName();
+        
+        console.log('本卦:', mainGuaName);
+        console.log('變卦:', changeGuaName);
+        
+        if (!mainGuaName) {
+            console.error('找不到本卦名稱');
+            return null;
+        }
+        
+        // 從常數中找到對應的二進制代碼
+        const mainGuaCode = findGuaCodeByName(mainGuaName);
+        if (!mainGuaCode) {
+            console.error('找不到本卦的二進制代碼:', mainGuaName);
+            return null;
+        }
+        
+        console.log('本卦二進制:', mainGuaCode);
+        
+        // 如果沒有變卦，所有爻都是靜爻
+        if (!changeGuaName || changeGuaName === '') {
+            const staticCodes = mainGuaCode.split('').map(bit => bit === '1' ? 1 : 2);
+            console.log('無變卦，所有爻為靜爻:', staticCodes);
+            return staticCodes;
+        }
+        
+        // 有變卦，找變卦的二進制代碼
+        const changeGuaCode = findGuaCodeByName(changeGuaName);
+        if (!changeGuaCode) {
+            console.error('找不到變卦的二進制代碼:', changeGuaName);
+            return null;
+        }
+        
+        console.log('變卦二進制:', changeGuaCode);
+        
+        // 比較本卦和變卦，推算六爻代碼
+        const yaoCodesArray = [];
+        for (let i = 0; i < 6; i++) {
+            const mainBit = mainGuaCode[i];
+            const changeBit = changeGuaCode[i];
+            
+            let code;
+            if (mainBit === '0' && changeBit === '0') {
+                code = 2; // 陰爻（靜）
+            } else if (mainBit === '0' && changeBit === '1') {
+                code = 0; // 老陰（陰變陽）
+            } else if (mainBit === '1' && changeBit === '0') {
+                code = 3; // 老陽（陽變陰）
+            } else { // mainBit === '1' && changeBit === '1'
+                code = 1; // 陽爻（靜）
+            }
+            
+            yaoCodesArray.push(code);
+            console.log(`第${i+1}爻: ${mainBit}變${changeBit} = ${code}`);
+        }
+        
+        console.log('最終六爻代碼 (初爻到上爻):', yaoCodesArray);
+        return yaoCodesArray;
+        
+    } catch (error) {
+        console.error('用卦名推算六爻代碼失敗:', error);
+        return null;
+    }
+}
+
+// 根據卦名找到二進制代碼
+function findGuaCodeByName(guaName) {
+const GUA_64_SIMPLE = {
+    // 乾宮
+    '111111': { name: '乾為天', palace: '乾', wuxing: '金', type: '八純卦', shi: 6, ying: 3 },
+    '011111': { name: '天風姤', palace: '乾', wuxing: '金', type: '一世卦', shi: 1, ying: 4 },
+    '001111': { name: '天山遯', palace: '乾', wuxing: '金', type: '二世卦', shi: 2, ying: 5 },
+    '000111': { name: '天地否', palace: '乾', wuxing: '金', type: '三世卦', shi: 3, ying: 6 },
+    '000110': { name: '風地觀', palace: '乾', wuxing: '金', type: '四世卦', shi: 4, ying: 1 },
+    '000100': { name: '山地剝', palace: '乾', wuxing: '金', type: '五世卦', shi: 5, ying: 2 },
+    '000101': { name: '火地晉', palace: '乾', wuxing: '金', type: '游魂卦', shi: 4, ying: 1 },
+    '000001': { name: '火天大有', palace: '乾', wuxing: '金', type: '歸魂卦', shi: 3, ying: 6 },
+    
+    // 坤宮
+    '000000': { name: '坤為地', palace: '坤', wuxing: '土', type: '八純卦', shi: 6, ying: 3 },
+    '100000': { name: '地雷復', palace: '坤', wuxing: '土', type: '一世卦', shi: 1, ying: 4 },
+    '110000': { name: '地澤臨', palace: '坤', wuxing: '土', type: '二世卦', shi: 2, ying: 5 },
+    '111000': { name: '地天泰', palace: '坤', wuxing: '土', type: '三世卦', shi: 3, ying: 6 },
+    '111001': { name: '雷天大壯', palace: '坤', wuxing: '土', type: '四世卦', shi: 4, ying: 1 },
+    '111011': { name: '澤天夬', palace: '坤', wuxing: '土', type: '五世卦', shi: 5, ying: 2 },
+    '111010': { name: '水天需', palace: '坤', wuxing: '土', type: '游魂卦', shi: 4, ying: 1 },
+    '111110': { name: '水地比', palace: '坤', wuxing: '土', type: '歸魂卦', shi: 3, ying: 6 },
+    
+    // 震宮
+    '100100': { name: '震為雷', palace: '震', wuxing: '木', type: '八純卦', shi: 6, ying: 3 },
+    '110100': { name: '雷澤歸妹', palace: '震', wuxing: '木', type: '一世卦', shi: 1, ying: 4 },
+    '010100': { name: '雷水解', palace: '震', wuxing: '木', type: '二世卦', shi: 2, ying: 5 },
+    '011100': { name: '雷風恆', palace: '震', wuxing: '木', type: '三世卦', shi: 3, ying: 6 },
+    '011101': { name: '風火家人', palace: '震', wuxing: '木', type: '四世卦', shi: 4, ying: 1 },
+    '011001': { name: '風澤中孚', palace: '震', wuxing: '木', type: '五世卦', shi: 5, ying: 2 },
+    '011010': { name: '風水渙', palace: '震', wuxing: '木', type: '游魂卦', shi: 4, ying: 1 },
+    '011110': { name: '風雷益', palace: '震', wuxing: '木', type: '歸魂卦', shi: 3, ying: 6 },
+    
+    // 巽宮
+    '011011': { name: '巽為風', palace: '巽', wuxing: '木', type: '八純卦', shi: 6, ying: 3 },
+    '001011': { name: '風山漸', palace: '巽', wuxing: '木', type: '一世卦', shi: 1, ying: 4 },
+    '101011': { name: '風火鼎', palace: '巽', wuxing: '木', type: '二世卦', shi: 2, ying: 5 },
+    '100011': { name: '風雷益', palace: '巽', wuxing: '木', type: '三世卦', shi: 3, ying: 6 },
+    '100010': { name: '雷水解', palace: '巽', wuxing: '木', type: '四世卦', shi: 4, ying: 1 },
+    '100110': { name: '雷澤歸妹', palace: '巽', wuxing: '木', type: '五世卦', shi: 5, ying: 2 },
+    '100101': { name: '雷火豐', palace: '巽', wuxing: '木', type: '游魂卦', shi: 4, ying: 1 },
+    '100001': { name: '雷山小過', palace: '巽', wuxing: '木', type: '歸魂卦', shi: 3, ying: 6 },
+    
+    // 坎宮
+    '010010': { name: '坎為水', palace: '坎', wuxing: '水', type: '八純卦', shi: 6, ying: 3 },
+    '101010': { name: '水火既濟', palace: '坎', wuxing: '水', type: '一世卦', shi: 1, ying: 4 },
+    '001010': { name: '水山蹇', palace: '坎', wuxing: '水', type: '二世卦', shi: 2, ying: 5 },
+    '000010': { name: '水地比', palace: '坎', wuxing: '水', type: '三世卦', shi: 3, ying: 6 },
+    '000011': { name: '地風升', palace: '坎', wuxing: '水', type: '四世卦', shi: 4, ying: 1 },
+    '000001': { name: '地山謙', palace: '坎', wuxing: '水', type: '五世卦', shi: 5, ying: 2 },
+    '000101': { name: '地火明夷', palace: '坎', wuxing: '水', type: '游魂卦', shi: 4, ying: 1 },
+    '001101': { name: '山火賁', palace: '坎', wuxing: '水', type: '歸魂卦', shi: 3, ying: 6 },
+    
+    // 離宮
+    '101101': { name: '離為火', palace: '離', wuxing: '火', type: '八純卦', shi: 6, ying: 3 },
+    '010101': { name: '火水未濟', palace: '離', wuxing: '火', type: '一世卦', shi: 1, ying: 4 },
+    '110101': { name: '火澤睽', palace: '離', wuxing: '火', type: '二世卦', shi: 2, ying: 5 },
+    '111101': { name: '火天大有', palace: '離', wuxing: '火', type: '三世卦', shi: 3, ying: 6 },
+    '111100': { name: '天雷無妄', palace: '離', wuxing: '火', type: '四世卦', shi: 4, ying: 1 },
+    '111110': { name: '天澤履', palace: '離', wuxing: '火', type: '五世卦', shi: 5, ying: 2 },
+    '111011': { name: '風天小畜', palace: '離', wuxing: '火', type: '游魂卦', shi: 4, ying: 1 },
+    '110011': { name: '澤風大過', palace: '離', wuxing: '火', type: '歸魂卦', shi: 3, ying: 6 },
+    
+    // 艮宮
+    '001001': { name: '艮為山', palace: '艮', wuxing: '土', type: '八純卦', shi: 6, ying: 3 },
+    '110001': { name: '山澤損', palace: '艮', wuxing: '土', type: '一世卦', shi: 1, ying: 4 },
+    '010001': { name: '山水蒙', palace: '艮', wuxing: '土', type: '二世卦', shi: 2, ying: 5 },
+    '011001': { name: '山風蠱', palace: '艮', wuxing: '土', type: '三世卦', shi: 3, ying: 6 },
+    '011000': { name: '風地觀', palace: '艮', wuxing: '土', type: '四世卦', shi: 4, ying: 1 },
+    '011010': { name: '風水渙', palace: '艮', wuxing: '土', type: '五世卦', shi: 5, ying: 2 },
+    '011101': { name: '風火家人', palace: '艮', wuxing: '土', type: '游魂卦', shi: 4, ying: 1 },
+    '010101': { name: '水火既濟', palace: '艮', wuxing: '土', type: '歸魂卦', shi: 3, ying: 6 },
+    
+    // 兌宮
+    '110110': { name: '兌為澤', palace: '兌', wuxing: '金', type: '八純卦', shi: 6, ying: 3 },
+    '100110': { name: '澤雷隨', palace: '兌', wuxing: '金', type: '一世卦', shi: 1, ying: 4 },
+    '000110': { name: '澤地萃', palace: '兌', wuxing: '金', type: '二世卦', shi: 2, ying: 5 },
+    '010110': { name: '澤水困', palace: '兌', wuxing: '金', type: '三世卦', shi: 3, ying: 6 },
+    '010111': { name: '水天需', palace: '兌', wuxing: '金', type: '四世卦', shi: 4, ying: 1 },
+    '010011': { name: '水風井', palace: '兌', wuxing: '金', type: '五世卦', shi: 5, ying: 2 },
+    '010001': { name: '水山蹇', palace: '兌', wuxing: '金', type: '游魂卦', shi: 4, ying: 1 },
+    '011001': { name: '風山漸', palace: '兌', wuxing: '金', type: '歸魂卦', shi: 3, ying: 6 }
+};
+    for (const [binaryCode, guaInfo] of Object.entries(GUA_64_SIMPLE)) {
+        if (guaInfo.name === guaName) {
+            return binaryCode;
+        }
+    }
+    
+    return null;
 }
