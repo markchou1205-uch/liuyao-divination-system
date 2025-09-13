@@ -324,7 +324,7 @@ async function generateAIInterpretation(questionType) {
         
         // 顯示 AI 解卦結果
         const interpretationHTML = `
-            <div class="question-indicator">問題：${getQuestionText(questionType)}</div>
+            <div class="question-indicator">問題：${aiDivination.getQuestionText(questionType)}</div>
             
             <div class="ai-interpretation">
                 <h4>🤖 AI 智能解卦</h4>
