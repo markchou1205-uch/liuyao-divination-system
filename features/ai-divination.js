@@ -134,7 +134,7 @@ async callAIAPI(guaData, questionType) {
         const prompt = this.generatePrompt(guaData, questionType);
         
         // 請替換為您的 Google AI API Key
-        const apiKey = 'YOUR_GOOGLE_AI_API_KEY';
+        const apiKey = 'AIzaSyDwNr6Res144rwZJMbxX7jNa1OcGf1DQJQ';
         
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
             method: 'POST',
