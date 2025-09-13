@@ -42,59 +42,80 @@ class AIDivination {
     }
 
     // 生成 AI 解卦 prompt
-    generatePrompt(guaData, questionType) {
-        const questionTexts = {
-            'love-female': '感情/問女方',
-            'love-male': '感情/問男方',
-            'parents': '問父母',
-            'children': '問子女',
-            'career': '問事業',
-            'health': '問健康',
-            'wealth': '問財富',
-            'partnership': '問合作合夥',
-            'lawsuit': '問官司'
-        };
+generatePrompt(guaData, questionType) {
+    const questionTexts = {
+        'love-female': '感情/問女方',
+        'love-male': '感情/問男方',
+        'parents': '問父母',
+        'children': '問子女',
+        'career': '問事業',
+        'health': '問健康',
+        'wealth': '問財富',
+        'partnership': '問合作合夥',
+        'lawsuit': '問官司'
+    };
 
-        const questionText = questionTexts[questionType] || '未知問題';
-        const yongshenMapping = {
-            'love-female': '妻財',
-            'love-male': '官鬼',
-            'parents': '父母',
-            'children': '子孫',
-            'career': '官鬼',
-            'health': '世爻',
-            'wealth': '妻財',
-            'partnership': '兄弟',
-            'lawsuit': '官鬼'
-        };
-        
-        const yongshen = yongshenMapping[questionType] || '未知';
+    const questionText = questionTexts[questionType] || '未知問題';
+    const yongshenMapping = {
+        'love-female': '妻財',
+        'love-male': '官鬼',
+        'parents': '父母',
+        'children': '子孫',
+        'career': '官鬼',
+        'health': '世爻',
+        'wealth': '妻財',
+        'partnership': '兄弟',
+        'lawsuit': '官鬼'
+    };
+    
+    const yongshen = yongshenMapping[questionType] || '未知';
+    const customQuestion = guaData.customQuestion;
 
-        // 構建詳細的卦象資訊
-        let prompt = `你是專業的六爻卦師，請根據以下卦象資訊提供解卦分析：
+    // 構建詳細的卦象資訊
+    let prompt = `你是專業的六爻卦師，請根據以下卦象資訊提供解卦分析：
 
 問題類型：${questionText}
+${customQuestion ? `具體問題：${customQuestion}` : ''}
 主卦：${guaData.mainGuaName || '未知'}
 變卦：${guaData.changeGuaName || '無變卦'}
 取用神：${yongshen}
+起卦時間：月支${guaData.monthBranch || '未知'}、日支${guaData.dayBranch || '未知'}、時支${guaData.hourBranch || '未知'}
+
+請按照專業六爻分析法進行判斷：
+
+【第一步：用神分析】
+1. 確認用神是否為動爻？如是動爻，分析其力量強弱（F欄數據）
+2. 動變後用神是變強還是變弱？（參考J欄數據）
+3. 分析日月對用神的生克關係（參考F欄數據）
+
+【第二步：元神忌神分析】
+1. 元神、忌神是否為動爻？如是動爻，力量如何？
+2. 元神幫扶用神的力量 vs 忌神克害用神的力量，何者較強？
+
+【第三步：伏神分析（如用神不現）】
+1. 日月對伏神是生扶還是克害？
+2. 飛神（伏神所在爻的地支）對伏神是生扶還是克害？
+
+【第四步：綜合判斷】
+基於以上分析，判斷用神的旺衰強弱，進而判斷吉凶。
 
 請提供以下分析（總字數控制在${this.maxWords}字以內）：
 
-1. 卦象概述（50字內）
-2. 用神分析（100字內）
-3. 卦變解釋（如有變卦，80字內）
-4. 結論建議（70字內）
+1. 用神旺衰分析（80字內）
+2. 元神忌神力量對比（70字內）
+3. 日月生克影響（50字內）
+4. 吉凶判斷與建議（100字內）
 
-請用專業但易懂的語言，避免過於艱深的術語。回覆格式：
-【卦象概述】...
-【用神分析】...
-【卦變解釋】...（如無變卦可省略）
-【結論建議】...
+回覆格式：
+【用神旺衰】...
+【元忌對比】...
+【日月影響】...
+【吉凶判斷】...
 
-注意：回覆請務必控制在${this.maxWords}字以內。`;
+注意：請根據六爻專業理論進行客觀分析，總字數控制在${this.maxWords}字以內。`;
 
-        return prompt;
-    }
+    return prompt;
+}
 
     // 調用增強版 AI API
     async callEnhancedAIAPI(guaData, userQuestion) {
@@ -268,6 +289,12 @@ function showInterpretationOptions(questionType) {
         <div class="interpretation-options">
             <h4>請選擇解卦方式：</h4>
             
+            <!-- 添加問題輸入區域 -->
+            <div class="question-input-section">
+                <label for="custom-question">您想問的具體問題：</label>
+                <textarea id="custom-question" placeholder="請輸入您想問的具體問題...（可選）" rows="3"></textarea>
+            </div>
+            
             <div class="option-card basic-option" onclick="generateBasicInterpretation('${questionType}')">
                 <h5>📋 基礎解卦</h5>
                 <p>根據傳統六爻理論提供基本解釋</p>
@@ -288,7 +315,289 @@ function showInterpretationOptions(questionType) {
     
     contentDiv.innerHTML = optionsHTML;
 }
+// 提取六爻分析所需的所有資料
+function extractHexagramData() {
+    console.log('=== 開始提取六爻資料 ===');
+    
+    const data = {
+        // 基本資訊
+        mainGuaName: getMainGuaName(),
+        changeGuaName: getChangeGuaName(),
+        
+        // 農曆干支資訊
+        yearBranch: null,
+        monthBranch: null, 
+        dayBranch: null,
+        hourBranch: null,
+        
+        // 用神資訊
+        yongshen: {
+            exists: false,
+            isMoving: false,
+            strength: null, // F欄
+            changeEffect: null // J欄
+        },
+        
+        // 元神資訊
+        yuanshen: {
+            exists: false,
+            isMoving: false,
+            strength: null,
+            changeEffect: null
+        },
+        
+        // 忌神資訊
+        jishen: {
+            exists: false,
+            isMoving: false,
+            strength: null,
+            changeEffect: null
+        },
+        
+        // 伏神資訊
+        fushen: {
+            exists: false,
+            position: null, // 在哪一爻
+            element: null, // 地支五行
+            flyingGodElement: null // 飛神(該爻地支)
+        }
+    };
+    
+    try {
+        console.log('初始資料結構:', data);
+        
+        // 提取農曆干支
+        extractGanzhiData(data);
+        console.log('提取干支後:', {
+            年支: data.yearBranch,
+            月支: data.monthBranch,
+            日支: data.dayBranch,
+            時支: data.hourBranch
+        });
+        
+        // 提取用神、元神、忌神資料
+        extractShenData(data);
+        console.log('提取神煞後:', {
+            用神: data.yongshen,
+            元神: data.yuanshen,
+            忌神: data.jishen
+        });
+        
+        // 檢查是否有伏神
+        checkFushen(data);
+        console.log('檢查伏神後:', data.fushen);
+        
+        console.log('=== 最終提取的六爻資料 ===', data);
+        return data;
+        
+    } catch (error) {
+        console.error('提取六爻資料錯誤:', error);
+        return data;
+    }
+}
 
+// 提取農曆干支資料
+function extractGanzhiData(data) {
+    console.log('--- 開始提取干支資料 ---');
+    
+    const tables = document.querySelectorAll('table');
+    console.log('找到表格數量:', tables.length);
+    
+    tables.forEach((table, tableIndex) => {
+        console.log(`檢查第 ${tableIndex + 1} 個表格`);
+        
+        const rows = table.querySelectorAll('tr');
+        console.log(`表格 ${tableIndex + 1} 有 ${rows.length} 列`);
+        
+        for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i].querySelectorAll('td, th');
+            
+            for (let j = 0; j < cells.length; j++) {
+                const cellText = cells[j].textContent.trim();
+                
+                // 找到年、月、日、時，取下一列的資料
+                if (cellText === '年' && i + 1 < rows.length) {
+                    const nextRowCells = rows[i + 1].querySelectorAll('td, th');
+                    if (nextRowCells[j]) {
+                        data.yearBranch = nextRowCells[j].textContent.trim();
+                        console.log(`找到年支: ${data.yearBranch} (位置: 表${tableIndex + 1}, 列${i + 2}, 欄${j + 1})`);
+                    }
+                }
+                if (cellText === '月' && i + 1 < rows.length) {
+                    const nextRowCells = rows[i + 1].querySelectorAll('td, th');
+                    if (nextRowCells[j]) {
+                        data.monthBranch = nextRowCells[j].textContent.trim();
+                        console.log(`找到月支: ${data.monthBranch} (位置: 表${tableIndex + 1}, 列${i + 2}, 欄${j + 1})`);
+                    }
+                }
+                if (cellText === '日' && i + 1 < rows.length) {
+                    const nextRowCells = rows[i + 1].querySelectorAll('td, th');
+                    if (nextRowCells[j]) {
+                        data.dayBranch = nextRowCells[j].textContent.trim();
+                        console.log(`找到日支: ${data.dayBranch} (位置: 表${tableIndex + 1}, 列${i + 2}, 欄${j + 1})`);
+                    }
+                }
+                if (cellText === '時' && i + 1 < rows.length) {
+                    const nextRowCells = rows[i + 1].querySelectorAll('td, th');
+                    if (nextRowCells[j]) {
+                        data.hourBranch = nextRowCells[j].textContent.trim();
+                        console.log(`找到時支: ${data.hourBranch} (位置: 表${tableIndex + 1}, 列${i + 2}, 欄${j + 1})`);
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 提取用神、元神、忌神資料
+function extractShenData(data) {
+    console.log('--- 開始提取神煞資料 ---');
+    
+    const tables = document.querySelectorAll('table');
+    
+    tables.forEach((table, tableIndex) => {
+        console.log(`檢查第 ${tableIndex + 1} 個表格中的神煞`);
+        
+        const rows = table.querySelectorAll('tr');
+        
+        rows.forEach((row, rowIndex) => {
+            const cells = row.querySelectorAll('td, th');
+            
+            cells.forEach((cell, cellIndex) => {
+                const cellText = cell.textContent.trim();
+                
+                // 尋找"用"、"元"、"忌"
+                if (cellText === '用') {
+                    console.log(`找到用神 (位置: 表${tableIndex + 1}, 列${rowIndex + 1}, 欄${cellIndex + 1})`);
+                    data.yongshen.exists = true;
+                    extractShenDetails(data.yongshen, cells, cellIndex, '用神');
+                }
+                if (cellText === '元') {
+                    console.log(`找到元神 (位置: 表${tableIndex + 1}, 列${rowIndex + 1}, 欄${cellIndex + 1})`);
+                    data.yuanshen.exists = true;
+                    extractShenDetails(data.yuanshen, cells, cellIndex, '元神');
+                }
+                if (cellText === '忌') {
+                    console.log(`找到忌神 (位置: 表${tableIndex + 1}, 列${rowIndex + 1}, 欄${cellIndex + 1})`);
+                    data.jishen.exists = true;
+                    extractShenDetails(data.jishen, cells, cellIndex, '忌神');
+                }
+            });
+        });
+    });
+}
+
+// 提取神煞的詳細資料（F欄、J欄）
+function extractShenDetails(shenObj, cells, index, shenName) {
+    console.log(`--- 提取 ${shenName} 詳細資料 ---`);
+    
+    // F欄 (右邊1欄)
+    if (cells[index + 1]) {
+        const fColumnText = cells[index + 1].textContent.trim();
+        if (fColumnText && fColumnText !== '') {
+            shenObj.strength = fColumnText;
+            console.log(`${shenName} F欄 (強度): ${fColumnText}`);
+        }
+    }
+    
+    // 檢查是否為動爻
+    const cell = cells[index];
+    if (cell) {
+        // 檢查各種可能的動爻標記
+        const computedStyle = window.getComputedStyle(cell);
+        const backgroundColor = computedStyle.backgroundColor;
+        const color = computedStyle.color;
+        
+        console.log(`${shenName} 樣式檢查:`, {
+            backgroundColor: backgroundColor,
+            color: color,
+            classList: Array.from(cell.classList),
+            innerHTML: cell.innerHTML
+        });
+        
+        // 檢查是否有紅色標記（動爻通常用紅色）
+        const hasRedBackground = backgroundColor.includes('rgb(255') || // red variants
+                                backgroundColor.includes('red') || 
+                                cell.classList.contains('red') ||
+                                cell.querySelector('.red') ||
+                                cell.innerHTML.includes('style="color: red"') ||
+                                cell.innerHTML.includes('color:red');
+        
+        if (hasRedBackground) {
+            shenObj.isMoving = true;
+            console.log(`${shenName} 確認為動爻`);
+            
+            // 如果是動爻，尋找J欄資料
+            console.log('搜尋J欄資料...');
+            for (let i = index + 2; i < Math.min(cells.length, index + 6); i++) {
+                const jColumnText = cells[i].textContent.trim();
+                console.log(`檢查位置 ${i}: "${jColumnText}"`);
+                if (jColumnText && jColumnText !== '' && jColumnText !== shenObj.strength) {
+                    shenObj.changeEffect = jColumnText;
+                    console.log(`${shenName} J欄 (變化效果): ${jColumnText}`);
+                    break;
+                }
+            }
+        } else {
+            console.log(`${shenName} 不是動爻`);
+        }
+    }
+    
+    console.log(`${shenName} 最終資料:`, shenObj);
+}
+
+// 檢查伏神
+function checkFushen(data) {
+    console.log('--- 檢查伏神 ---');
+    
+    // 如果沒有找到用神，則可能是伏神
+    if (!data.yongshen.exists) {
+        console.log('未找到用神，開始搜尋伏神...');
+        
+        const tables = document.querySelectorAll('table');
+        
+        tables.forEach((table, tableIndex) => {
+            const rows = table.querySelectorAll('tr');
+            
+            rows.forEach((row, rowIndex) => {
+                const cells = row.querySelectorAll('td, th');
+                
+                cells.forEach((cell, cellIndex) => {
+                    const cellText = cell.textContent.trim();
+                    
+                    // 尋找B欄有文字的格子（可能包含伏神標記）
+                    if (cellText && cellText.length > 0 && rowIndex + 1 < rows.length) {
+                        console.log(`檢查可能的伏神位置: "${cellText}" (表${tableIndex + 1}, 列${rowIndex + 1}, 欄${cellIndex + 1})`);
+                        
+                        const nextRow = rows[rowIndex + 1];
+                        const nextRowCells = nextRow.querySelectorAll('td, th');
+                        
+                        if (nextRowCells[cellIndex]) {
+                            const elementText = nextRowCells[cellIndex].textContent.trim();
+                            console.log(`下一列對應位置文字: "${elementText}"`);
+                            
+                            if (elementText && ['金', '木', '水', '火', '土'].some(element => elementText.includes(element))) {
+                                data.fushen.exists = true;
+                                data.fushen.position = cellText;
+                                data.fushen.element = elementText;
+                                data.fushen.flyingGodElement = elementText;
+                                
+                                console.log('找到伏神:', {
+                                    位置: cellText,
+                                    五行: elementText,
+                                    飛神: elementText
+                                });
+                                return; // 找到就結束
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    } else {
+        console.log('已找到用神，無需檢查伏神');
+    }
+}
 // 生成基礎解卦（原有功能）
 function generateBasicInterpretation(questionType) {
     // 調用原有的 generateInterpretation 函數
@@ -301,7 +610,9 @@ function generateBasicInterpretation(questionType) {
 async function generateAIInterpretation(questionType) {
     const contentDiv = document.getElementById('simple-interpretation-content');
     
-    // 顯示載入中
+    const customQuestionInput = document.getElementById('custom-question');
+    const customQuestion = customQuestionInput ? customQuestionInput.value.trim() : '';
+    
     contentDiv.innerHTML = `
         <div class="loading-interpretation">
             <div class="loading-spinner"></div>
@@ -309,22 +620,20 @@ async function generateAIInterpretation(questionType) {
         </div>
     `;
     
-    // 增加使用次數
     aiDivination.incrementUsage();
     
     try {
-        // 獲取卦象資料
-        const guaData = {
-            mainGuaName: getMainGuaName(),
-            changeGuaName: getChangeGuaName()
-        };
+        // 使用新的資料提取函數
+        const hexagramData = extractHexagramData();
+        hexagramData.customQuestion = customQuestion;
         
-        // 調用 AI API
-        const aiResponse = await aiDivination.callAIAPI(guaData, questionType);
+        const aiResponse = await aiDivination.callAIAPI(hexagramData, questionType);
         
-        // 顯示 AI 解卦結果
         const interpretationHTML = `
-            <div class="question-indicator">問題：${aiDivination.getQuestionText(questionType)}</div>
+            <div class="question-indicator">
+                問題類型：${aiDivination.getQuestionText(questionType)}
+                ${customQuestion ? `<br>具體問題：${customQuestion}` : ''}
+            </div>
             
             <div class="ai-interpretation">
                 <h4>🤖 AI 智能解卦</h4>
