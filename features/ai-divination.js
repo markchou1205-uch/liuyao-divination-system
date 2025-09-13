@@ -283,17 +283,10 @@ function showSimpleInterpretationWithAI() {
 // 顯示解卦選項
 function showInterpretationOptions(questionType) {
     const contentDiv = document.getElementById('simple-interpretation-content');
-    const remaining = aiDivination.getRemainingUsage();
     
     const optionsHTML = `
         <div class="interpretation-options">
             <h4>請選擇解卦方式：</h4>
-            
-            <!-- 添加問題輸入區域 -->
-            <div class="question-input-section">
-                <label for="custom-question">您想問的具體問題：</label>
-                <textarea id="custom-question" placeholder="請輸入您想問的具體問題...（可選）" rows="3"></textarea>
-            </div>
             
             <div class="option-card basic-option" onclick="generateBasicInterpretation('${questionType}')">
                 <h5>📋 基礎解卦</h5>
@@ -301,19 +294,87 @@ function showInterpretationOptions(questionType) {
                 <span class="option-price">免費</span>
             </div>
             
-            <div class="option-card ai-option" onclick="generateAIInterpretation('${questionType}')">
+            <div class="option-card ai-option" onclick="showAIQuestionModal('${questionType}')">
                 <h5>🤖 AI 智能解卦</h5>
                 <p>結合 AI 技術提供個性化深度分析</p>
-                <span class="option-price">剩餘 ${remaining} 次</span>
+                <span class="option-price">免費 AI 智能解卦</span>
             </div>
-        </div>
-        
-        <div class="usage-info">
-            <small>※ AI 解卦每日限制 ${aiDivination.dailyLimit} 次，今日剩餘 ${remaining} 次</small>
+            
+            <div class="option-card master-option" onclick="showMasterDivinationModal('${questionType}')">
+                <h5>👨‍🏫 卦師親自解卦</h5>
+                <p>由專業卦師提供完整深度解析</p>
+                <span class="option-price">NT$ 300</span>
+            </div>
         </div>
     `;
     
     contentDiv.innerHTML = optionsHTML;
+}
+function showAIQuestionModal(questionType) {
+    const modalHTML = `
+        <div id="ai-question-modal" class="modal" style="display: flex;">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeAIQuestionModal()">&times;</span>
+                <h3>AI 智能解卦</h3>
+                <div class="ai-question-form">
+                    <label for="ai-custom-question">您想問的具體問題：</label>
+                    <textarea id="ai-custom-question" 
+                             placeholder="請詳細描述您想問的問題...（建議100-200字）" 
+                             rows="4" 
+                             maxlength="300"></textarea>
+                    <div class="char-counter">
+                        <span id="char-count">0</span>/300 字
+                    </div>
+                    
+                    <div class="ai-notice">
+                        <h4>注意事項：</h4>
+                        <p>• 每日限問卦 1 次</p>
+                        <p>• 問題寫得愈清楚，解卦結果也會更明確</p>
+                    </div>
+                    
+                    <div class="modal-buttons">
+                        <button class="btn btn-secondary" onclick="closeAIQuestionModal()">取消</button>
+                        <button class="btn btn-primary" onclick="confirmAIInterpretation('${questionType}')">開始 AI 解卦</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除現有 modal
+    const existingModal = document.getElementById('ai-question-modal');
+    if (existingModal) existingModal.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // 字數計算
+    const textarea = document.getElementById('ai-custom-question');
+    const charCount = document.getElementById('char-count');
+    
+    textarea.addEventListener('input', function() {
+        charCount.textContent = this.value.length;
+    });
+}
+function closeAIQuestionModal() {
+    const modal = document.getElementById('ai-question-modal');
+    if (modal) modal.remove();
+}
+function confirmAIInterpretation(questionType) {
+    const customQuestion = document.getElementById('ai-custom-question').value.trim();
+    
+    if (!customQuestion) {
+        alert('請輸入您想問的問題');
+        return;
+    }
+    
+    // 檢查使用次數
+    if (!aiDivination.canUseAIDivination()) {
+        aiDivination.showUsageLimitModal();
+        return;
+    }
+    
+    closeAIQuestionModal();
+    generateAIInterpretation(questionType, customQuestion);
 }
 // 提取六爻分析所需的所有資料
 function extractHexagramData() {
@@ -607,11 +668,8 @@ function generateBasicInterpretation(questionType) {
 }
 
 // 生成 AI 解卦
-async function generateAIInterpretation(questionType) {
+async function generateAIInterpretationWithQuestion(questionType, customQuestion) {
     const contentDiv = document.getElementById('simple-interpretation-content');
-    
-    const customQuestionInput = document.getElementById('custom-question');
-    const customQuestion = customQuestionInput ? customQuestionInput.value.trim() : '';
     
     contentDiv.innerHTML = `
         <div class="loading-interpretation">
@@ -623,7 +681,6 @@ async function generateAIInterpretation(questionType) {
     aiDivination.incrementUsage();
     
     try {
-        // 使用新的資料提取函數
         const hexagramData = extractHexagramData();
         hexagramData.customQuestion = customQuestion;
         
@@ -632,19 +689,24 @@ async function generateAIInterpretation(questionType) {
         const interpretationHTML = `
             <div class="question-indicator">
                 問題類型：${aiDivination.getQuestionText(questionType)}
-                ${customQuestion ? `<br>具體問題：${customQuestion}` : ''}
+                <br>具體問題：${customQuestion}
             </div>
             
-            <div class="ai-interpretation">
+            <div class="ai-interpretation" id="interpretation-content">
                 <h4>🤖 AI 智能解卦</h4>
                 <div class="ai-content">
                     ${formatAIResponse(aiResponse)}
                 </div>
             </div>
             
+            <div class="interpretation-actions">
+                <button class="btn btn-download" onclick="downloadInterpretation()">
+                    📥 下載解卦結果
+                </button>
+            </div>
+            
             <div class="interpretation-footer-info">
                 <small>※ 此為 AI 輔助分析，建議搭配專業卦師諮詢</small>
-                <small>今日 AI 解卦剩餘次數：${aiDivination.getRemainingUsage()}</small>
             </div>
         `;
         
@@ -695,4 +757,179 @@ function closeUsageLimitModal() {
 function handleUpgrade(plan) {
     alert(`升級 ${plan} 功能開發中...`);
     closeUsageLimitModal();
+}
+// 4. 下載解卦結果功能
+function downloadInterpretation() {
+    // 需要先添加 html2canvas 庫
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = function() {
+        const element = document.getElementById('interpretation-content');
+        
+        html2canvas(element, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `六爻解卦結果_${new Date().toLocaleDateString()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    };
+    document.head.appendChild(script);
+}
+// 5. 卦師解卦 Modal
+function showMasterDivinationModal(questionType) {
+    const modalHTML = `
+        <div id="master-divination-modal" class="modal" style="display: flex;">
+            <div class="modal-content large-modal">
+                <span class="close-btn" onclick="closeMasterDivinationModal()">&times;</span>
+                <h3>👨‍🏫 卦師親自解卦</h3>
+                
+                <div class="master-divination-form">
+                    <div class="form-group">
+                        <label for="master-question">您想問的問題：</label>
+                        <textarea id="master-question" 
+                                 placeholder="請詳細說明您想問的問題..."
+                                 rows="4" 
+                                 required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="master-email">電子郵件：</label>
+                        <input type="email" id="master-email" 
+                               placeholder="請輸入您的 Email" 
+                               required>
+                    </div>
+                    
+                    <div class="service-terms">
+                        <h4>服務說明：</h4>
+                        <ul>
+                            <li>將由本站站長馬克老師於 24 小時內親自為您解卦，並將解卦結果寄至您的信箱</li>
+                            <li>超過 24 小時則全額退費（以寄出的時間為準）</li>
+                            <li>若因您的信箱問題導致無法收到解卦結果，請於 24 小時以電子郵件告知站長。逾 24 小時（合計 48 小時）未反應者，則視同已收到批卦結果，不得再要求補寄</li>
+                            <li>一旦您確認送出占卦請求，則除了逾時未寄送，則一律不予退費</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="price-info">
+                        <h4>費用：NT$ 300</h4>
+                    </div>
+                    
+                    <div class="modal-buttons">
+                        <button class="btn btn-secondary" onclick="closeMasterDivinationModal()">取消</button>
+                        <button class="btn btn-primary" onclick="submitMasterDivinationRequest('${questionType}')">確認送出</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeMasterDivinationModal() {
+    const modal = document.getElementById('master-divination-modal');
+    if (modal) modal.remove();
+}
+
+// 6. 提交卦師解卦請求
+async function submitMasterDivinationRequest(questionType) {
+    const question = document.getElementById('master-question').value.trim();
+    const email = document.getElementById('master-email').value.trim();
+    
+    if (!question || !email) {
+        alert('請填寫完整的問題和電子郵件');
+        return;
+    }
+    
+    try {
+        const hexagramData = extractHexagramData();
+        
+        const requestData = {
+            questionType: questionType,
+            question: question,
+            email: email,
+            hexagramData: hexagramData,
+            timestamp: new Date().toISOString(),
+            status: 'pending'
+        };
+        
+        // 暫時先用 localStorage 儲存，之後改成後端 API
+        const requests = JSON.parse(localStorage.getItem('master_divination_requests') || '[]');
+        requests.push(requestData);
+        localStorage.setItem('master_divination_requests', JSON.stringify(requests));
+        
+        closeMasterDivinationModal();
+        alert('您的解卦請求已送出！馬克老師將於 24 小時內將解卦結果寄至您的信箱。');
+        
+    } catch (error) {
+        console.error('提交請求失敗:', error);
+        alert('提交失敗，請稍後再試');
+    }
+}
+async function generateAIInterpretation(questionType, customQuestion = '') {
+    const contentDiv = document.getElementById('simple-interpretation-content');
+    
+    // 如果沒有傳入 customQuestion，可能是從其他地方呼叫的，顯示問題輸入modal
+    if (!customQuestion) {
+        showAIQuestionModal(questionType);
+        return;
+    }
+    
+    // 其餘保持您已經修改的內容...
+    contentDiv.innerHTML = `
+        <div class="loading-interpretation">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">AI 正在分析卦象...</div>
+        </div>
+    `;
+    
+    aiDivination.incrementUsage();
+    
+    try {
+        const hexagramData = extractHexagramData();
+        hexagramData.customQuestion = customQuestion;
+        
+        const aiResponse = await aiDivination.callAIAPI(hexagramData, questionType);
+        
+        const interpretationHTML = `
+            <div class="question-indicator">
+                問題類型：${aiDivination.getQuestionText(questionType)}
+                <br>具體問題：${customQuestion}
+            </div>
+            
+            <div class="ai-interpretation" id="interpretation-content">
+                <h4>🤖 AI 智能解卦</h4>
+                <div class="ai-content">
+                    ${formatAIResponse(aiResponse)}
+                </div>
+            </div>
+            
+            <div class="interpretation-actions">
+                <button class="btn btn-download" onclick="downloadInterpretation()">
+                    📥 下載解卦結果
+                </button>
+            </div>
+            
+            <div class="interpretation-footer-info">
+                <small>※ 此為 AI 輔助分析，建議搭配專業卦師諮詢</small>
+            </div>
+        `;
+        
+        contentDiv.innerHTML = interpretationHTML;
+        
+    } catch (error) {
+        console.error('AI 解卦失敗:', error);
+        contentDiv.innerHTML = `
+            <div class="error-message">
+                <h4>AI 分析失敗</h4>
+                <p>系統暫時無法提供 AI 解卦服務，請稍後再試或選擇基礎解卦。</p>
+                <button class="btn" onclick="generateBasicInterpretation('${questionType}')">
+                    使用基礎解卦
+                </button>
+            </div>
+        `;
+    }
 }
