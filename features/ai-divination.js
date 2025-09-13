@@ -127,7 +127,59 @@ class AIDivination {
             return '系統忙碌中，請稍後再試';
         }
     }
+// 調用基本 AI API（連接到我們的後端）
+async callAIAPI(guaData, questionType) {
+    try {
+        const prompt = this.generatePrompt(guaData, questionType);
+        
+        // 調用我們剛建立的後端 API
+        const response = await fetch('/api/ai-divination', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                hexagrams: guaData,
+                question: this.getQuestionText(questionType),
+                timestamp: new Date().toLocaleString('zh-TW'),
+                questionType: questionType
+            })
+        });
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'API 調用失敗');
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            return result.interpretation;
+        } else {
+            throw new Error(result.error || 'AI 分析失敗');
+        }
+
+    } catch (error) {
+        console.error('AI API 調用錯誤:', error);
+        throw error; // 重新拋出錯誤讓上層處理
+    }
+}
+
+// 輔助方法：獲取問題文字
+getQuestionText(questionType) {
+    const questionTexts = {
+        'love-female': '感情/問女方',
+        'love-male': '感情/問男方',
+        'parents': '問父母',
+        'children': '問子女',
+        'career': '問事業',
+        'health': '問健康',
+        'wealth': '問財富',
+        'partnership': '問合作合夥',
+        'lawsuit': '問官司'
+    };
+    return questionTexts[questionType] || '未知問題';
+}
     // 顯示使用限制提示
     showUsageLimitModal() {
         const modalHTML = `
@@ -315,21 +367,6 @@ function getChangeGuaName() {
     const bgnCell = document.querySelector('.main-table tr.blue-header td:nth-child(2)');
     const text = bgnCell ? bgnCell.textContent.trim() : '';
     return (text && text !== 'BGN') ? text : '';
-}
-
-function getQuestionText(questionType) {
-    const questionTexts = {
-        'love-female': '感情/問女方',
-        'love-male': '感情/問男方',
-        'parents': '問父母',
-        'children': '問子女',
-        'career': '問事業',
-        'health': '問健康',
-        'wealth': '問財富',
-        'partnership': '問合作合夥',
-        'lawsuit': '問官司'
-    };
-    return questionTexts[questionType] || '未知問題';
 }
 
 function formatAIResponse(response) {
