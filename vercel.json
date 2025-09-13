@@ -1,33 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "**/*",
-      "use": "@vercel/static"
-    }
-  ],
-    "functions": {
+  "functions": {
     "api/**/*.js": {
       "runtime": "nodejs18.x"
     }
   },
   "routes": [
-    {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/scripts/(.*)",
-      "dest": "/scripts/$1"
-    },
-    {
-      "src": "/features/(.*)",
-      "dest": "/features/$1"
-    },
-    {
-      "src": "/admin/(.*)",
-      "dest": "/admin/$1"
-    },
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
