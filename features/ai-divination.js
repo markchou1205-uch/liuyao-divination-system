@@ -858,10 +858,27 @@ async function submitMasterDivinationRequest(questionType) {
         submitBtn.textContent = '準備發送郵件...';
         
         const hexagramData = extractHexagramData();
-        const hexagramCodes = extractHexagramCodes();
+        const hexagramCodes = extractHexagramCodesMain();
         const formattedHexagramData = formatHexagramDataForEmail(hexagramData);
         const formattedHexagramCodes = formatHexagramCodes(hexagramCodes);
-        
+        console.log('提取結果:', {
+            hexagramData: hexagramData,
+            hexagramCodes: hexagramCodes
+        });
+        // 顯示確認對話框
+        if (hexagramCodes) {
+            const codeString = hexagramCodes.join(', ');
+            const confirmed = confirm(
+                `檢測到的六爻代碼（從初爻到上爻）：${codeString}\n\n` +
+                `請確認是否正確？\n` +
+                `(應該對應您看到的卦象從下到上的順序)\n\n` +
+                `點擊「確定」繼續發送，點擊「取消」中止。`
+            );
+            
+            if (!confirmed) {
+                return;
+            }
+        }
         // 不包含圖片，避免超過 50KB 限制
         const emailParams = {
             to_name: '馬克老師',
@@ -1223,114 +1240,188 @@ function closeSuccessModal() {
 }
 // 提取六爻代碼的函數
 function extractHexagramCodes() {
-    console.log('=== 開始提取六爻代碼 ===');
-    
-    const codes = [];
+    console.log('=== 開始提取主卦六爻代碼（第三欄） ===');
     
     try {
-        // 尋找卦表
-        const table = document.querySelector('table') || 
-                     document.querySelector('.main-table') ||
-                     document.querySelector('.hexagram-table');
-        
+        const table = document.querySelector('table');
         if (!table) {
             console.error('找不到卦表');
             return null;
         }
         
-        const rows = table.querySelectorAll('tr');
-        console.log(`找到 ${rows.length} 列`);
+        const rows = Array.from(table.querySelectorAll('tr'));
+        console.log(`總共找到 ${rows.length} 列`);
         
-        // 從下到上掃描每一列，尋找爻的圖形
-        for (let i = rows.length - 1; i >= 0; i--) {
-            const row = rows[i];
-            const cells = row.querySelectorAll('td, th');
+        const yaoData = [];
+        
+        // 只掃描每一列的第三欄（索引為2，因為從0開始）
+        rows.forEach((row, rowIndex) => {
+            const cells = Array.from(row.querySelectorAll('td, th'));
             
-            // 在每一列中尋找爻的圖形
-            for (let j = 0; j < cells.length; j++) {
-                const cell = cells[j];
-                const cellHTML = cell.innerHTML;
+            // 專門檢查第三欄
+            if (cells.length >= 3) {
+                const thirdCell = cells[2]; // 第三欄（索引2）
+                const html = thirdCell.innerHTML;
                 
-                // 檢查是否包含爻的圖形
-                if (cellHTML.includes('▇') || cellHTML.includes('█')) {
-                    console.log(`第 ${i} 列，第 ${j} 欄找到爻圖形:`, cellHTML);
+                // 檢查是否包含爻的符號
+                if (html.includes('▇') || html.includes('█')) {
+                    console.log(`第 ${rowIndex} 列，第三欄:`, html);
                     
-                    // 判斷爻的類型和顏色
-                    const code = analyzeYaoCode(cell, cellHTML);
-                    if (code !== null) {
-                        codes.push(code);
-                        console.log(`提取到爻代碼: ${code}`);
+                    const yaoInfo = analyzeYaoDetailed(thirdCell, html, rowIndex);
+                    if (yaoInfo) {
+                        yaoData.push({
+                            ...yaoInfo,
+                            rowIndex: rowIndex
+                        });
                     }
                 }
             }
-        }
+        });
         
-        // 如果找到的爻少於6個，嘗試其他方法
-        if (codes.length < 6) {
-            console.log('爻數量不足，嘗試其他方法...');
-            return extractHexagramCodesAlternative();
-        }
+        console.log('第三欄找到的所有爻資料:', yaoData);
         
-        // 只取前6個爻（從初爻到上爻）
-        const finalCodes = codes.slice(0, 6);
-        console.log('最終六爻代碼 (初爻到上爻):', finalCodes);
+        // 根據表格位置排序（從上到下，然後反轉為從下到上）
+        // 因為表格通常是上爻在上面，初爻在下面
+        yaoData.sort((a, b) => a.rowIndex - b.rowIndex);
+        yaoData.reverse(); // 反轉：變成初爻到上爻的順序
         
-        return finalCodes;
+        const codes = yaoData.map(yao => yao.code);
+        console.log('最終六爻代碼 (初爻到上爻):', codes);
+        
+        return codes.length === 6 ? codes : codes; // 即使不足6個也回傳，用於偵錯
         
     } catch (error) {
-        console.error('提取六爻代碼失敗:', error);
+        console.error('提取失敗:', error);
         return null;
     }
 }
 
-// 分析單個爻的代碼
-function analyzeYaoCode(cell, cellHTML) {
-    // 檢查是否為紅色（動爻）
-    const isRed = checkIfRed(cell);
+// 如果第三欄方法失敗，嘗試其他欄位
+function extractHexagramCodesAlternative() {
+    console.log('=== 嘗試其他欄位 ===');
     
-    // 判斷是陽爻還是陰爻
-    if (isYangYao(cellHTML)) {
-        // 陽爻：實線
-        return isRed ? 3 : 1; // 紅色為3，黑色為1
-    } else if (isYinYao(cellHTML)) {
-        // 陰爻：虛線
-        return isRed ? 0 : 2; // 紅色為0，黑色為2
+    const table = document.querySelector('table');
+    const rows = Array.from(table.querySelectorAll('tr'));
+    
+    // 嘗試不同的欄位位置
+    for (let columnIndex = 0; columnIndex < 6; columnIndex++) {
+        console.log(`--- 嘗試第 ${columnIndex + 1} 欄 ---`);
+        
+        const yaoData = [];
+        
+        rows.forEach((row, rowIndex) => {
+            const cells = Array.from(row.querySelectorAll('td, th'));
+            
+            if (cells.length > columnIndex) {
+                const cell = cells[columnIndex];
+                const html = cell.innerHTML;
+                
+                if (html.includes('▇') || html.includes('█')) {
+                    console.log(`第 ${rowIndex} 列，第 ${columnIndex + 1} 欄:`, html);
+                    
+                    const yaoInfo = analyzeYaoDetailed(cell, html, rowIndex);
+                    if (yaoInfo) {
+                        yaoData.push({
+                            ...yaoInfo,
+                            rowIndex: rowIndex
+                        });
+                    }
+                }
+            }
+        });
+        
+        if (yaoData.length === 6) {
+            console.log(`在第 ${columnIndex + 1} 欄找到完整的6爻`);
+            yaoData.sort((a, b) => a.rowIndex - b.rowIndex);
+            yaoData.reverse();
+            return yaoData.map(yao => yao.code);
+        }
     }
     
     return null;
 }
+// 更新主要提取函數
+function extractHexagramCodesMain() {
+    // 先嘗試第三欄
+    let codes = extractHexagramCodes();
+    
+    if (!codes || codes.length !== 6) {
+        console.log('第三欄方法失敗，嘗試其他欄位');
+        codes = extractHexagramCodesAlternative();
+    }
+    
+    return codes;
+}
+
+// 分析單個爻的代碼
+function analyzeYaoDetailed(cell, html, rowIndex) {
+    console.log(`--- 分析第 ${rowIndex} 列的爻 ---`);
+    console.log('HTML:', html);
+    
+    // 檢查是否為紅色（動爻）
+    const isRed = checkIfRedDetailed(cell);
+    console.log('是否為紅色:', isRed);
+    
+    // 更精確的陰陽爻判斷
+    let isYang = false;
+    let isYin = false;
+    
+    // 陽爻判斷：連續的實心方塊，沒有空格
+    if (html.includes('▇▇▇▇▇') || 
+        (html.includes('▇▇▇') && !html.includes('　')) ||
+        (html.includes('█') && !html.includes('　'))) {
+        isYang = true;
+        console.log('判斷為陽爻');
+    }
+    
+    // 陰爻判斷：中間有空格的方塊
+    if (html.includes('▇▇　▇▇') || 
+        html.includes('██　██') ||
+        (html.includes('▇') && html.includes('　')) ||
+        (html.includes('█') && html.includes('　'))) {
+        isYin = true;
+        console.log('判斷為陰爻');
+    }
+    
+    // 根據陰陽和顏色確定代碼
+    let code = null;
+    if (isYang) {
+        code = isRed ? 3 : 1; // 陽爻：動為3，靜為1
+    } else if (isYin) {
+        code = isRed ? 0 : 2; // 陰爻：動為0，靜為2
+    }
+    
+    console.log(`最終代碼: ${code} (陽爻:${isYang}, 陰爻:${isYin}, 紅色:${isRed})`);
+    
+    return code !== null ? { code, isYang, isYin, isRed } : null;
+}
 
 // 檢查是否為紅色
-function checkIfRed(cell) {
-    // 檢查多種可能的紅色標記方式
+function checkIfRedDetailed(cell) {
     const computedStyle = window.getComputedStyle(cell);
     const backgroundColor = computedStyle.backgroundColor;
     const color = computedStyle.color;
     
-    // 檢查背景色或文字色是否為紅色
-    const isRedBackground = backgroundColor.includes('rgb(255') || 
-                           backgroundColor.includes('red') ||
-                           backgroundColor.includes('#ff') ||
-                           backgroundColor.includes('#f00');
+    console.log('樣式檢查:', {
+        backgroundColor: backgroundColor,
+        color: color,
+        classList: Array.from(cell.classList),
+        innerHTML: cell.innerHTML
+    });
     
-    const isRedText = color.includes('rgb(255') || 
-                     color.includes('red') ||
-                     color.includes('#ff') ||
-                     color.includes('#f00');
+    // 檢查各種紅色可能性
+    const checks = {
+        redBgColor: backgroundColor.includes('rgb(255, 0, 0)') || backgroundColor.includes('red'),
+        redTextColor: color.includes('rgb(255, 0, 0)') || color.includes('red'),
+        redClass: cell.classList.contains('red'),
+        redInlineStyle: cell.innerHTML.includes('color: red') || cell.innerHTML.includes('color:red'),
+        redBackground: cell.innerHTML.includes('background: red') || cell.innerHTML.includes('background-color: red')
+    };
     
-    // 檢查 class 或 inline style
-    const hasRedClass = cell.classList.contains('red') ||
-                       cell.classList.contains('moving') ||
-                       cell.classList.contains('active');
+    console.log('紅色檢查結果:', checks);
     
-    const hasRedStyle = cell.innerHTML.includes('color: red') ||
-                       cell.innerHTML.includes('color:red') ||
-                       cell.innerHTML.includes('background: red') ||
-                       cell.innerHTML.includes('background-color: red');
-    
-    return isRedBackground || isRedText || hasRedClass || hasRedStyle;
+    return Object.values(checks).some(check => check);
 }
-
 // 判斷是否為陽爻（實線）
 function isYangYao(html) {
     // 陽爻通常是連續的實心方塊
