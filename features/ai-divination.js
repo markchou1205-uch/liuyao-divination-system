@@ -983,8 +983,8 @@ async function submitMasterDivinationRequest(questionType) {
         
         // 發送郵件
         const result = await emailjs.send(
-            'YOUR_SERVICE_ID',    // 從 EmailJS 後台取得
-            'YOUR_TEMPLATE_ID',   // 從 EmailJS 後台取得
+            'service_h23ly0m',    // 從 EmailJS 後台取得
+            'template_fc17e8f',   // 從 EmailJS 後台取得
             emailParams
         );
         
