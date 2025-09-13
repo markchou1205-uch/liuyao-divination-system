@@ -127,41 +127,39 @@ class AIDivination {
             return '系統忙碌中，請稍後再試';
         }
     }
-// 調用基本 AI API（連接到我們的後端）
+// 調用基本 AI API（連接到後端或直接調用）
 async callAIAPI(guaData, questionType) {
     try {
+        // 暫時使用前端直接調用方案
         const prompt = this.generatePrompt(guaData, questionType);
         
-        // 調用我們剛建立的後端 API
-        const response = await fetch('/api/ai-divination', {
+        // 請替換為您的 Google AI API Key
+        const apiKey = 'YOUR_GOOGLE_AI_API_KEY';
+        
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                hexagrams: guaData,
-                question: this.getQuestionText(questionType),
-                timestamp: new Date().toLocaleString('zh-TW'),
-                questionType: questionType
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }]
             })
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'API 調用失敗');
+            throw new Error('AI 服務暫時無法使用');
         }
 
-        const result = await response.json();
-        
-        if (result.success) {
-            return result.interpretation;
-        } else {
-            throw new Error(result.error || 'AI 分析失敗');
-        }
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
 
     } catch (error) {
         console.error('AI API 調用錯誤:', error);
-        throw error; // 重新拋出錯誤讓上層處理
+        throw error;
     }
 }
 
