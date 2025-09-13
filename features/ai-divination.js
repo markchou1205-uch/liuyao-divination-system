@@ -1281,14 +1281,13 @@ function extractHexagramCodes() {
         console.log('第三欄找到的所有爻資料:', yaoData);
         
         // 根據表格位置排序（從上到下，然後反轉為從下到上）
-        // 因為表格通常是上爻在上面，初爻在下面
         yaoData.sort((a, b) => a.rowIndex - b.rowIndex);
         yaoData.reverse(); // 反轉：變成初爻到上爻的順序
         
         const codes = yaoData.map(yao => yao.code);
         console.log('最終六爻代碼 (初爻到上爻):', codes);
         
-        return codes.length === 6 ? codes : codes; // 即使不足6個也回傳，用於偵錯
+        return codes;
         
     } catch (error) {
         console.error('提取失敗:', error);
@@ -1442,23 +1441,47 @@ function isYinYao(html) {
 
 // 替代方法提取爻代碼
 function extractHexagramCodesAlternative() {
-    console.log('使用替代方法提取爻代碼...');
+    console.log('=== 嘗試其他欄位 ===');
     
-    // 可以根據您的具體 HTML 結構來調整
-    const allCells = document.querySelectorAll('td, th');
-    const codes = [];
+    const table = document.querySelector('table');
+    const rows = Array.from(table.querySelectorAll('tr'));
     
-    for (const cell of allCells) {
-        const html = cell.innerHTML;
-        if (html.includes('▇') || html.includes('█')) {
-            const code = analyzeYaoCode(cell, html);
-            if (code !== null && codes.length < 6) {
-                codes.push(code);
+    // 嘗試不同的欄位位置
+    for (let columnIndex = 0; columnIndex < 6; columnIndex++) {
+        console.log(`--- 嘗試第 ${columnIndex + 1} 欄 ---`);
+        
+        const yaoData = [];
+        
+        rows.forEach((row, rowIndex) => {
+            const cells = Array.from(row.querySelectorAll('td, th'));
+            
+            if (cells.length > columnIndex) {
+                const cell = cells[columnIndex];
+                const html = cell.innerHTML;
+                
+                if (html.includes('▇') || html.includes('█')) {
+                    console.log(`第 ${rowIndex} 列，第 ${columnIndex + 1} 欄:`, html);
+                    
+                    const yaoInfo = analyzeYaoDetailed(cell, html, rowIndex);
+                    if (yaoInfo) {
+                        yaoData.push({
+                            ...yaoInfo,
+                            rowIndex: rowIndex
+                        });
+                    }
+                }
             }
+        });
+        
+        if (yaoData.length === 6) {
+            console.log(`在第 ${columnIndex + 1} 欄找到完整的6爻`);
+            yaoData.sort((a, b) => a.rowIndex - b.rowIndex);
+            yaoData.reverse();
+            return yaoData.map(yao => yao.code);
         }
     }
     
-    return codes.length === 6 ? codes : null;
+    return null;
 }
 
 // 格式化六爻代碼為郵件內容
