@@ -9,5 +9,23 @@
       "src": "**/*",
       "use": "@vercel/static"
     }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/divination",
+      "dest": "/pages/divination.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin/admin.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/pages/index.html"
+    }
   ]
 }
