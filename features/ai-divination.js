@@ -297,7 +297,7 @@ function showInterpretationOptions(questionType) {
             <div class="option-card ai-option" onclick="showAIQuestionModal('${questionType}')">
                 <h5>🤖 AI 智能解卦</h5>
                 <p>結合 AI 技術提供個性化深度分析</p>
-                <span class="option-price">免費 AI 智能解卦</span>
+                <span class="option-price">免費</span>
             </div>
             
             <div class="option-card master-option" onclick="showMasterDivinationModal('${questionType}')">
