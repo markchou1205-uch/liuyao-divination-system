@@ -853,28 +853,21 @@ async function submitMasterDivinationRequest(questionType) {
     const submitBtn = document.querySelector('#master-divination-modal .btn-primary');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = '正在產生卦表截圖...';
     
     try {
-        // 先載入 html2canvas 庫
-        if (!window.html2canvas) {
-            await loadHtml2Canvas();
-        }
-        
-        // 產生卦表截圖
-        const hexagramImage = await captureHexagramTable();
-        
-        submitBtn.textContent = '送出中...';
+        submitBtn.textContent = '準備發送郵件...';
         
         const hexagramData = extractHexagramData();
         const formattedHexagramData = formatHexagramDataForEmail(hexagramData);
         
+        // 不包含圖片，避免超過 50KB 限制
         const emailParams = {
+            to_name: '馬克老師',
+            from_name: '六爻網站系統',
             user_email: email,
             question_type: aiDivination.getQuestionText(questionType),
             question: question,
             hexagram_data: formattedHexagramData,
-            hexagram_image: hexagramImage, // Base64 圖片
             timestamp: new Date().toLocaleString('zh-TW', {
                 year: 'numeric',
                 month: '2-digit',
@@ -884,32 +877,79 @@ async function submitMasterDivinationRequest(questionType) {
             })
         };
         
+        console.log('EmailJS 參數 (不含圖片):', emailParams);
+        
+        // 檢查參數總大小
+        const paramsSize = JSON.stringify(emailParams).length;
+        console.log('參數大小:', Math.round(paramsSize / 1024), 'KB');
+        
+        if (paramsSize > 50000) { // 50KB
+            throw new Error('參數過大，超過 EmailJS 限制');
+        }
+        
+        submitBtn.textContent = '發送郵件中...';
+        
         const result = await emailjs.send(
-            'service_h23ly0m',
-            'template_fc17e8f',
+            'YOUR_SERVICE_ID',
+            'YOUR_TEMPLATE_ID', 
             emailParams
         );
         
         console.log('郵件發送成功:', result);
         
-        saveToLocalStorage({
-            id: Date.now().toString(),
-            ...emailParams,
-            status: 'sent',
-            emailResult: result
-        });
+        // 嘗試在背景產生截圖並儲存到本地
+        try {
+            submitBtn.textContent = '產生卦表截圖中...';
+            
+            if (!window.html2canvas) {
+                await loadHtml2Canvas();
+            }
+            
+            const hexagramImage = await captureHexagramTable();
+            console.log('截圖成功，儲存到本地記錄');
+            
+            saveToLocalStorage({
+                id: Date.now().toString(),
+                ...emailParams,
+                status: 'sent',
+                emailResult: result,
+                hasImage: true,
+                imageData: hexagramImage // 本地儲存圖片
+            });
+            
+        } catch (screenshotError) {
+            console.warn('截圖失敗:', screenshotError);
+            
+            saveToLocalStorage({
+                id: Date.now().toString(),
+                ...emailParams,
+                status: 'sent',
+                emailResult: result,
+                hasImage: false
+            });
+        }
         
         closeMasterDivinationModal();
-        showSuccessModal(email);
+        showSuccessModal(email, false); // 暫時顯示無圖片版本
         
     } catch (error) {
-        console.error('發送郵件失敗:', error);
+        console.error('整體流程失敗:', error);
         
+        // 修正錯誤處理
         let errorMessage = '系統忙碌中，請稍後再試';
-        if (error.message.includes('截圖')) {
-            errorMessage = '卦表截圖失敗，請重新嘗試';
-        } else if (error.status === 422) {
-            errorMessage = '郵件格式錯誤，請檢查電子郵件地址';
+        
+        if (error && error.text) {
+            if (error.text.includes('Variables size limit')) {
+                errorMessage = '資料過大，請簡化問題描述';
+            } else {
+                errorMessage = 'EmailJS 錯誤: ' + error.text;
+            }
+        } else if (error && error.message) {
+            if (error.message.includes('參數過大')) {
+                errorMessage = '資料過大，請簡化問題描述';
+            } else {
+                errorMessage = error.message;
+            }
         }
         
         alert(errorMessage);
@@ -919,6 +959,7 @@ async function submitMasterDivinationRequest(questionType) {
         submitBtn.textContent = originalText;
     }
 }
+
 
 // 載入 html2canvas 庫
 function loadHtml2Canvas() {
@@ -941,14 +982,12 @@ async function captureHexagramTable() {
     console.log('=== 開始卦表截圖 ===');
     
     try {
-        // 尋找卦表元素的各種可能選擇器
         const possibleSelectors = [
             '.main-table',
             'table',
             '.hexagram-table',
             '.main-table-section table',
-            '#main-table-section table',
-            '.blue-header' // 根據您之前的截圖，表格有 blue-header 類別
+            '#main-table-section table'
         ];
         
         let tableElement = null;
@@ -956,35 +995,16 @@ async function captureHexagramTable() {
         for (const selector of possibleSelectors) {
             tableElement = document.querySelector(selector);
             if (tableElement) {
-                console.log(`找到卦表元素，選擇器: ${selector}`, tableElement);
+                console.log(`找到卦表元素，選擇器: ${selector}`);
                 break;
-            } else {
-                console.log(`選擇器 ${selector} 找不到元素`);
             }
         }
         
         if (!tableElement) {
-            // 如果找不到特定的表格，尋找所有表格
             const allTables = document.querySelectorAll('table');
-            console.log(`找到 ${allTables.length} 個表格元素`);
-            
             if (allTables.length > 0) {
-                // 取最大的表格（通常是主卦表）
-                let largestTable = allTables[0];
-                let maxArea = 0;
-                
-                allTables.forEach((table, index) => {
-                    const area = table.offsetWidth * table.offsetHeight;
-                    console.log(`表格 ${index}: 寬度=${table.offsetWidth}, 高度=${table.offsetHeight}, 面積=${area}`);
-                    
-                    if (area > maxArea) {
-                        maxArea = area;
-                        largestTable = table;
-                    }
-                });
-                
-                tableElement = largestTable;
-                console.log('選擇最大的表格作為卦表:', tableElement);
+                tableElement = allTables[0]; // 取第一個表格
+                console.log('使用第一個表格元素');
             }
         }
         
@@ -992,102 +1012,46 @@ async function captureHexagramTable() {
             throw new Error('找不到任何表格元素');
         }
         
-        // 檢查元素是否可見
+        // 檢查元素尺寸
         const rect = tableElement.getBoundingClientRect();
-        console.log('表格位置和尺寸:', {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
-            visible: rect.width > 0 && rect.height > 0
-        });
-        
         if (rect.width === 0 || rect.height === 0) {
-            throw new Error('表格元素不可見或尺寸為零');
+            throw new Error('表格元素不可見');
         }
         
-        // 檢查元素是否在視窗範圍內
-        const isInViewport = rect.top < window.innerHeight && rect.bottom > 0;
-        console.log('表格是否在視窗內:', isInViewport);
-        
-        // 如果不在視窗內，滾動到該元素
-        if (!isInViewport) {
-            console.log('滾動到表格元素');
-            tableElement.scrollIntoView({ behavior: 'instant', block: 'center' });
-            
-            // 等待滾動完成
-            await new Promise(resolve => setTimeout(resolve, 500));
-        }
-        
-        // 暫時調整樣式
-        const originalStyle = tableElement.style.cssText;
-        console.log('原始樣式:', originalStyle);
-        
-        tableElement.style.backgroundColor = '#ffffff';
-        tableElement.style.padding = '20px';
-        tableElement.style.border = '2px solid #333';
-        tableElement.style.borderRadius = '8px';
-        
-        console.log('套用截圖樣式後的元素:', tableElement);
-        
-        // 等待樣式套用
+        // 滾動到元素
+        tableElement.scrollIntoView({ behavior: 'instant', block: 'center' });
         await new Promise(resolve => setTimeout(resolve, 200));
         
-        console.log('開始 html2canvas 截圖...');
-        
-        // 截圖選項
+        // 截圖選項 - 降低品質以減少檔案大小
         const options = {
             backgroundColor: '#ffffff',
-            scale: 2,
+            scale: 1, // 降低解析度
             useCORS: true,
             allowTaint: false,
-            scrollX: 0,
-            scrollY: 0,
-            width: tableElement.offsetWidth + 40, // 加上 padding
-            height: tableElement.offsetHeight + 40,
-            logging: true // 啟用 html2canvas 內部日誌
+            width: Math.min(800, tableElement.offsetWidth), // 限制最大寬度
+            height: Math.min(600, tableElement.offsetHeight), // 限制最大高度
+            logging: false
         };
-        
-        console.log('html2canvas 選項:', options);
         
         const canvas = await html2canvas(tableElement, options);
         
-        console.log('html2canvas 完成，canvas 尺寸:', {
-            width: canvas.width,
-            height: canvas.height
-        });
+        // 轉換為較低品質的 JPEG 以減少檔案大小
+        const base64Image = canvas.toDataURL('image/jpeg', 0.7); // 70% 品質
         
-        // 恢復原始樣式
-        tableElement.style.cssText = originalStyle;
-        console.log('恢復原始樣式');
+        const imageSizeKB = Math.round(base64Image.length / 1024);
+        console.log('圖片大小:', imageSizeKB, 'KB');
         
-        // 轉換為 Base64
-        const base64Image = canvas.toDataURL('image/png', 0.9);
-        
-        console.log('Base64 圖片大小:', Math.round(base64Image.length / 1024), 'KB');
-        console.log('Base64 前100字元:', base64Image.substring(0, 100));
-        
-        // 檢查 Base64 是否有效
-        if (!base64Image.startsWith('data:image/png;base64,')) {
-            throw new Error('Base64 格式無效');
+        if (imageSizeKB > 40) { // 如果超過 40KB，進一步壓縮
+            const compressedImage = canvas.toDataURL('image/jpeg', 0.5); // 50% 品質
+            console.log('壓縮後圖片大小:', Math.round(compressedImage.length / 1024), 'KB');
+            return compressedImage;
         }
         
-        console.log('=== 卦表截圖成功 ===');
         return base64Image;
         
     } catch (error) {
-        console.error('=== 卦表截圖失敗 ===');
-        console.error('錯誤詳情:', error);
-        console.error('錯誤堆疊:', error.stack);
-        
-        // 提供更詳細的錯誤資訊
-        if (error.message.includes('html2canvas')) {
-            throw new Error('html2canvas 庫錯誤: ' + error.message);
-        } else if (error.message.includes('找不到')) {
-            throw new Error('DOM 元素錯誤: ' + error.message);
-        } else {
-            throw new Error('截圖過程錯誤: ' + error.message);
-        }
+        console.error('截圖失敗:', error);
+        throw error;
     }
 }
 // 成功提示模組
@@ -1187,103 +1151,6 @@ async function generateAIInterpretation(questionType, customQuestion = '') {
 (function() {
     emailjs.init("TSdwo36GqNZWm259J"); // 從 EmailJS 後台取得
 })();
-
-// 修改 submitMasterDivinationRequest 函數
-async function submitMasterDivinationRequest(questionType) {
-    const question = document.getElementById('master-question').value.trim();
-    const email = document.getElementById('master-email').value.trim();
-    
-    if (!question || !email) {
-        alert('請填寫完整的問題和電子郵件');
-        return;
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        alert('請輸入正確的電子郵件格式');
-        return;
-    }
-    
-    const submitBtn = document.querySelector('#master-divination-modal .btn-primary');
-    const originalText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    
-    let hexagramImage = null;
-    
-    try {
-        // 先載入 html2canvas 庫
-        submitBtn.textContent = '載入截圖工具...';
-        if (!window.html2canvas) {
-            await loadHtml2Canvas();
-            console.log('html2canvas 庫載入成功');
-        }
-        
-        // 嘗試產生卦表截圖
-        submitBtn.textContent = '正在截取卦表...';
-        try {
-            hexagramImage = await captureHexagramTable();
-            console.log('卦表截圖成功');
-        } catch (screenshotError) {
-            console.warn('卦表截圖失敗，將繼續發送不含圖片的郵件:', screenshotError);
-            // 不中斷流程，繼續發送郵件
-        }
-        
-        submitBtn.textContent = '發送郵件中...';
-        
-        const hexagramData = extractHexagramData();
-        const formattedHexagramData = formatHexagramDataForEmail(hexagramData);
-        
-        const emailParams = {
-            user_email: email,
-            question_type: aiDivination.getQuestionText(questionType),
-            question: question,
-            hexagram_data: formattedHexagramData,
-            hexagram_image: hexagramImage || '截圖失敗', // 如果沒有圖片就發送錯誤訊息
-            timestamp: new Date().toLocaleString('zh-TW', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            })
-        };
-        
-        const result = await emailjs.send(
-            'service_h23ly0m',
-            'template_fc17e8f',
-            emailParams
-        );
-        
-        console.log('郵件發送成功:', result);
-        
-        saveToLocalStorage({
-            id: Date.now().toString(),
-            ...emailParams,
-            status: 'sent',
-            emailResult: result,
-            hasImage: !!hexagramImage
-        });
-        
-        closeMasterDivinationModal();
-        showSuccessModal(email, !!hexagramImage);
-        
-    } catch (error) {
-        console.error('整體流程失敗:', error);
-        
-        let errorMessage = '系統忙碌中，請稍後再試';
-        if (error.message.includes('html2canvas 載入失敗')) {
-            errorMessage = '截圖工具載入失敗，請檢查網路連線';
-        } else if (error.status === 422) {
-            errorMessage = '郵件格式錯誤，請檢查電子郵件地址';
-        }
-        
-        alert(errorMessage);
-        
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-    }
-}
 
 // 格式化卦象資料為郵件友善格式
 function formatHexagramDataForEmail(data) {
