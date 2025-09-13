@@ -933,3 +933,178 @@ async function generateAIInterpretation(questionType, customQuestion = '') {
         `;
     }
 }
+// EmailJS 初始化
+(function() {
+    emailjs.init("TSdwo36GqNZWm259J"); // 從 EmailJS 後台取得
+})();
+
+// 修改 submitMasterDivinationRequest 函數
+async function submitMasterDivinationRequest(questionType) {
+    const question = document.getElementById('master-question').value.trim();
+    const email = document.getElementById('master-email').value.trim();
+    
+    if (!question || !email) {
+        alert('請填寫完整的問題和電子郵件');
+        return;
+    }
+    
+    // 簡單的 email 格式驗證
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('請輸入正確的電子郵件格式');
+        return;
+    }
+    
+    // 顯示載入狀態
+    const submitBtn = document.querySelector('#master-divination-modal .btn-primary');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '送出中...';
+    
+    try {
+        const hexagramData = extractHexagramData();
+        
+        // 格式化卦象資料為易讀文字
+        const formattedHexagramData = formatHexagramDataForEmail(hexagramData);
+        
+        const emailParams = {
+            user_email: email,
+            question_type: aiDivination.getQuestionText(questionType),
+            question: question,
+            hexagram_data: formattedHexagramData,
+            timestamp: new Date().toLocaleString('zh-TW', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        };
+        
+        // 發送郵件
+        const result = await emailjs.send(
+            'YOUR_SERVICE_ID',    // 從 EmailJS 後台取得
+            'YOUR_TEMPLATE_ID',   // 從 EmailJS 後台取得
+            emailParams
+        );
+        
+        console.log('郵件發送成功:', result);
+        
+        // 儲存到本地記錄（供後台查看）
+        saveToLocalStorage({
+            id: Date.now().toString(),
+            ...emailParams,
+            status: 'sent',
+            emailResult: result
+        });
+        
+        closeMasterDivinationModal();
+        
+        // 成功提示
+        const successModal = `
+            <div id="success-modal" class="modal" style="display: flex;">
+                <div class="modal-content">
+                    <h3>申請送出成功！</h3>
+                    <div class="success-content">
+                        <p>您的解卦請求已經成功送出至馬克老師。</p>
+                        <p><strong>請注意：</strong></p>
+                        <ul>
+                            <li>馬克老師將於 24 小時內親自解卦</li>
+                            <li>解卦結果將寄送至：<strong>${email}</strong></li>
+                            <li>請留意您的信箱（包含垃圾郵件資料夾）</li>
+                        </ul>
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="btn btn-primary" onclick="closeSuccessModal()">確認</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', successModal);
+        
+    } catch (error) {
+        console.error('發送郵件失敗:', error);
+        
+        let errorMessage = '系統忙碌中，請稍後再試';
+        if (error.status === 422) {
+            errorMessage = '郵件格式錯誤，請檢查電子郵件地址';
+        } else if (error.status === 400) {
+            errorMessage = '請求格式錯誤，請重新填寫表單';
+        }
+        
+        alert(errorMessage);
+        
+    } finally {
+        // 恢復按鈕狀態
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+// 格式化卦象資料為郵件友善格式
+function formatHexagramDataForEmail(data) {
+    let formatted = `
+主卦：${data.mainGuaName || '未知'}
+變卦：${data.changeGuaName || '無變卦'}
+
+起卦時間：
+年支：${data.yearBranch || '未知'}
+月支：${data.monthBranch || '未知'}
+日支：${data.dayBranch || '未知'}
+時支：${data.hourBranch || '未知'}
+
+神煞分析：`;
+
+    if (data.yongshen.exists) {
+        formatted += `
+用神：存在${data.yongshen.isMoving ? '（動爻）' : '（靜爻）'}
+  - 強度：${data.yongshen.strength || '未知'}
+  - 變化：${data.yongshen.changeEffect || '無變化'}`;
+    } else {
+        formatted += `
+用神：不現`;
+    }
+
+    if (data.yuanshen.exists) {
+        formatted += `
+元神：存在${data.yuanshen.isMoving ? '（動爻）' : '（靜爻）'}
+  - 強度：${data.yuanshen.strength || '未知'}`;
+    }
+
+    if (data.jishen.exists) {
+        formatted += `
+忌神：存在${data.jishen.isMoving ? '（動爻）' : '（靜爻）'}
+  - 強度：${data.jishen.strength || '未知'}`;
+    }
+
+    if (data.fushen.exists) {
+        formatted += `
+伏神：${data.fushen.element || '未知'}（伏於${data.fushen.position || '未知'}）`;
+    }
+
+    return formatted;
+}
+
+// 儲存到本地記錄
+function saveToLocalStorage(data) {
+    try {
+        const requests = JSON.parse(localStorage.getItem('master_divination_requests') || '[]');
+        requests.push(data);
+        
+        // 只保留最近 100 筆記錄
+        if (requests.length > 100) {
+            requests.splice(0, requests.length - 100);
+        }
+        
+        localStorage.setItem('master_divination_requests', JSON.stringify(requests));
+    } catch (error) {
+        console.error('儲存本地記錄失敗:', error);
+    }
+}
+
+// 關閉成功提示
+function closeSuccessModal() {
+    const modal = document.getElementById('success-modal');
+    if (modal) modal.remove();
+}
