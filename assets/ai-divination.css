@@ -1,0 +1,455 @@
+/* AI 問題輸入樣式 */
+.ai-question-input {
+    padding: 20px 0;
+}
+
+.ai-question-input h4 {
+    color: #667eea;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ai-question-input > p {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.question-input-area {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.question-input-area textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color 0.3s ease;
+}
+
+.question-input-area textarea:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.char-counter {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 12px;
+    color: #666;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.input-tips {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.input-tips h5 {
+    color: #495057;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.input-tips ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #6c757d;
+    font-size: 13px;
+}
+
+.input-tips li {
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+.input-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.ai-submit-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ai-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.ai-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 用戶問題顯示樣式 */
+.user-question-display {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.user-question-display h4 {
+    color: #495057;
+    margin: 0 0 10px 0;
+    font-size: 16px;
+}
+
+.question-text {
+    color: #333;
+    font-style: italic;
+    line-height: 1.5;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+}
+
+/* 解卦操作按鈕 */
+.interpretation-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+    padding: 20px 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+.interpretation-actions .btn {
+    flex: 1;
+    max-width: 200px;
+}
+
+/* 載入詳細信息 */
+.loading-detail {
+    color: #888;
+    font-size: 14px;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+/* 響應式設計增強 */
+@media (max-width: 768px) {
+    .input-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .input-buttons .btn {
+        width: 100%;
+    }
+    
+    .question-input-area textarea {
+        min-height: 80px;
+        padding: 12px;
+    }
+    
+    .input-tips {
+        padding: 12px;
+    }
+    
+    .input-tips h5 {
+        font-size: 13px;
+    }
+    
+    .input-tips ul {
+        font-size: 12px;
+    }
+    
+    .interpretation-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .interpretation-actions .btn {
+        max-width: 100%;
+    }
+    
+    .user-question-display {
+        padding: 12px;
+    }
+    
+    .question-text {
+        padding: 8px;
+    }
+}/* AI 解卦專用樣式 */
+
+/* 解卦選項卡片 */
+.interpretation-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.option-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    background: white;
+}
+
+.option-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.basic-option {
+    border-color: #667eea;
+}
+
+.basic-option:hover {
+    border-color: #5a67d8;
+    background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+}
+
+.ai-option {
+    border-color: #f093fb;
+}
+
+.ai-option:hover {
+    border-color: #e879f9;
+    background: linear-gradient(135deg, #f093fb10 0%, #f5576c10 100%);
+}
+
+.option-card h5 {
+    font-size: 18px;
+    margin: 0 0 10px 0;
+    font-weight: bold;
+}
+
+.basic-option h5 {
+    color: #667eea;
+}
+
+.ai-option h5 {
+    color: #f093fb;
+}
+
+.option-card p {
+    color: #666;
+    margin: 0 0 15px 0;
+    line-height: 1.5;
+}
+
+.option-price {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #f8f9fa;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+}
+
+.ai-option .option-price {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white;
+}
+
+.basic-option .option-price {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+/* 使用資訊提示 */
+.usage-info {
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.usage-info small {
+    color: #856404;
+    font-size: 13px;
+}
+
+/* AI 解卦結果樣式 */
+.ai-interpretation {
+    background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+    border: 1px solid #667eea30;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.ai-interpretation h4 {
+    color: #667eea;
+    margin: 0 0 15px 0;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ai-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    line-height: 1.7;
+}
+
+.ai-content h5 {
+    color: #333;
+    font-size: 16px;
+    font-weight: bold;
+    margin: 20px 0 10px 0;
+    border-left: 4px solid #667eea;
+    padding-left: 12px;
+}
+
+.ai-content h5:first-child {
+    margin-top: 0;
+}
+
+/* 使用限制 Modal */
+.usage-limit-content {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.usage-limit-content p {
+    font-size: 16px;
+    margin: 15px 0;
+    color: #333;
+}
+
+.upgrade-options {
+    margin-top: 30px;
+}
+
+.upgrade-options h4 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.upgrade-options .option-card {
+    max-width: 300px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.upgrade-btn {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.upgrade-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(240, 147, 251, 0.3);
+}
+
+/* 錯誤訊息樣式 */
+.error-message {
+    text-align: center;
+    padding: 30px;
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.error-message h4 {
+    color: #e53e3e;
+    margin-bottom: 15px;
+}
+
+.error-message p {
+    color: #742a2a;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+/* 解卦結果底部資訊 */
+.interpretation-footer-info {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+.interpretation-footer-info small {
+    display: block;
+    color: #666;
+    font-size: 12px;
+    margin: 5px 0;
+}
+
+.interpretation-footer-info small:first-child {
+    color: #856404;
+    font-weight: 500;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .interpretation-options {
+        gap: 10px;
+    }
+    
+    .option-card {
+        padding: 15px;
+    }
+    
+    .option-card h5 {
+        font-size: 16px;
+    }
+    
+    .option-price {
+        position: static;
+        display: inline-block;
+        margin-top: 10px;
+    }
+    
+    .ai-content {
+        padding: 15px;
+    }
+    
+    .usage-limit-content {
+        padding: 15px 0;
+    }
+    
+    .upgrade-options .option-card {
+        max-width: 100%;
+    }
+}

@@ -1,0 +1,21 @@
+{
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/pages/index.html"
+    },
+    {
+      "source": "/divination",
+      "destination": "/pages/divination.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/admin.html"
+    }
+  ]
+}

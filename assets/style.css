@@ -1,0 +1,543 @@
+/* 新增：主卦表區域樣式 */
+.main-table-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: '微軟正黑體', Arial, sans-serif;
+    background: #f5f5f5;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.section {
+    border: 2px solid #dc3545;
+    margin: 10px;
+    border-radius: 5px;
+    display: block !important; /* 強制顯示 */
+}
+
+.section.active {
+    display: block !important; /* 強制顯示 */
+}
+
+.section-header {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-group label {
+    font-weight: bold;
+    color: #333;
+    min-width: 80px;
+}
+
+select, input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+select {
+    min-width: 120px;
+}
+
+.btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn:hover {
+    background: #0056b3;
+}
+
+/* 新增：起卦結果一行顯示 */
+.result-inline {
+    flex: 1;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.result-inline #result-text {
+    color: #333;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+/* 新增：表格容器 */
+.tables-container {
+    margin: 15px 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* 新增：信息表格樣式 */
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.info-table td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.info-table tr:first-child td {
+    background: #e9ecef;
+    font-weight: bold;
+    color: #495057;
+}
+
+.info-table tr:last-child td {
+    background: white;
+    font-weight: bold;
+    color: #333;
+}
+
+.main-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px;
+}
+
+.main-table th,
+.main-table td {
+    border: 1px solid #333;
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.main-table th {
+    background: #4a90e2;
+    color: white;
+}
+
+.blue-header {
+    background: #4a90e2 !important;
+    color: white;
+}
+
+.cell-small {
+    width: 40px;
+    height: 35px;
+    font-size: 14px;
+}
+
+.cell-medium {
+    width: 60px;
+    height: 35px;
+}
+
+.number-inputs {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.number-inputs input {
+    width: 80px;
+}
+
+.random-section {
+    padding: 20px;
+    text-align: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* 覆蓋通用hidden類別，專門用於表格 */
+.info-table.hidden {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transition: opacity 0.3s ease;
+}
+
+/* 確保顯示的表格完全可見 */
+.info-table:not(.hidden) {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: table !important;
+    transition: opacity 0.3s ease;
+}
+
+.date-picker {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #ddd;
+}
+
+.ganzhi-picker {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #ddd;
+}
+
+.ganzhi-selectors {
+    display: flex;
+    gap: 20px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.ganzhi-selectors .form-group {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.ganzhi-selectors .form-group label {
+    margin-bottom: 5px;
+    min-width: auto;
+}
+
+.ganzhi-selectors .form-group select {
+    min-width: 80px;
+}
+
+.liuyao-section {
+    margin-top: 20px;
+}
+
+.liuyao-inputs {
+    margin: 15px 0;
+}
+
+.dice-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.dice-row .form-group {
+    flex: 1;
+    min-width: 120px;
+}
+
+.liuyao-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.liuyao-buttons .btn {
+    padding: 8px 16px;
+}
+/* 表格標題容器 */
+.table-with-title {
+    position: relative;
+    width: 100%;
+}
+
+/* 表格標題樣式 */
+.table-title {
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: white;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #495057;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    z-index: 10;
+}
+
+/* 確保表格有邊框以便標題顯示效果 */
+.info-table {
+    position: relative;
+    border: 1px solid #ddd;
+    margin-top: 8px;
+}
+/* 修正：大卦表對齊和欄位寬度 */
+.main-table-section {
+    margin: 15px 20px; /* 與上方表格對齊 */
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.main-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0; /* 移除之前的 margin: 20px */
+    table-layout: fixed; /* 固定表格佈局以控制欄位寬度 */
+}
+
+/* 設定各欄位寬度比例 */
+.main-table td:nth-child(1) { width: 9%; }   /* 六獸 */
+.main-table td:nth-child(2) { width: 9%; }   /* 伏神 */
+.main-table td:nth-child(3) { width: 9%; }   /* 卦象 */
+.main-table td:nth-child(4) { width: 9%; }   /* 地支五行 */
+.main-table td:nth-child(5) { width: 9%; }   /* 六親 */
+.main-table td:nth-child(6) { width: 13%; }  /* 日月 (F欄) */
+.main-table td:nth-child(7) { width: 9%; }   /* 地支五行 */
+.main-table td:nth-child(8) { width: 9%; }   /* 六親 */
+.main-table td:nth-child(9) { width: 9%; }   /* 卦象 */
+.main-table td:nth-child(10) { width: 14%; } /* 卦變 (J欄) */
+
+.main-table th,
+.main-table td {
+    border: 1px solid #333;
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+/* F欄和J欄特殊樣式 */
+.main-table td:nth-child(6),
+.main-table td:nth-child(10) {
+    text-align: left !important;
+    font-size: 14px;
+    line-height: 1.2;
+    vertical-align: middle;
+}
+
+/* 確保表格容器寬度一致 */
+.tables-container,
+.main-table-section {
+    margin-left: 20px;
+    margin-right: 20px;
+    width: calc(100% - 40px);
+}
+/* 批卦區域樣式 */
+.pigua-section {
+    margin-top: 20px;
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.pigua-info-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.pigua-info-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pigua-info-row .form-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pigua-info-row .form-group label {
+    font-weight: bold;
+    color: #333;
+    white-space: nowrap;
+    min-width: auto;
+}
+
+.pigua-info-row .form-group input {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.pigua-content-section {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.pigua-content-section label {
+    display: block;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.pigua-textarea {
+    width: 100%;
+    min-height: 200px;
+    max-height: 600px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: '微軟正黑體', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.pigua-textarea:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.pigua-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .pigua-info-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .pigua-info-row .form-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* 系統標題樣式 */
+.system-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000;
+    text-align: center;
+    padding: 15px 0;
+    margin: 0 20px; /* 與表格左右對齊 */
+}
+/* Modal 基本樣式 */
+.modal {
+    display: none; /* 預設隱藏 */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+/* 顯示時 */
+.modal.show {
+    display: flex;
+}
+
+/* 內容區 */
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+/* 關閉按鈕 */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+}
+/* ===== Modal 樣式 ===== */
+.modal {
+  display: none; /* 預設隱藏 */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 400px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.close-btn {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+  color: #000;
+}

@@ -1,0 +1,12 @@
+{
+  "name": "liuyao-divination-system",
+  "version": "1.0.0",
+  "description": "六爻起卦系統",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

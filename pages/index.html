@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>馬克老師六爻起卦系統</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="stylesheet" href="../assets/learning-mode.css">
+    <link rel="stylesheet" href="../assets/welcome-modal.css">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+</head>
+<body>
+<!-- 右上角設定按鈕 -->
+<div id="settings-btn" onclick="showSettingsMenu()" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
+    transition: all 0.3s ease;
+" onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 15px rgba(52, 152, 219, 0.4)'" 
+   onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 10px rgba(52, 152, 219, 0.3)'">
+    ⚙️
+</div>
+    <div class="container">
+      <div class="system-title">馬克老師六爻起卦系統</div>
+        <!-- 區塊1 -->
+        <div class="section active" id="section1">
+            <div class="section-header" id="method-selection-row">
+                <div class="form-group">
+                    <label>起卦方式：</label>
+                    <select id="divination-method">
+                        <option value="">請選擇</option>
+                        <option value="time">時間起卦</option>
+                        <option value="number">數字起卦</option>
+                        <option value="liuyao">六爻起卦</option>
+                        <option value="random">隨機起卦</option>
+                        <option value="record">批卦記錄</option>
+                    </select>
+                </div>
+<!-- 在起卦方式選單後面添加取用神選單 -->
+<div class="form-group">
+    <label>取用神：</label>
+    <select id="yongshen-method">
+        <option value="">請選擇</option>
+        <option value="shi">世</option>
+        <option value="ying">應</option>
+        <option value="xiongdi">兄弟</option>
+        <option value="zisun">子孫</option>
+        <option value="qicai">妻財</option>
+        <option value="guanGui">官鬼</option>
+        <option value="fumu">父母</option>
+    </select>
+</div>
+             
+                <!-- 起卦結果顯示區 (移到這裡，一行顯示) -->
+                <div class="result-inline" id="result-inline">
+                    <span id="result-text"></span>
+                </div>
+            </div>
+            
+            <div class="section-header" id="date-selection-row" style="border-top: 1px solid #ddd;">
+                <div class="form-group">
+                    <label>起卦日期：</label>
+                    <select id="date-method">
+                        <option value="current">現在日期</option>
+                        <option value="specific">指定日期</option>
+                        <option value="ganzhi">指定干支</option>
+                    </select>
+                </div>
+                
+                <!-- 開始起卦按鈕移到這裡 -->
+                <button class="btn" onclick="startDivination()">開始起卦</button>
+            </div>
+
+            <!-- 指定日期選擇器 -->
+            <div class="date-picker hidden" id="date-picker">
+                <div class="section-header">
+                    <div class="form-group">
+                        <label>選擇日期：</label>
+                        <input type="date" id="specific-date" />
+                        <input type="time" id="specific-time" />
+                        <button class="btn" onclick="updateSpecificDate()">更新干支</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 指定干支選擇器 -->
+            <div class="ganzhi-picker hidden" id="ganzhi-picker">
+                <div class="section-header">
+                    <div class="ganzhi-selectors">
+                        <div class="form-group">
+                            <label>年支：</label>
+                            <select id="year-zhi">
+                                <option value="子">子</option>
+                                <option value="丑">丑</option>
+                                <option value="寅">寅</option>
+                                <option value="卯">卯</option>
+                                <option value="辰">辰</option>
+                                <option value="巳" selected>巳</option>
+                                <option value="午">午</option>
+                                <option value="未">未</option>
+                                <option value="申">申</option>
+                                <option value="酉">酉</option>
+                                <option value="戌">戌</option>
+                                <option value="亥">亥</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>月支：</label>
+                            <select id="month-zhi">
+                                <option value="子">子</option>
+                                <option value="丑">丑</option>
+                                <option value="寅">寅</option>
+                                <option value="卯">卯</option>
+                                <option value="辰">辰</option>
+                                <option value="巳">巳</option>
+                                <option value="午">午</option>
+                                <option value="未">未</option>
+                                <option value="申">申</option>
+                                <option value="酉" selected>酉</option>
+                                <option value="戌">戌</option>
+                                <option value="亥">亥</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>日支：</label>
+                            <select id="day-zhi">
+                                <option value="子">子</option>
+                                <option value="丑">丑</option>
+                                <option value="寅">寅</option>
+                                <option value="卯" selected>卯</option>
+                                <option value="辰">辰</option>
+                                <option value="巳">巳</option>
+                                <option value="午">午</option>
+                                <option value="未">未</option>
+                                <option value="申">申</option>
+                                <option value="酉">酉</option>
+                                <option value="戌">戌</option>
+                                <option value="亥">亥</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>時支：</label>
+                            <select id="time-zhi">
+                                <option value="">不指定</option>
+                                <option value="子">子</option>
+                                <option value="丑">丑</option>
+                                <option value="寅">寅</option>
+                                <option value="卯">卯</option>
+                                <option value="辰">辰</option>
+                                <option value="巳">巳</option>
+                                <option value="午">午</option>
+                                <option value="未">未</option>
+                                <option value="申">申</option>
+                                <option value="酉">酉</option>
+                                <option value="戌">戌</option>
+                                <option value="亥">亥</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn" onclick="updateGanzhiDate()">更新干支</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 表格顯示區域 -->
+<!-- 表格顯示區域 -->
+<div class="tables-container">
+    <table class="main-info-table">
+        <tr>
+            <td class="table-cell">
+                <!-- 干支旬空表 -->
+                <div class="table-with-title">
+                    <div class="table-title">干支旬空</div>
+                    <table class="info-table" id="ganzhi-table">
+                        <tr>
+                            <td>年</td>
+                            <td>月</td>
+                            <td>日</td>
+                            <td>時</td>
+                            <td>旬空</td>
+                        </tr>
+                        <tr>
+                            <td id="t1">--</td>
+                            <td id="t2">--</td>
+                            <td id="t3">--</td>
+                            <td id="t4">--</td>
+                            <td id="k">--</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+            <td class="table-cell">
+                <!-- 五行旺衰表 (初始隱藏) -->
+                <div class="table-with-title">
+                    <div class="table-title">五行旺衰</div>
+                    <table class="info-table hidden" id="wuxing-table">
+                        <tr>
+                            <td>木</td>
+                            <td>火</td>
+                            <td>土</td>
+                            <td>金</td>
+                            <td>水</td>
+                        </tr>
+                        <tr>
+                            <td id="w1">--</td>
+                            <td id="w2">--</td>
+                            <td id="w3">--</td>
+                            <td id="w4">--</td>
+                            <td id="w5">--</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+            <td class="table-cell">
+                <!-- 神煞表 (初始隱藏) -->
+                <div class="table-with-title">
+                    <div class="table-title">神煞</div>
+                    <table class="info-table hidden" id="shensha-table">
+                        <tr>
+                            <td>驛馬</td>
+                            <td>貴人</td>
+                            <td>桃花</td>
+                            <td>祿存</td>
+                        </tr>
+                        <tr>
+                            <td id="o1">--</td>
+                            <td id="o2">--</td>
+                            <td id="o3">--</td>
+                            <td id="o4">--</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+            <!-- 主要卦表區域 - 移到section1內部 -->
+            <div class="main-table-section hidden" id="main-table-section">
+                <table class="main-table">
+                    <!-- 本卦和變卦區域 -->
+                    <tr class="blue-header">
+                        <td colspan="6">GN</td>
+                        <td colspan="4">BGN</td>
+                    </tr>
+                    
+                    <!-- 卦位表格 -->
+                    <tr class="blue-header">
+                        <td>六獸</td><td>伏神</td><td>卦象</td><td>地支五行</td><td>六親</td><td>日月</td>
+                        <td>地支五行</td><td>六親</td><td>卦象</td><td>卦變</td>
+                    </tr>
+                    
+                    <!-- 六爻位置 -->
+                    <tr>
+                        <td>A6</td><td>B6</td><td>C6</td><td>D6</td><td>E6</td><td>F6</td>
+                        <td>G6</td><td>H6</td><td>I6</td><td>J6</td>
+                    </tr>
+                    <tr>
+                        <td>A5</td><td>B5</td><td>C5</td><td>D5</td><td>E5</td><td>F5</td>
+                        <td>G5</td><td>H5</td><td>I5</td><td>J5</td>
+                    </tr>
+                    <tr>
+                        <td>A4</td><td>B4</td><td>C4</td><td>D4</td><td>E4</td><td>F4</td>
+                        <td>G4</td><td>H4</td><td>I4</td><td>J4</td>
+                    </tr>
+                    <tr>
+                        <td>A3</td><td>B3</td><td>C3</td><td>D3</td><td>E3</td><td>F3</td>
+                        <td>G3</td><td>H3</td><td>I3</td><td>J3</td>
+                    </tr>
+                    <tr>
+                        <td>A2</td><td>B2</td><td>C2</td><td>D2</td><td>E2</td><td>F2</td>
+                        <td>G2</td><td>H2</td><td>I2</td><td>J2</td>
+                    </tr>
+                    <tr>
+                        <td>A1</td><td>B1</td><td>C1</td><td>D1</td><td>E1</td><td>F1</td>
+                        <td>G1</td><td>H1</td><td>I1</td><td>J1</td>
+                    </tr>
+                </table>
+                
+                <div class="section-header">
+                    <button class="btn" onclick="backToSection1()">返回起卦</button>
+                    <button class="btn" id="pigua-btn" onclick="togglePiguaSection()">批卦</button>
+                </div>
+<!-- 新增批卦區域 -->
+<div class="pigua-section hidden" id="pigua-section">
+    <!-- 批卦資訊輸入區 -->
+    <div class="pigua-info-section">
+        <div class="pigua-info-row">
+            <div class="form-group">
+                <label>批卦日期：</label>
+                <input type="date" id="pigua-date" />
+            </div>
+            <div class="form-group">
+                <label>問卦者姓名：</label>
+                <input type="text" id="questioner-name" placeholder="請輸入姓名" />
+            </div>
+            <div class="form-group">
+                <label>電話：</label>
+                <input type="tel" id="questioner-phone" placeholder="請輸入電話" />
+            </div>
+        </div>
+    </div>
+    
+    <!-- 文字輸入區域 -->
+    <div class="pigua-content-section">
+        <label for="pigua-content">批卦內容：</label>
+        <textarea id="pigua-content" class="pigua-textarea" placeholder="請輸入批卦內容..."></textarea>
+        <div class="resize-handle"></div>
+    </div>
+    
+    <!-- 批卦操作按鈕 -->
+    <div class="pigua-buttons">
+        <button class="btn" onclick="savePiguaContent()">儲存批卦內容</button>
+        <button class="btn btn-secondary" onclick="clearPiguaContent()">清除</button>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+<!-- 批卦記錄 Modal -->
+<div id="recordModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeRecordModal">&times;</span>
+    <h3>載入批卦記錄</h3>
+    <input type="file" id="record-file" accept=".json">
+  </div>
+</div>
+<script src="../features/google-drive.js"></script>
+<script src="../scripts/lunar-ganzhi.js"></script>         <!-- 農曆干支計算 -->
+<script src="../scripts/advanced-calculations.js"></script>  <!-- 進階計算功能 -->
+<script src="../scripts/gua-calculations.js"></script>      <!-- 卦理數據計算 -->
+<script src="../features/google-drive-records.js"></script>
+<script src="../scripts/script.js"></script>               <!-- 基本功能處理 -->
+<script src="../features/file-handler.js"></script>               <!-- 檔案處理功能 -->
+<script src="../features/learning-mode.js"></script>
+<script src="../features/welcome-modal.js"></script>        <!-- 歡迎Modal -->
+</body>
+</html>

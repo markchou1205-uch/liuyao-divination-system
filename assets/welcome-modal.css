@@ -1,0 +1,194 @@
+/* 歡迎Modal樣式 */
+.welcome-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.welcome-modal.hidden {
+    display: none;
+}
+
+.welcome-modal-content {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 800px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.welcome-modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.welcome-modal-header h2 {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-modal-body {
+    display: flex;
+    min-height: 400px;
+}
+
+.welcome-option {
+    flex: 1;
+    padding: 40px 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 4px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-option:first-child {
+    border-right: 1px solid #e0e0e0;
+    background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+}
+
+.welcome-option:last-child {
+    background: linear-gradient(135deg, #f093fb10 0%, #f5576c10 100%);
+}
+
+.welcome-option:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-option:first-child:hover {
+    border-bottom-color: #667eea;
+    background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+}
+
+.welcome-option:last-child:hover {
+    border-bottom-color: #f5576c;
+    background: linear-gradient(135deg, #f093fb20 0%, #f5576c20 100%);
+}
+
+.welcome-option-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.welcome-option:first-child .welcome-option-icon {
+    color: #667eea;
+}
+
+.welcome-option:last-child .welcome-option-icon {
+    color: #f5576c;
+}
+
+.welcome-option h3 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.welcome-option:first-child h3 {
+    color: #667eea;
+}
+
+.welcome-option:last-child h3 {
+    color: #f5576c;
+}
+
+.welcome-option p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #666;
+    margin: 0;
+    padding: 0 10px;
+}
+
+.welcome-modal-footer {
+    padding: 20px 30px;
+    background: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.no-show-again {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.no-show-again:hover {
+    color: #333;
+}
+
+.no-show-again input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .welcome-modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .welcome-modal-header h2 {
+        font-size: 22px;
+    }
+    
+    .welcome-modal-body {
+        flex-direction: column;
+        min-height: auto;
+    }
+    
+    .welcome-option {
+        padding: 30px 20px;
+    }
+    
+    .welcome-option:first-child {
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .welcome-option h3 {
+        font-size: 20px;
+    }
+    
+    .welcome-option p {
+        font-size: 14px;
+    }
+}

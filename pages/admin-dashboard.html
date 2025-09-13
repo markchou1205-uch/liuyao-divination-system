@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統管理後台 - 命理教觀室</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: '微軟正黑體', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .admin-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .admin-header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .change {
+            font-size: 12px;
+            color: #28a745;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+
+        .controls select, .controls button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .controls button {
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        .controls button:hover {
+            background: #5a67d8;
+        }
+
+        .data-table {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .data-table h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .status-active {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .export-btn {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: auto;
+            display: block;
+            margin-top: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h1>系統管理後台</h1>
+        <p>命理教觀室 - 六爻起卦系統數據分析</p>
+    </div>
+
+    <div class="container">
+        <!-- 控制面板 -->
+        <div class="controls">
+            <select id="dateRange">
+                <option value="today">今日</option>
+                <option value="week">本週</option>
+                <option value="month">本月</option>
+                <option value="year">今年</option>
+            </select>
+            <button onclick="refreshData()">刷新數據</button>
+            <button onclick="exportData()">匯出報告</button>
+        </div>
+
+        <!-- 統計卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>總訪問次數</h3>
+                <div class="number" id="totalVisits">-</div>
+                <div class="change">+12% 較昨日</div>
+            </div>
+            <div class="stat-card">
+                <h3>求卦者訪問</h3>
+                <div class="number" id="divinationVisits">-</div>
+                <div class="change">+8% 較昨日</div>
+            </div>
+            <div class="stat-card">
+                <h3>專業版訪問</h3>
+                <div class="number" id="professionalVisits">-</div>
+                <div class="change">+15% 較昨日</div>
+            </div>
+            <div class="stat-card">
+                <h3>AI 解卦使用</h3>
+                <div class="number" id="aiUsage">-</div>
+                <div class="change">+25% 較昨日</div>
+            </div>
+            <div class="stat-card">
+                <h3>Token 消耗</h3>
+                <div class="number" id="tokenUsage">-</div>
+                <div class="change">成本: $<span id="tokenCost">0.00</span></div>
+            </div>
+            <div class="stat-card">
+                <h3>Vercel 調用</h3>
+                <div class="number" id="vercelCalls">-</div>
+                <div class="change">剩餘: <span id="remainingCalls">999,999+</span></div>
+            </div>
+        </div>
+
+        <!-- 圖表區域 -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <h3>用戶訪問趨勢</h3>
+                <canvas id="visitsChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>AI 使用分析</h3>
+                <canvas id="aiChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 詳細數據表格 -->
+        <div class="data-table">
+            <h3>AI 解卦記錄</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>時間</th>
+                        <th>問題類型</th>
+                        <th>Token 消耗</th>
+                        <th>回應時間</th>
+                        <th>狀態</th>
+                    </tr>
+                </thead>
+                <tbody id="aiRecords">
+                    <tr>
+                        <td colspan="5" class="loading">載入中...</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="export-btn" onclick="exportAIRecords()">匯出 AI 記錄</button>
+        </div>
+    </div>
+
+    <script>
+        // 全域變數
+        let visitsChart, aiChart;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            loadDashboardData();
+            
+            // 每5分鐘自動刷新
+            setInterval(loadDashboardData, 5 * 60 * 1000);
+        });
+
+        // 初始化圖表
+        function initCharts() {
+            // 訪問趨勢圖
+            const visitsCtx = document.getElementById('visitsChart').getContext('2d');
+            visitsChart = new Chart(visitsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '求卦者',
+                        data: [],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: '專業版',
+                        data: [],
+                        borderColor: '#f093fb',
+                        backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // AI 使用分析圖
+            const aiCtx = document.getElementById('aiChart').getContext('2d');
+            aiChart = new Chart(aiCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['成功', '失敗', '限制'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#28a745', '#dc3545', '#ffc107']
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+
+        // 載入儀表板數據
+        async function loadDashboardData() {
+            try {
+                const dateRange = document.getElementById('dateRange').value;
+                const response = await fetch(`/api/analytics/dashboard?range=${dateRange}`);
+                const data = await response.json();
+
+                // 更新統計卡片
+                document.getElementById('totalVisits').textContent = data.totalVisits || 0;
+                document.getElementById('divinationVisits').textContent = data.divinationVisits || 0;
+                document.getElementById('professionalVisits').textContent = data.professionalVisits || 0;
+                document.getElementById('aiUsage').textContent = data.aiUsage || 0;
+                document.getElementById('tokenUsage').textContent = data.tokenUsage || 0;
+                document.getElementById('tokenCost').textContent = (data.tokenUsage * 0.00025 / 1000).toFixed(4);
+                document.getElementById('vercelCalls').textContent = data.vercelCalls || 0;
+                document.getElementById('remainingCalls').textContent = Math.max(0, 1000000 - (data.vercelCalls || 0)).toLocaleString();
+
+                // 更新圖表
+                updateCharts(data);
+                
+                // 更新 AI 記錄表格
+                updateAIRecords(data.aiRecords || []);
+
+            } catch (error) {
+                console.error('載入數據失敗:', error);
+            }
+        }
+
+        // 更新圖表
+        function updateCharts(data) {
+            // 更新訪問趨勢圖
+            if (data.visitsTimeline) {
+                visitsChart.data.labels = data.visitsTimeline.labels;
+                visitsChart.data.datasets[0].data = data.visitsTimeline.divination;
+                visitsChart.data.datasets[1].data = data.visitsTimeline.professional;
+                visitsChart.update();
+            }
+
+            // 更新 AI 使用分析圖
+            if (data.aiStats) {
+                aiChart.data.datasets[0].data = [
+                    data.aiStats.success || 0,
+                    data.aiStats.error || 0,
+                    data.aiStats.limited || 0
+                ];
+                aiChart.update();
+            }
+        }
+
+        // 更新 AI 記錄表格
+        function updateAIRecords(records) {
+            const tbody = document.getElementById('aiRecords');
+            
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">暫無記錄</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = records.map(record => `
+                <tr>
+                    <td>${new Date(record.timestamp).toLocaleString('zh-TW')}</td>
+                    <td>${record.questionType || '自定義問題'}</td>
+                    <td>${record.tokenCount}</td>
+                    <td>${record.responseTime || '-'}ms</td>
+                    <td class="${record.status === 'success' ? 'status-active' : 'status-error'}">
+                        ${record.status === 'success' ? '成功' : '失敗'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 刷新數據
+        function refreshData() {
+            loadDashboardData();
+        }
+
+        // 匯出數據
+        function exportData() {
+            const dateRange = document.getElementById('dateRange').value;
+            window.open(`/api/analytics/export?range=${dateRange}&format=csv`);
+        }
+
+        // 匯出 AI 記錄
+        function exportAIRecords() {
+            const dateRange = document.getElementById('dateRange').value;
+            window.open(`/api/analytics/export-ai?range=${dateRange}&format=csv`);
+        }
+
+        // 日期範圍變更
+        document.getElementById('dateRange').addEventListener('change', function() {
+            loadDashboardData();
+        });
+    </script>
+</body>
+</html>
