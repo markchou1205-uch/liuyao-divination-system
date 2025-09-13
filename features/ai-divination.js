@@ -1,7 +1,7 @@
 // AI 解卦功能
 class AIDivination {
     constructor() {
-        this.dailyLimit = 1; // 每日限制次數
+        this.dailyLimit = 10; // 每日限制次數
         this.maxWords = 300; // 回覆字數限制
         this.storageKey = 'ai_divination_usage';
         this.dateKey = 'ai_divination_date';
@@ -136,7 +136,7 @@ async callAIAPI(guaData, questionType) {
         // 請替換為您的 Google AI API Key
         const apiKey = 'AIzaSyDwNr6Res144rwZJMbxX7jNa1OcGf1DQJQ';
         
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
