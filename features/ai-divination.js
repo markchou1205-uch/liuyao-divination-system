@@ -1091,19 +1091,23 @@ async function captureHexagramTable() {
     }
 }
 // 成功提示模組
-function showSuccessModal(email) {
+function showSuccessModal(email, hasImage) {
+    const imageStatus = hasImage ? 
+        '<li>卦表截圖已一併送出，便於老師解卦</li>' : 
+        '<li>卦表截圖失敗，但卦象數據已完整送出</li>';
+    
     const successModal = `
         <div id="success-modal" class="modal" style="display: flex;">
             <div class="modal-content">
                 <h3>申請送出成功！</h3>
                 <div class="success-content">
-                    <p>您的解卦請求（包含卦表截圖）已經成功送出至馬克老師。</p>
+                    <p>您的解卦請求已經成功送出至馬克老師。</p>
                     <p><strong>請注意：</strong></p>
                     <ul>
                         <li>馬克老師將於 24 小時內親自解卦</li>
                         <li>解卦結果將寄送至：<strong>${email}</strong></li>
                         <li>請留意您的信箱（包含垃圾郵件資料夾）</li>
-                        <li>卦表截圖已一併送出，便於老師解卦</li>
+                        ${imageStatus}
                     </ul>
                 </div>
                 <div class="modal-buttons">
