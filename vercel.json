@@ -1,20 +1,41 @@
 {
   "version": 2,
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "builds": [
     {
-      "src": "**/*.html",
+      "src": "pages/**/*.html",
       "use": "@vercel/static"
     },
     {
-      "src": "**/*.js",
+      "src": "assets/**/*",
       "use": "@vercel/static"
     },
     {
-      "src": "**/*.css",
+      "src": "scripts/**/*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "features/**/*.js",
       "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/divination",
+      "dest": "/pages/divination.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin/admin.html"
+    },
     {
       "src": "/(.*)",
       "dest": "/pages/index.html"
