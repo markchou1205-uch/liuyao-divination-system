@@ -858,7 +858,9 @@ async function submitMasterDivinationRequest(questionType) {
         submitBtn.textContent = '準備發送郵件...';
         
         const hexagramData = extractHexagramData();
+        const hexagramCodes = extractHexagramCodes();
         const formattedHexagramData = formatHexagramDataForEmail(hexagramData);
+        const formattedHexagramCodes = formatHexagramCodes(hexagramCodes);
         
         // 不包含圖片，避免超過 50KB 限制
         const emailParams = {
@@ -868,6 +870,7 @@ async function submitMasterDivinationRequest(questionType) {
             question_type: aiDivination.getQuestionText(questionType),
             question: question,
             hexagram_data: formattedHexagramData,
+            hexagram_codes: formattedHexagramCodes,
             timestamp: new Date().toLocaleString('zh-TW', {
                 year: 'numeric',
                 month: '2-digit',
@@ -1217,4 +1220,177 @@ function saveToLocalStorage(data) {
 function closeSuccessModal() {
     const modal = document.getElementById('success-modal');
     if (modal) modal.remove();
+}
+// 提取六爻代碼的函數
+function extractHexagramCodes() {
+    console.log('=== 開始提取六爻代碼 ===');
+    
+    const codes = [];
+    
+    try {
+        // 尋找卦表
+        const table = document.querySelector('table') || 
+                     document.querySelector('.main-table') ||
+                     document.querySelector('.hexagram-table');
+        
+        if (!table) {
+            console.error('找不到卦表');
+            return null;
+        }
+        
+        const rows = table.querySelectorAll('tr');
+        console.log(`找到 ${rows.length} 列`);
+        
+        // 從下到上掃描每一列，尋找爻的圖形
+        for (let i = rows.length - 1; i >= 0; i--) {
+            const row = rows[i];
+            const cells = row.querySelectorAll('td, th');
+            
+            // 在每一列中尋找爻的圖形
+            for (let j = 0; j < cells.length; j++) {
+                const cell = cells[j];
+                const cellHTML = cell.innerHTML;
+                
+                // 檢查是否包含爻的圖形
+                if (cellHTML.includes('▇') || cellHTML.includes('█')) {
+                    console.log(`第 ${i} 列，第 ${j} 欄找到爻圖形:`, cellHTML);
+                    
+                    // 判斷爻的類型和顏色
+                    const code = analyzeYaoCode(cell, cellHTML);
+                    if (code !== null) {
+                        codes.push(code);
+                        console.log(`提取到爻代碼: ${code}`);
+                    }
+                }
+            }
+        }
+        
+        // 如果找到的爻少於6個，嘗試其他方法
+        if (codes.length < 6) {
+            console.log('爻數量不足，嘗試其他方法...');
+            return extractHexagramCodesAlternative();
+        }
+        
+        // 只取前6個爻（從初爻到上爻）
+        const finalCodes = codes.slice(0, 6);
+        console.log('最終六爻代碼 (初爻到上爻):', finalCodes);
+        
+        return finalCodes;
+        
+    } catch (error) {
+        console.error('提取六爻代碼失敗:', error);
+        return null;
+    }
+}
+
+// 分析單個爻的代碼
+function analyzeYaoCode(cell, cellHTML) {
+    // 檢查是否為紅色（動爻）
+    const isRed = checkIfRed(cell);
+    
+    // 判斷是陽爻還是陰爻
+    if (isYangYao(cellHTML)) {
+        // 陽爻：實線
+        return isRed ? 3 : 1; // 紅色為3，黑色為1
+    } else if (isYinYao(cellHTML)) {
+        // 陰爻：虛線
+        return isRed ? 0 : 2; // 紅色為0，黑色為2
+    }
+    
+    return null;
+}
+
+// 檢查是否為紅色
+function checkIfRed(cell) {
+    // 檢查多種可能的紅色標記方式
+    const computedStyle = window.getComputedStyle(cell);
+    const backgroundColor = computedStyle.backgroundColor;
+    const color = computedStyle.color;
+    
+    // 檢查背景色或文字色是否為紅色
+    const isRedBackground = backgroundColor.includes('rgb(255') || 
+                           backgroundColor.includes('red') ||
+                           backgroundColor.includes('#ff') ||
+                           backgroundColor.includes('#f00');
+    
+    const isRedText = color.includes('rgb(255') || 
+                     color.includes('red') ||
+                     color.includes('#ff') ||
+                     color.includes('#f00');
+    
+    // 檢查 class 或 inline style
+    const hasRedClass = cell.classList.contains('red') ||
+                       cell.classList.contains('moving') ||
+                       cell.classList.contains('active');
+    
+    const hasRedStyle = cell.innerHTML.includes('color: red') ||
+                       cell.innerHTML.includes('color:red') ||
+                       cell.innerHTML.includes('background: red') ||
+                       cell.innerHTML.includes('background-color: red');
+    
+    return isRedBackground || isRedText || hasRedClass || hasRedStyle;
+}
+
+// 判斷是否為陽爻（實線）
+function isYangYao(html) {
+    // 陽爻通常是連續的實心方塊
+    return html.includes('▇▇▇▇▇') || 
+           html.includes('█████') ||
+           html.includes('███') ||
+           (html.includes('▇') && !html.includes('　'));
+}
+
+// 判斷是否為陰爻（虛線）
+function isYinYao(html) {
+    // 陰爻通常是中間有空格的方塊
+    return html.includes('▇▇　▇▇') || 
+           html.includes('██　██') ||
+           html.includes('▇　▇') ||
+           (html.includes('▇') && html.includes('　'));
+}
+
+// 替代方法提取爻代碼
+function extractHexagramCodesAlternative() {
+    console.log('使用替代方法提取爻代碼...');
+    
+    // 可以根據您的具體 HTML 結構來調整
+    const allCells = document.querySelectorAll('td, th');
+    const codes = [];
+    
+    for (const cell of allCells) {
+        const html = cell.innerHTML;
+        if (html.includes('▇') || html.includes('█')) {
+            const code = analyzeYaoCode(cell, html);
+            if (code !== null && codes.length < 6) {
+                codes.push(code);
+            }
+        }
+    }
+    
+    return codes.length === 6 ? codes : null;
+}
+
+// 格式化六爻代碼為郵件內容
+function formatHexagramCodes(codes) {
+    if (!codes || codes.length !== 6) {
+        return '六爻代碼提取失敗';
+    }
+    
+    const yaoNames = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'];
+    const codeDescriptions = {
+        1: '陽爻（靜）',
+        2: '陰爻（靜）', 
+        3: '陽爻（動）',
+        0: '陰爻（動）'
+    };
+    
+    let formatted = '六爻代碼（從初爻到上爻）：\n';
+    formatted += codes.join(', ') + '\n\n';
+    formatted += '詳細說明：\n';
+    
+    codes.forEach((code, index) => {
+        formatted += `${yaoNames[index]}：${code} (${codeDescriptions[code]})\n`;
+    });
+    
+    return formatted;
 }
