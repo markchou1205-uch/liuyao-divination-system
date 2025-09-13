@@ -1,21 +1,23 @@
 {
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "nodejs18.x"
+  "version": 2,
+  "builds": [
+    {
+      "src": "**/*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.css",
+      "use": "@vercel/static"
     }
-  },
-  "rewrites": [
+  ],
+  "routes": [
     {
-      "source": "/",
-      "destination": "/pages/index.html"
-    },
-    {
-      "source": "/divination",
-      "destination": "/pages/divination.html"
-    },
-    {
-      "source": "/admin",
-      "destination": "/admin/admin.html"
+      "src": "/(.*)",
+      "dest": "/pages/index.html"
     }
   ]
 }
