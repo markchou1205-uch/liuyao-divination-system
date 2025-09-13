@@ -6,7 +6,23 @@
       "use": "@vercel/node"
     },
     {
-      "src": "**/*",
+      "src": "pages/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assets/**/*", 
+      "use": "@vercel/static"
+    },
+    {
+      "src": "scripts/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "features/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin/**/*",
       "use": "@vercel/static"
     }
   ],
@@ -14,6 +30,22 @@
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/scripts/(.*)",
+      "dest": "/scripts/$1"
+    },
+    {
+      "src": "/features/(.*)",
+      "dest": "/features/$1"
+    },
+    {
+      "src": "/admin/(.*)",
+      "dest": "/admin/$1"
     },
     {
       "src": "/divination",
