@@ -865,20 +865,6 @@ async function submitMasterDivinationRequest(questionType) {
             hexagramData: hexagramData,
             hexagramCodes: hexagramCodes
         });
-        // 顯示確認對話框
-        if (hexagramCodes) {
-            const codeString = hexagramCodes.join(', ');
-            const confirmed = confirm(
-                `檢測到的六爻代碼（從初爻到上爻）：${codeString}\n\n` +
-                `請確認是否正確？\n` +
-                `(應該對應您看到的卦象從下到上的順序)\n\n` +
-                `點擊「確定」繼續發送，點擊「取消」中止。`
-            );
-            
-            if (!confirmed) {
-                return;
-            }
-        }
         // 不包含圖片，避免超過 50KB 限制
         const emailParams = {
             to_name: '馬克老師',
@@ -1096,7 +1082,21 @@ async function generateAIInterpretation(questionType, customQuestion = '') {
 })();
 
 // 格式化卦象資料為郵件友善格式
-function formatHexagramDataForEmail(data) {
+function formatHexagramDataForEmail(data, questionType) {
+    const yongshenMapping = {
+        'love-female': '妻財',
+        'love-male': '官鬼',
+        'parents': '父母',
+        'children': '子孫',
+        'career': '官鬼',
+        'health': '世爻',
+        'wealth': '妻財',
+        'partnership': '兄弟',
+        'lawsuit': '官鬼'
+    };
+    
+    const yongshen = yongshenMapping[questionType] || '未知';
+    
     let formatted = `
 主卦：${data.mainGuaName || '未知'}
 變卦：${data.changeGuaName || '無變卦'}
@@ -1107,34 +1107,7 @@ function formatHexagramDataForEmail(data) {
 日支：${data.dayBranch || '未知'}
 時支：${data.hourBranch || '未知'}
 
-神煞分析：`;
-
-    if (data.yongshen.exists) {
-        formatted += `
-用神：存在${data.yongshen.isMoving ? '（動爻）' : '（靜爻）'}
-  - 強度：${data.yongshen.strength || '未知'}
-  - 變化：${data.yongshen.changeEffect || '無變化'}`;
-    } else {
-        formatted += `
-用神：不現`;
-    }
-
-    if (data.yuanshen.exists) {
-        formatted += `
-元神：存在${data.yuanshen.isMoving ? '（動爻）' : '（靜爻）'}
-  - 強度：${data.yuanshen.strength || '未知'}`;
-    }
-
-    if (data.jishen.exists) {
-        formatted += `
-忌神：存在${data.jishen.isMoving ? '（動爻）' : '（靜爻）'}
-  - 強度：${data.jishen.strength || '未知'}`;
-    }
-
-    if (data.fushen.exists) {
-        formatted += `
-伏神：${data.fushen.element || '未知'}（伏於${data.fushen.position || '未知'}）`;
-    }
+取用神：${yongshen}`;
 
     return formatted;
 }
