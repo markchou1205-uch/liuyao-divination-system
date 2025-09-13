@@ -90,7 +90,7 @@ class WelcomeModal {
         // 根據選擇進行跳轉或關閉
         if (option === 'divination') {
             // 跳轉到求卦者頁面
-            window.location.href = 'divination.html';
+            window.location.href = '/divination';
         } else if (option === 'professional') {
             // 關閉Modal，繼續使用專業版
             this.hideModal();
