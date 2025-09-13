@@ -1576,85 +1576,84 @@ function extractHexagramCodesByName() {
 // 根據卦名找到二進制代碼
 function findGuaCodeByName(guaName) {
 const GUA_64_SIMPLE = {
-    // 乾宮
-    '111111': { name: '乾為天', palace: '乾', wuxing: '金', type: '八純卦', shi: 6, ying: 3 },
-    '011111': { name: '天風姤', palace: '乾', wuxing: '金', type: '一世卦', shi: 1, ying: 4 },
-    '001111': { name: '天山遯', palace: '乾', wuxing: '金', type: '二世卦', shi: 2, ying: 5 },
-    '000111': { name: '天地否', palace: '乾', wuxing: '金', type: '三世卦', shi: 3, ying: 6 },
-    '000110': { name: '風地觀', palace: '乾', wuxing: '金', type: '四世卦', shi: 4, ying: 1 },
-    '000100': { name: '山地剝', palace: '乾', wuxing: '金', type: '五世卦', shi: 5, ying: 2 },
-    '000101': { name: '火地晉', palace: '乾', wuxing: '金', type: '游魂卦', shi: 4, ying: 1 },
-    '000001': { name: '火天大有', palace: '乾', wuxing: '金', type: '歸魂卦', shi: 3, ying: 6 },
-    
-    // 坤宮
-    '000000': { name: '坤為地', palace: '坤', wuxing: '土', type: '八純卦', shi: 6, ying: 3 },
-    '100000': { name: '地雷復', palace: '坤', wuxing: '土', type: '一世卦', shi: 1, ying: 4 },
-    '110000': { name: '地澤臨', palace: '坤', wuxing: '土', type: '二世卦', shi: 2, ying: 5 },
-    '111000': { name: '地天泰', palace: '坤', wuxing: '土', type: '三世卦', shi: 3, ying: 6 },
-    '111001': { name: '雷天大壯', palace: '坤', wuxing: '土', type: '四世卦', shi: 4, ying: 1 },
-    '111011': { name: '澤天夬', palace: '坤', wuxing: '土', type: '五世卦', shi: 5, ying: 2 },
-    '111010': { name: '水天需', palace: '坤', wuxing: '土', type: '游魂卦', shi: 4, ying: 1 },
-    '111110': { name: '水地比', palace: '坤', wuxing: '土', type: '歸魂卦', shi: 3, ying: 6 },
-    
-    // 震宮
-    '100100': { name: '震為雷', palace: '震', wuxing: '木', type: '八純卦', shi: 6, ying: 3 },
-    '110100': { name: '雷澤歸妹', palace: '震', wuxing: '木', type: '一世卦', shi: 1, ying: 4 },
-    '010100': { name: '雷水解', palace: '震', wuxing: '木', type: '二世卦', shi: 2, ying: 5 },
-    '011100': { name: '雷風恆', palace: '震', wuxing: '木', type: '三世卦', shi: 3, ying: 6 },
-    '011101': { name: '風火家人', palace: '震', wuxing: '木', type: '四世卦', shi: 4, ying: 1 },
-    '011001': { name: '風澤中孚', palace: '震', wuxing: '木', type: '五世卦', shi: 5, ying: 2 },
-    '011010': { name: '風水渙', palace: '震', wuxing: '木', type: '游魂卦', shi: 4, ying: 1 },
-    '011110': { name: '風雷益', palace: '震', wuxing: '木', type: '歸魂卦', shi: 3, ying: 6 },
-    
-    // 巽宮
-    '011011': { name: '巽為風', palace: '巽', wuxing: '木', type: '八純卦', shi: 6, ying: 3 },
-    '001011': { name: '風山漸', palace: '巽', wuxing: '木', type: '一世卦', shi: 1, ying: 4 },
-    '101011': { name: '風火鼎', palace: '巽', wuxing: '木', type: '二世卦', shi: 2, ying: 5 },
-    '100011': { name: '風雷益', palace: '巽', wuxing: '木', type: '三世卦', shi: 3, ying: 6 },
-    '100010': { name: '雷水解', palace: '巽', wuxing: '木', type: '四世卦', shi: 4, ying: 1 },
-    '100110': { name: '雷澤歸妹', palace: '巽', wuxing: '木', type: '五世卦', shi: 5, ying: 2 },
-    '100101': { name: '雷火豐', palace: '巽', wuxing: '木', type: '游魂卦', shi: 4, ying: 1 },
-    '100001': { name: '雷山小過', palace: '巽', wuxing: '木', type: '歸魂卦', shi: 3, ying: 6 },
-    
-    // 坎宮
-    '010010': { name: '坎為水', palace: '坎', wuxing: '水', type: '八純卦', shi: 6, ying: 3 },
-    '101010': { name: '水火既濟', palace: '坎', wuxing: '水', type: '一世卦', shi: 1, ying: 4 },
-    '001010': { name: '水山蹇', palace: '坎', wuxing: '水', type: '二世卦', shi: 2, ying: 5 },
-    '000010': { name: '水地比', palace: '坎', wuxing: '水', type: '三世卦', shi: 3, ying: 6 },
-    '000011': { name: '地風升', palace: '坎', wuxing: '水', type: '四世卦', shi: 4, ying: 1 },
-    '000001': { name: '地山謙', palace: '坎', wuxing: '水', type: '五世卦', shi: 5, ying: 2 },
-    '000101': { name: '地火明夷', palace: '坎', wuxing: '水', type: '游魂卦', shi: 4, ying: 1 },
-    '001101': { name: '山火賁', palace: '坎', wuxing: '水', type: '歸魂卦', shi: 3, ying: 6 },
-    
-    // 離宮
-    '101101': { name: '離為火', palace: '離', wuxing: '火', type: '八純卦', shi: 6, ying: 3 },
-    '010101': { name: '火水未濟', palace: '離', wuxing: '火', type: '一世卦', shi: 1, ying: 4 },
-    '110101': { name: '火澤睽', palace: '離', wuxing: '火', type: '二世卦', shi: 2, ying: 5 },
-    '111101': { name: '火天大有', palace: '離', wuxing: '火', type: '三世卦', shi: 3, ying: 6 },
-    '111100': { name: '天雷無妄', palace: '離', wuxing: '火', type: '四世卦', shi: 4, ying: 1 },
-    '111110': { name: '天澤履', palace: '離', wuxing: '火', type: '五世卦', shi: 5, ying: 2 },
-    '111011': { name: '風天小畜', palace: '離', wuxing: '火', type: '游魂卦', shi: 4, ying: 1 },
-    '110011': { name: '澤風大過', palace: '離', wuxing: '火', type: '歸魂卦', shi: 3, ying: 6 },
-    
-    // 艮宮
-    '001001': { name: '艮為山', palace: '艮', wuxing: '土', type: '八純卦', shi: 6, ying: 3 },
-    '110001': { name: '山澤損', palace: '艮', wuxing: '土', type: '一世卦', shi: 1, ying: 4 },
-    '010001': { name: '山水蒙', palace: '艮', wuxing: '土', type: '二世卦', shi: 2, ying: 5 },
-    '011001': { name: '山風蠱', palace: '艮', wuxing: '土', type: '三世卦', shi: 3, ying: 6 },
-    '011000': { name: '風地觀', palace: '艮', wuxing: '土', type: '四世卦', shi: 4, ying: 1 },
-    '011010': { name: '風水渙', palace: '艮', wuxing: '土', type: '五世卦', shi: 5, ying: 2 },
-    '011101': { name: '風火家人', palace: '艮', wuxing: '土', type: '游魂卦', shi: 4, ying: 1 },
-    '010101': { name: '水火既濟', palace: '艮', wuxing: '土', type: '歸魂卦', shi: 3, ying: 6 },
-    
-    // 兌宮
-    '110110': { name: '兌為澤', palace: '兌', wuxing: '金', type: '八純卦', shi: 6, ying: 3 },
-    '100110': { name: '澤雷隨', palace: '兌', wuxing: '金', type: '一世卦', shi: 1, ying: 4 },
-    '000110': { name: '澤地萃', palace: '兌', wuxing: '金', type: '二世卦', shi: 2, ying: 5 },
-    '010110': { name: '澤水困', palace: '兌', wuxing: '金', type: '三世卦', shi: 3, ying: 6 },
-    '010111': { name: '水天需', palace: '兌', wuxing: '金', type: '四世卦', shi: 4, ying: 1 },
-    '010011': { name: '水風井', palace: '兌', wuxing: '金', type: '五世卦', shi: 5, ying: 2 },
-    '010001': { name: '水山蹇', palace: '兌', wuxing: '金', type: '游魂卦', shi: 4, ying: 1 },
-    '011001': { name: '風山漸', palace: '兌', wuxing: '金', type: '歸魂卦', shi: 3, ying: 6 }
+    '111111': { name: '乾為天', palace: '乾', wuxing: '金', type: '八純卦', shi: 6, ying: 3, dizhi: ['子水', '寅木', '辰土', '午火', '申金', '戌土'] },
+    '011111': { name: '天風姤', palace: '乾', wuxing: '金', type: '一世卦', shi: 1, ying: 4, dizhi: ['丑土', '亥水', '酉金', '午火', '申金', '戌土'] },
+    '001111': { name: '天山遯', palace: '乾', wuxing: '金', type: '二世卦', shi: 2, ying: 5, dizhi: ['辰土', '午火', '申金', '午火', '申金', '戌土'] },
+    '000111': { name: '天地否', palace: '乾', wuxing: '金', type: '三世卦', shi: 3, ying: 6, dizhi: ['未土', '巳火', '卯木', '午火', '申金', '戌土'] },
+    '000011': { name: '風地觀', palace: '乾', wuxing: '金', type: '四世卦', shi: 4, ying: 1, dizhi: ['未土', '巳火', '卯木', '亥水', '酉金', '未土'] },
+    '000001': { name: '山地剝', palace: '乾', wuxing: '金', type: '五世卦', shi: 5, ying: 2, dizhi: ['未土', '巳火', '卯木', '戌土', '子水', '寅木'] },
+    '000101': { name: '火地晉', palace: '乾', wuxing: '金', type: '游魂卦', shi: 4, ying: 1, dizhi: ['未土', '巳火', '卯木', '酉金', '未土', '巳火'] },
+    '111101': { name: '火天大有', palace: '乾', wuxing: '金', type: '歸魂卦', shi: 3, ying: 6, dizhi: ['卯木', '丑土', '亥水', '午火', '申金', '戌土'] },
+
+    // 兌宮八卦（五行屬金）
+    '110110': { name: '兌為澤', palace: '兌', wuxing: '金', type: '八純卦', shi: 6, ying: 3, dizhi: ['巳火', '卯木', '丑土', '亥水', '酉金', '未土'] },
+    '010110': { name: '澤水困', palace: '兌', wuxing: '金', type: '一世卦', shi: 1, ying: 4, dizhi: ['寅木', '辰土', '午火', '亥水', '酉金', '未土'] },
+    '000110': { name: '澤地萃', palace: '兌', wuxing: '金', type: '二世卦', shi: 2, ying: 5, dizhi: ['未土', '巳火', '卯木', '亥水', '酉金', '未土'] },
+    '001110': { name: '澤山咸', palace: '兌', wuxing: '金', type: '三世卦', shi: 3, ying: 6, dizhi: ['辰土', '午火', '申金', '亥水', '酉金', '未土'] },
+    '001010': { name: '水山蹇', palace: '兌', wuxing: '金', type: '四世卦', shi: 4, ying: 1, dizhi: ['辰土', '午火', '申金', '申金', '戌土', '子水'] },
+    '001000': { name: '地山謙', palace: '兌', wuxing: '金', type: '五世卦', shi: 5, ying: 2, dizhi: ['未土', '巳火', '卯木', '戌土', '子水', '寅木'] },
+    '001100': { name: '雷山小過', palace: '兌', wuxing: '金', type: '游魂卦', shi: 4, ying: 1, dizhi: ['子水', '寅木', '辰土', '戌土', '子水', '寅木'] },
+    '110100': { name: '雷澤歸妹', palace: '兌', wuxing: '金', type: '歸魂卦', shi: 3, ying: 6, dizhi: ['卯木', '丑土', '亥水', '亥水', '酉金', '未土'] },
+
+    // 離宮八卦（五行屬火）
+    '101101': { name: '離為火', palace: '離', wuxing: '火', type: '八純卦', shi: 6, ying: 3, dizhi: ['卯木', '丑土', '亥水', '酉金', '未土', '巳火'] },
+    '001101': { name: '火山旅', palace: '離', wuxing: '火', type: '一世卦', shi: 1, ying: 4, dizhi: ['辰土', '午火', '申金', '酉金', '未土', '巳火'] },
+    '011101': { name: '火風鼎', palace: '離', wuxing: '火', type: '二世卦', shi: 2, ying: 5, dizhi: ['丑土', '亥水', '酉金', '酉金', '未土', '巳火'] },
+    '010101': { name: '火水未濟', palace: '離', wuxing: '火', type: '三世卦', shi: 3, ying: 6, dizhi: ['寅木', '辰土', '午火', '酉金', '未土', '巳火'] },
+    '010001': { name: '山水蒙', palace: '離', wuxing: '火', type: '四世卦', shi: 4, ying: 1, dizhi: ['寅木', '辰土', '午火', '戌土', '子水', '寅木'] },
+    '010011': { name: '風水渙', palace: '離', wuxing: '火', type: '五世卦', shi: 5, ying: 2, dizhi: ['寅木', '辰土', '午火', '未土', '巳火', '卯木'] },
+    '010111': { name: '天水訟', palace: '離', wuxing: '火', type: '游魂卦', shi: 4, ying: 1, dizhi: ['子水', '寅木', '辰土', '申金', '戌土', '子水'] },
+    '101111': { name: '天火同人', palace: '離', wuxing: '火', type: '歸魂卦', shi: 3, ying: 6, dizhi: ['子水', '寅木', '辰土', '酉金', '未土', '巳火'] },
+
+    // 震宮八卦（五行屬木）- 按您提供的卦序
+    '100100': { name: '震為雷', palace: '震', wuxing: '木', type: '八純卦', shi: 6, ying: 3, dizhi: ['子水', '寅木', '辰土', '午火', '申金', '戌土'] },
+    '000100': { name: '雷地豫', palace: '震', wuxing: '木', type: '一世卦', shi: 1, ying: 4, dizhi: ['未土', '巳火', '卯木', '午火', '申金', '戌土'] },
+    '010100': { name: '雷水解', palace: '震', wuxing: '木', type: '二世卦', shi: 2, ying: 5, dizhi: ['寅木', '辰土', '午火', '午火', '申金', '戌土'] },
+    '011100': { name: '雷風恒', palace: '震', wuxing: '木', type: '三世卦', shi: 3, ying: 6, dizhi: ['丑土', '亥水', '酉金', '午火', '申金', '戌土'] },
+    '011000': { name: '地風升', palace: '震', wuxing: '木', type: '四世卦', shi: 4, ying: 1, dizhi: ['丑土', '亥水', '酉金', '丑土', '亥水', '酉金'] },
+    '011010': { name: '水風井', palace: '震', wuxing: '木', type: '五世卦', shi: 5, ying: 2, dizhi: ['丑土', '亥水', '酉金', '申金', '戌土', '子水'] },
+    '011110': { name: '澤風大過', palace: '震', wuxing: '木', type: '游魂卦', shi: 4, ying: 1, dizhi: ['巳火', '卯木', '丑土', '未土', '巳火', '卯木'] },
+    '100110': { name: '澤雷隨', palace: '震', wuxing: '木', type: '歸魂卦', shi: 3, ying: 6, dizhi: ['子水', '寅木', '辰土', '亥水', '酉金', '未土'] },
+
+    // 巽宮八卦（五行屬木）
+    '011011': { name: '巽為風', palace: '巽', wuxing: '木', type: '八純卦', shi: 6, ying: 3, dizhi: ['丑土', '亥水', '酉金', '未土', '巳火', '卯木'] },
+    '111011': { name: '風天小畜', palace: '巽', wuxing: '木', type: '一世卦', shi: 1, ying: 4, dizhi: ['子水', '寅木', '辰土', '未土', '巳火', '卯木'] },
+    '101011': { name: '風火家人', palace: '巽', wuxing: '木', type: '二世卦', shi: 2, ying: 5, dizhi: ['卯木', '丑土', '亥水', '未土', '巳火', '卯木'] },
+    '100011': { name: '風雷益', palace: '巽', wuxing: '木', type: '三世卦', shi: 3, ying: 6, dizhi: ['子水', '寅木', '辰土', '未土', '巳火', '卯木'] },
+    '100111': { name: '天雷無妄', palace: '巽', wuxing: '木', type: '四世卦', shi: 4, ying: 1, dizhi: ['子水', '寅木', '辰土', '午火', '申金', '戌土'] },
+    '100101': { name: '火雷噬嗑', palace: '巽', wuxing: '木', type: '五世卦', shi: 5, ying: 2, dizhi: ['子水', '寅木', '辰土', '酉金', '未土', '巳火'] },
+    '100001': { name: '山雷頤', palace: '巽', wuxing: '木', type: '游魂卦', shi: 4, ying: 1, dizhi: ['子水', '寅木', '辰土', '戌土', '子水', '寅木'] },
+    '011001': { name: '山風蠱', palace: '巽', wuxing: '木', type: '歸魂卦', shi: 3, ying: 6, dizhi: ['丑土', '亥水', '酉金', '戌土', '子水', '寅木'] },
+
+    // 坎宮八卦（五行屬水）  <-- 補齊
+    '010010': { name: '坎為水', palace: '坎', wuxing: '水', type: '八純卦', shi: 6, ying: 3, dizhi: ['寅木', '辰土', '午火', '申金', '戌土', '子水'] },
+    '110010': { name: '水澤節', palace: '坎', wuxing: '水', type: '一世卦', shi: 1, ying: 4, dizhi: ['巳火', '卯木', '丑土', '申金', '戌土', '子水'] },
+    '100010': { name: '水雷屯', palace: '坎', wuxing: '水', type: '二世卦', shi: 2, ying: 5, dizhi: ['子水', '寅木', '辰土',  '申金', '戌土', '子水'] },
+    '101010': { name: '水火既齊', palace: '坎', wuxing: '水', type: '三世卦', shi: 3, ying: 6, dizhi: ['卯木', '丑土', '亥水', '申金', '戌土', '子水'] },
+    '101110': { name: '澤火革', palace: '坎', wuxing: '水', type: '四世卦', shi: 4, ying: 1, dizhi: ['卯木', '丑土', '亥水','亥水',  '酉金', '未土'] },
+    '101100': { name: '雷火豐', palace: '坎', wuxing: '水', type: '五世卦', shi: 5, ying: 2, dizhi: ['卯木', '丑土', '亥水', '午火', '申金', '戌土'] },
+    '101000': { name: '地火明夷', palace: '坎', wuxing: '水', type: '游魂卦', shi: 4, ying: 1, dizhi: ['卯木', '丑土', '亥水', '丑土', '亥水', '酉金'] },
+    '010000': { name: '地水師', palace: '坎', wuxing: '水', type: '歸魂卦', shi: 3, ying: 6, dizhi: ['寅木', '辰土', '午火', '丑土', '亥水', '酉金'] },
+
+    // 艮宮八卦（五行屬土）  <-- 補齊
+    '001001': { name: '艮為山', palace: '艮', wuxing: '土', type: '八純卦', shi: 6, ying: 3, dizhi: ['辰土', '午火', '申金', '戌土', '子水', '寅木'] },
+    '101001': { name: '山火賁', palace: '艮', wuxing: '土', type: '一世卦', shi: 1, ying: 4, dizhi: ['卯木', '丑土', '亥水', '戌土', '子水', '寅木'] },
+    '111001': { name: '山天大畜', palace: '艮', wuxing: '土', type: '二世卦', shi: 2, ying: 5, dizhi: ['子水', '', '寅木', '辰土', '戌土', '子水', '寅木'] },
+    '110001': { name: '山澤損', palace: '艮', wuxing: '土', type: '三世卦', shi: 3, ying: 6, dizhi: ['巳火', '卯木', '丑土', '戌土', '子水', '寅木'] },
+    '110101': { name: '火澤暌', palace: '艮', wuxing: '土', type: '四世卦', shi: 4, ying: 1, dizhi: ['巳火', '卯木', '丑土', '酉金', '未土', '巳火'] },
+    '110111': { name: '天澤覆', palace: '艮', wuxing: '土', type: '五世卦', shi: 5, ying: 2, dizhi: ['巳火', '卯木', '丑土', '午火', '申金', '戌土'] },
+    '110011': { name: '風澤中孚', palace: '艮', wuxing: '土', type: '游魂卦', shi: 4, ying: 1, dizhi: ['巳火', '卯木', '丑土', '未土', '巳火', '卯木'] },
+    '001011': { name: '風山漸', palace: '艮', wuxing: '土', type: '歸魂卦', shi: 3, ying: 6, dizhi: ['辰土', '午火', '申金', '未土', '巳火', '卯木'] },
+
+    // 坤宮八卦（五行屬土）
+    '000000': { name: '坤為地', palace: '坤', wuxing: '土', type: '八純卦', shi: 6, ying: 3, dizhi: ['未土', '巳火', '卯木', '丑土', '亥水', '酉金'] },
+    '100000': { name: '地雷復', palace: '坤', wuxing: '土', type: '一世卦', shi: 1, ying: 4, dizhi: ['子水', '寅木', '辰土', '丑土', '亥水', '酉金'] },
+    '110000': { name: '地澤臨', palace: '坤', wuxing: '土', type: '二世卦', shi: 2, ying: 5, dizhi: ['巳火', '卯木', '丑土', '丑土', '亥水', '酉金'] },
+    '111000': { name: '地天泰', palace: '坤', wuxing: '土', type: '三世卦', shi: 3, ying: 6, dizhi: ['子水', '寅木', '辰土', '丑土', '亥水', '酉金'] },
+    '111100': { name: '雷天大壯', palace: '坤', wuxing: '土', type: '四世卦', shi: 4, ying: 1, dizhi: ['子水', '寅木', '辰土', '午火', '申金', '戌土'] },
+    '111110': { name: '澤天夬', palace: '坤', wuxing: '土', type: '五世卦', shi: 5, ying: 2, dizhi: ['子水', '寅木', '辰土', '亥水', '酉金', '未土'] },
+    '111010': { name: '水天需', palace: '坤', wuxing: '土', type: '游魂卦', shi: 4, ying: 1, dizhi: ['子水', '寅木', '辰土', '申金', '戌土', '子水'] },
+    '000010': { name: '水地比', palace: '坤', wuxing: '土', type: '歸魂卦', shi: 3, ying: 6, dizhi: ['未土', '巳火', '卯木', '申金', '戌土', '子水'] }
 };
     for (const [binaryCode, guaInfo] of Object.entries(GUA_64_SIMPLE)) {
         if (guaInfo.name === guaName) {
