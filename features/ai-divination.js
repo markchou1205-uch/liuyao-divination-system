@@ -148,27 +148,29 @@ ${customQuestion ? `具體問題：${customQuestion}` : ''}
             return '系統忙碌中，請稍後再試';
         }
     }
-// 前端 - 修改 callAIAPI 函數
+// 修改這個函數，從直接調用 Google AI 改為調用自己的後端
 async callAIAPI(guaData, questionType) {
     try {
+        const prompt = this.generatePrompt(guaData, questionType);
+        
+        // 改為調用自己的後端 API
         const response = await fetch('/api/ai-divination', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                guaData: guaData,
-                questionType: questionType,
-                prompt: this.generatePrompt(guaData, questionType)
+                prompt: prompt // 將 prompt 傳給後端
             })
         });
 
         if (!response.ok) {
-            throw new Error('API 調用失敗');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'AI 服務暫時無法使用');
         }
 
-        const result = await response.json();
-        return result.interpretation;
+        const data = await response.json();
+        return data.interpretation;
 
     } catch (error) {
         console.error('AI API 調用錯誤:', error);
