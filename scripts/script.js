@@ -3334,18 +3334,62 @@ function getGuaNamesFromTable() {
     let benGuaName = '未知';
     let bianGuaName = '';
     
-    for (let cell of cells) {
+    console.log('檢查第一行卦名格子數量:', cells.length);
+    
+    // 遍歷所有格子，找到本卦和變卦
+    for (let i = 0; i < cells.length; i++) {
+        const cell = cells[i];
         const colspan = cell.getAttribute('colspan');
-        if (colspan === '6' && !benGuaName || benGuaName === '未知') {
-            benGuaName = cell.textContent.trim();
-        } else if (colspan === '4') {
-            bianGuaName = cell.textContent.trim();
+        const text = cell.textContent.trim();
+        
+        console.log(`格子 ${i}: colspan=${colspan}, 內容="${text}"`);
+        
+        if (colspan === '6' && text && text !== 'GN' && text !== '本卦') {
+            benGuaName = text;
+            console.log('找到本卦名:', benGuaName);
+        } else if (colspan === '4' && text && text !== 'BGN' && text !== '變卦' && text !== '') {
+            bianGuaName = text;
+            console.log('找到變卦名:', bianGuaName);
         }
     }
     
+    // 如果沒找到變卦，可能是沒有動爻
+    if (!bianGuaName) {
+        const dongYaoList = getDongYaoList();
+        if (dongYaoList.length === 0) {
+            bianGuaName = ''; // 確實無變卦
+        } else {
+            console.log('有動爻但沒找到變卦名，可能是表格結構問題');
+            // 嘗試從其他方式獲取
+            bianGuaName = getBianGuaNameAlternative();
+        }
+    }
+    
+    console.log('最終卦名結果:', { ben: benGuaName, bian: bianGuaName });
     return { ben: benGuaName, bian: bianGuaName };
 }
-
+function getBianGuaNameAlternative() {
+    // 方法1：從全域變數獲取
+    if (window.dice1 !== undefined) {
+        const liuyaoResults = [window.dice1, window.dice2, window.dice3, window.dice4, window.dice5, window.dice6];
+        const guaNames = AdvancedCalculator.calculateGuaNames(liuyaoResults);
+        return guaNames.bgn || '';
+    }
+    
+    // 方法2：從數字起卦結果獲取
+    if (window.numberGuaResult) {
+        const guaNames = AdvancedCalculator.calculateNumberGuaNames(window.numberGuaResult);
+        return guaNames.bgn || '';
+    }
+    
+    // 方法3：從時間起卦結果獲取
+    if (window.timeGuaResult) {
+        const guaNames = AdvancedCalculator.calculateNumberGuaNames(window.timeGuaResult);
+        return guaNames.bgn || '';
+    }
+    
+    return '';
+}
 /**
  * 獲取用神信息
  */
