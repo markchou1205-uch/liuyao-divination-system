@@ -325,26 +325,26 @@ static calculateLiuqin(myWuxing, targetWuxing) {
 /**
  * 計算六親（允許指定卦宮五行）
  */
-static calculateGuaLiuqin(binary, palaceWuxingOverride = null) {
+static calculateGuaLiuqin(binary) {
     console.log('計算六親關係');
-    
+
     const guaData = this.GUA_64_COMPLETE[binary];
     if (!guaData) {
         return Array(6).fill('--');
     }
-    
-    // 使用覆寫的卦宮五行，或默認使用該卦自己的卦宮五行
-    const palaceWuxing = palaceWuxingOverride || guaData.wuxing;
+
+    const palaceWuxing = guaData.wuxing;
     const dizhiWuxing = this.calculateGuaDizhiWuxing(binary);
-    
+
     const liuqin = dizhiWuxing.map(dizhiItem => {
         if (dizhiItem === '--') return '--';
-        
+
+        // 提取五行
         const yaoWuxing = dizhiItem.charAt(dizhiItem.length - 1);
         return this.calculateLiuqin(palaceWuxing, yaoWuxing);
     });
-    
-    console.log(`各爻六親 (基於${palaceWuxing}宮):`, liuqin);
+
+    console.log('各爻六親:', liuqin);
     return liuqin;
 }
 
