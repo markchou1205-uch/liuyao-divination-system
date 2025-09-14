@@ -3277,6 +3277,335 @@ function extractWuxingFromText(text) {
     
     return null;
 }
+/**
+ * 提取 AI 解卦所需的完整數據
+ */
+function extractAIGuaData(questionType, customQuestion) {
+    console.log('=== 開始提取 AI 解卦數據 ===');
+    
+    try {
+        // 1. 基本信息
+        const ganZhi = getCurrentGanZhi();
+        const questionText = aiDivination.getQuestionText(questionType);
+        
+        // 2. 卦名信息
+        const guaNames = getGuaNamesFromTable();
+        
+        // 3. 用神信息
+        const yongshenInfo = getYongshenInfo(questionType);
+        
+        // 4. 元神忌神信息
+        const yuanJishenInfo = getYuanJishenInfo(yongshenInfo.liuqin);
+        
+        // 5. 世爻信息
+        const shiYaoInfo = getShiYaoInfo();
+        
+        // 6. 用神對世爻的生克關係
+        const yongshenShiRelation = getYongshenShiRelation(yongshenInfo, shiYaoInfo);
+        
+        return {
+            ganZhi: ganZhi,
+            questionType: questionText,
+            customQuestion: customQuestion,
+            guaNames: guaNames,
+            yongshen: yongshenInfo,
+            yuanJishen: yuanJishenInfo,
+            shiYao: shiYaoInfo,
+            yongshenShiRelation: yongshenShiRelation
+        };
+        
+    } catch (error) {
+        console.error('提取 AI 解卦數據時發生錯誤:', error);
+        return null;
+    }
+}
+
+/**
+ * 從表格獲取卦名
+ */
+function getGuaNamesFromTable() {
+    const table = document.querySelector('table.main-table');
+    if (!table) return { ben: '未知', bian: '' };
+    
+    const firstRow = table.querySelector('tr');
+    if (!firstRow) return { ben: '未知', bian: '' };
+    
+    const cells = firstRow.querySelectorAll('td');
+    let benGuaName = '未知';
+    let bianGuaName = '';
+    
+    for (let cell of cells) {
+        const colspan = cell.getAttribute('colspan');
+        if (colspan === '6' && !benGuaName || benGuaName === '未知') {
+            benGuaName = cell.textContent.trim();
+        } else if (colspan === '4') {
+            bianGuaName = cell.textContent.trim();
+        }
+    }
+    
+    return { ben: benGuaName, bian: bianGuaName };
+}
+
+/**
+ * 獲取用神信息
+ */
+function getYongshenInfo(questionType) {
+    // 用神映射
+    const yongshenMapping = {
+        'love-female': '妻財',
+        'love-male': '官鬼', 
+        'parents': '父母',
+        'children': '子孫',
+        'career': '官鬼',
+        'health': '世爻',
+        'wealth': '妻財',
+        'partnership': '兄弟',
+        'lawsuit': '官鬼'
+    };
+    
+    const yongshenLiuqin = yongshenMapping[questionType];
+    
+    // 在表格中找到用神標記
+    const yongshenYao = findYongshenInTable();
+    
+    if (yongshenYao) {
+        return {
+            liuqin: yongshenLiuqin,
+            position: yongshenYao.position,
+            wangShuai: yongshenYao.fColumn,
+            isDong: yongshenYao.isDong,
+            dongBian: yongshenYao.jColumn
+        };
+    }
+    
+    return {
+        liuqin: yongshenLiuqin,
+        position: 0,
+        wangShuai: '不現',
+        isDong: false,
+        dongBian: ''
+    };
+}
+
+/**
+ * 在表格中找到用神標記
+ */
+function findYongshenInTable() {
+    const table = document.querySelector('table.main-table');
+    if (!table) return null;
+    
+    const rows = table.querySelectorAll('tr');
+    
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        const row = rows[rowIndex];
+        const cells = row.querySelectorAll('td');
+        
+        if (cells.length >= 10) {
+            const eCell = cells[4]; // 六親欄
+            const fCell = cells[5]; // F欄（旺衰）
+            const jCell = cells[9]; // J欄（動變）
+            
+            // 檢查是否有用神標記
+            if (eCell.innerHTML.includes('用')) {
+                const position = 6 - (rowIndex - 1); // 計算爻位
+                const isDong = isDongYaoFromTable(position);
+                
+                return {
+                    position: position,
+                    fColumn: fCell.textContent.trim(),
+                    isDong: isDong,
+                    jColumn: jCell.textContent.trim()
+                };
+            }
+        }
+    }
+    
+    return null;
+}
+
+/**
+ * 獲取元神忌神信息
+ */
+function getYuanJishenInfo(yongshenLiuqin) {
+    const liuqinRelations = {
+        '兄弟': { yuan: '父母', ji: '官鬼' },
+        '子孫': { yuan: '兄弟', ji: '父母' },
+        '妻財': { yuan: '子孫', ji: '兄弟' },
+        '官鬼': { yuan: '妻財', ji: '子孫' },
+        '父母': { yuan: '官鬼', ji: '妻財' }
+    };
+    
+    const relation = liuqinRelations[yongshenLiuqin];
+    if (!relation) return { yuan: null, ji: null };
+    
+    const yuanShenInfo = findLiuqinInTable(relation.yuan);
+    const jiShenInfo = findLiuqinInTable(relation.ji);
+    
+    return {
+        yuan: yuanShenInfo,
+        ji: jiShenInfo
+    };
+}
+
+/**
+ * 在表格中找到指定六親
+ */
+function findLiuqinInTable(targetLiuqin) {
+    const table = document.querySelector('table.main-table');
+    if (!table) return null;
+    
+    const rows = table.querySelectorAll('tr');
+    
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        const row = rows[rowIndex];
+        const cells = row.querySelectorAll('td');
+        
+        if (cells.length >= 10) {
+            const eCell = cells[4]; // 六親欄
+            const fCell = cells[5]; // F欄
+            const jCell = cells[9]; // J欄
+            
+            const liuqinText = eCell.textContent.trim().replace(/[用元忌]/g, '').trim();
+            
+            if (liuqinText === targetLiuqin) {
+                const position = 6 - (rowIndex - 1);
+                const isDong = isDongYaoFromTable(position);
+                
+                return {
+                    liuqin: targetLiuqin,
+                    position: position,
+                    wangShuai: fCell.textContent.trim(),
+                    isDong: isDong,
+                    dongBian: jCell.textContent.trim()
+                };
+            }
+        }
+    }
+    
+    return null;
+}
+
+/**
+ * 獲取世爻信息
+ */
+function getShiYaoInfo() {
+    const table = document.querySelector('table.main-table');
+    if (!table) return null;
+    
+    const rows = table.querySelectorAll('tr');
+    
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        const row = rows[rowIndex];
+        const cells = row.querySelectorAll('td');
+        
+        if (cells.length >= 10) {
+            const cCell = cells[2]; // 卦象欄
+            const eCell = cells[4]; // 六親欄
+            const fCell = cells[5]; // F欄
+            const jCell = cells[9]; // J欄
+            
+            // 檢查是否有世爻標記
+            if (cCell.innerHTML.includes('世')) {
+                const position = 6 - (rowIndex - 1);
+                const isDong = isDongYaoFromTable(position);
+                const liuqin = eCell.textContent.trim().replace(/[用元忌]/g, '').trim();
+                
+                return {
+                    position: position,
+                    liuqin: liuqin,
+                    wangShuai: fCell.textContent.trim(),
+                    isDong: isDong,
+                    dongBian: jCell.textContent.trim()
+                };
+            }
+        }
+    }
+    
+    return null;
+}
+
+/**
+ * 檢查指定位置是否為動爻
+ */
+function isDongYaoFromTable(position) {
+    const dongYaoList = getDongYaoList();
+    return dongYaoList.includes(position);
+}
+
+/**
+ * 計算用神對世爻的生克關係
+ */
+function getYongshenShiRelation(yongshenInfo, shiYaoInfo) {
+    if (!yongshenInfo || !shiYaoInfo) return '關係不明';
+    
+    const yongshenLiuqin = yongshenInfo.liuqin;
+    const shiLiuqin = shiYaoInfo.liuqin;
+    
+    // 六親生克關係
+    const liuqinShengke = {
+        '父母': { sheng: '兄弟', ke: '子孫' },
+        '兄弟': { sheng: '子孫', ke: '妻財' },
+        '子孫': { sheng: '妻財', ke: '官鬼' },
+        '妻財': { sheng: '官鬼', ke: '父母' },
+        '官鬼': { sheng: '父母', ke: '兄弟' }
+    };
+    
+    if (yongshenLiuqin === shiLiuqin) {
+        return '比和';
+    } else if (liuqinShengke[yongshenLiuqin]?.sheng === shiLiuqin) {
+        return '生';
+    } else if (liuqinShengke[yongshenLiuqin]?.ke === shiLiuqin) {
+        return '克';
+    } else if (liuqinShengke[shiLiuqin]?.sheng === yongshenLiuqin) {
+        return '被生';
+    } else if (liuqinShengke[shiLiuqin]?.ke === yongshenLiuqin) {
+        return '被克';
+    } else {
+        return '無直接關係';
+    }
+}
+
+/**
+ * 生成 AI 解卦 prompt
+ */
+function generateAIPrompt(guaData) {
+    if (!guaData) return null;
+    
+    const formatDate = (ganZhi) => {
+        return `${ganZhi.year}年${ganZhi.month}月${ganZhi.day}日${ganZhi.time}時`;
+    };
+    
+    const formatYaoInfo = (info) => {
+        if (!info) return '不現';
+        
+        let result = `${info.wangShuai}，為${info.isDong ? '動' : '靜'}爻`;
+        if (info.isDong && info.dongBian) {
+            result += `，變動結果為${info.dongBian}`;
+        }
+        return result;
+    };
+    
+    const prompt = `你是專業的六爻卦師，請用六爻及易經的卦辭解卦，
+卜卦的日期為${formatDate(guaData.ganZhi)}，干支為${formatDate(guaData.ganZhi)}。
+問題是${guaData.customQuestion || guaData.questionType}
+得到的本卦為${guaData.guaNames.ben}、變卦為${guaData.guaNames.bian || '無'}。
+在易經中的解釋為${guaData.guaNames.ben}卦。
+用神為${guaData.yongshen.liuqin}，用神對於日月為${formatYaoInfo(guaData.yongshen)}。
+元神在卦中為${formatYaoInfo(guaData.yuanJishen.yuan)}，${guaData.yuanJishen.yuan ? '能' : '不能'}生旺用神。
+忌神在卦中為${formatYaoInfo(guaData.yuanJishen.ji)}，${guaData.yuanJishen.ji ? '能' : '不能'}克害用神。
+世爻為${guaData.shiYao ? guaData.shiYao.liuqin : '未知'}，${formatYaoInfo(guaData.shiYao)}。
+用神對世爻的關係為${guaData.yongshenShiRelation}。
+
+請你依據這些數據進行解卦，格式如下：
+【問題】整理歸納使用者的問題，不超過50字。
+【卦辭】用易經的卦辭推斷使用者的問題，不超過200字。
+【用神】說明用神在卦中的旺衰、動靜及動變的結果，不超過50字。
+【元、忌神】說明元神、忌神的旺衰，以及是否能幫扶或克害用神，不超過50字。
+【應期】如果使用者的問題有包括時間，則從用神的狀況去判斷應期，原則是：如果用神被忌神沖克，則日或月的地支沖開忌神的時間為應期；如果元神是動爻，但被日或月沖克，則走到日或月的時間則為應期；如果用神動變回動沖克，則沖開變爻的時間為應期。其它狀況就請你依專業進行判斷，不超過100字。
+【總結】依卦辭及六爻綜合的使用者的問題做總結及建議，不超過300字。`;
+
+    return prompt;
+}
 // ==================== 初始化 ====================
 
 // 主程式初始化
