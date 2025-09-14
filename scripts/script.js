@@ -1677,7 +1677,9 @@ function fillTimeGuaTable() {
             }
         }
     });
-    
+setTimeout(() => {
+    correctChangeGuaLiuqin();
+}, 200);
     console.log('已將時間起卦結果填入卦表，包含動爻紅色標記、六獸、世應、伏神');
 }
 
@@ -1936,7 +1938,9 @@ function fillLiuyaoGuaTable() {
             }
         }
     });
-    
+setTimeout(() => {
+    correctChangeGuaLiuqin();
+}, 200);
     console.log('已將六爻結果完全重新填入卦表，包括正確的顯示順序和世應位置');
 }
 
@@ -2131,7 +2135,9 @@ function fillNumberGuaTable() {
             }
         }
     });
-    
+setTimeout(() => {
+    correctChangeGuaLiuqin();
+}, 200);
     console.log('已將數字起卦結果填入卦表，包含動爻紅色標記、六獸、世應、伏神');
 }
     
@@ -3200,7 +3206,130 @@ function handleLearningModeErrors(error) {
     }
     return false;
 }
+//=====================  增加變卦六親修正函數  ===================
+/**
+ * 修正變卦六親（後處理函數）
+ * 在表格建構完成後執行，重新計算變卦六親
+ */
+function correctChangeGuaLiuqin() {
+    console.log('=== 開始修正變卦六親 ===');
+    
+    try {
+        // 1. 取得本卦的宮位五行
+        const mainGuaName = getMainGuaName();
+        if (!mainGuaName) {
+            console.error('無法取得本卦名稱');
+            return;
+        }
+        
+        const mainGuaBinary = findGuaCodeByName(mainGuaName);
+        if (!mainGuaBinary) {
+            console.error('無法找到本卦二進制:', mainGuaName);
+            return;
+        }
+        
+        const mainGuaData = AdvancedCalculator.GUA_64_COMPLETE[mainGuaBinary];
+        if (!mainGuaData) {
+            console.error('無法取得本卦資料:', mainGuaBinary);
+            return;
+        }
+        
+        const mainPalaceWuxing = mainGuaData.wuxing;
+        console.log(`本卦: ${mainGuaName}, 宮位五行: ${mainPalaceWuxing}`);
+        
+        // 2. 找到 main-table 並處理變卦欄位
+        const mainTable = document.querySelector('table.main-table');
+        if (!mainTable) {
+            console.error('找不到 main-table');
+            return;
+        }
+        
+        const rows = mainTable.querySelectorAll('tr');
+        console.log(`找到主表格，共 ${rows.length} 列`);
+        
+        // 3. 遍歷每一列，修正變卦六親（第8欄）
+        let correctedCount = 0;
+        rows.forEach((row, rowIndex) => {
+            const cells = row.querySelectorAll('td, th');
+            
+            // 跳過表頭或欄位不足的列
+            if (rowIndex === 0 || cells.length < 8) {
+                return;
+            }
+            
+            // 變卦的地支五行在第7欄（索引6），六親在第8欄（索引7）
+            const changeGuaDizhiWuxingCell = cells[6]; // 第7欄
+            const changeGuaLiuqinCell = cells[7]; // 第8欄
+            
+            if (changeGuaDizhiWuxingCell && changeGuaLiuqinCell) {
+                const dizhiWuxingText = changeGuaDizhiWuxingCell.textContent.trim();
+                
+                // 跳過空白或無效的格子
+                if (!dizhiWuxingText || dizhiWuxingText === '--' || dizhiWuxingText === '') {
+                    return;
+                }
+                
+                // 提取五行
+                const yaoWuxing = extractWuxingFromText(dizhiWuxingText);
+                
+                if (yaoWuxing && yaoWuxing !== '--') {
+                    // 重新計算六親（基於本卦宮位）
+                    const correctLiuqin = AdvancedCalculator.calculateLiuqin(mainPalaceWuxing, yaoWuxing);
+                    
+                    const originalLiuqin = changeGuaLiuqinCell.textContent.trim();
+                    
+                    console.log(`第 ${rowIndex} 爻變卦: ${dizhiWuxingText}(${yaoWuxing}) vs 本卦宮${mainPalaceWuxing} = ${correctLiuqin} (原為 ${originalLiuqin})`);
+                    
+                    // 更新六親顯示
+                    changeGuaLiuqinCell.textContent = correctLiuqin;
+                    
+                    // 如果有變更，標記顏色
+                    if (originalLiuqin !== correctLiuqin) {
+                        changeGuaLiuqinCell.style.backgroundColor = '#ffe6e6'; // 淺紅色背景表示已修正
+                        changeGuaLiuqinCell.title = `已修正：${originalLiuqin} → ${correctLiuqin} (基於本卦${mainGuaName}宮)`;
+                    }
+                    
+                    correctedCount++;
+                }
+            }
+        });
+        
+        console.log(`=== 變卦六親修正完成，共處理 ${correctedCount} 個爻 ===`);
+        
+    } catch (error) {
+        console.error('修正變卦六親時發生錯誤:', error);
+    }
+}
 
+/**
+ * 輔助函數：從文字中提取五行
+ */
+function extractWuxingFromText(text) {
+    if (!text || text === '--') return null;
+    
+    // 直接找五行字符
+    const wuxingChars = ['金', '木', '水', '火', '土'];
+    for (const wuxing of wuxingChars) {
+        if (text.includes(wuxing)) {
+            return wuxing;
+        }
+    }
+    
+    // 如果沒有直接的五行字符，從地支推斷
+    const dizhiWuxing = {
+        '子': '水', '丑': '土', '寅': '木', '卯': '木',
+        '辰': '土', '巳': '火', '午': '火', '未': '土',
+        '申': '金', '酉': '金', '戌': '土', '亥': '水'
+    };
+    
+    for (const [dizhi, wuxing] of Object.entries(dizhiWuxing)) {
+        if (text.includes(dizhi)) {
+            return wuxing;
+        }
+    }
+    
+    return null;
+}
 // ==================== 初始化 ====================
 
 // 主程式初始化
