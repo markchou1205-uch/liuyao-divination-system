@@ -153,27 +153,34 @@ async callAIAPI(guaData, questionType) {
     try {
         const prompt = this.generatePrompt(guaData, questionType);
         
-        // 改為調用自己的後端 API
+        console.log('呼叫 API:', '/api/ai-divination');
+        console.log('Prompt:', prompt);
+        
         const response = await fetch('/api/ai-divination', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                prompt: prompt // 將 prompt 傳給後端
+                prompt: prompt
             })
         });
 
+        console.log('API 回應狀態:', response.status);
+        console.log('API 回應 headers:', response.headers);
+
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'AI 服務暫時無法使用');
+            const errorText = await response.text();
+            console.log('錯誤回應內容:', errorText);
+            throw new Error(`API 錯誤: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
+        console.log('API 成功回應:', data);
         return data.interpretation;
 
     } catch (error) {
-        console.error('AI API 調用錯誤:', error);
+        console.error('完整錯誤資訊:', error);
         throw error;
     }
 }
