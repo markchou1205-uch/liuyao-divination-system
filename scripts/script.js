@@ -3323,6 +3323,9 @@ function extractAIGuaData(questionType, customQuestion) {
 /**
  * 從表格獲取卦名
  */
+/**
+ * 從表格獲取卦名 - 根據實際結構修正
+ */
 function getGuaNamesFromTable() {
     const table = document.querySelector('table.main-table');
     if (!table) return { ben: '未知', bian: '' };
@@ -3336,7 +3339,7 @@ function getGuaNamesFromTable() {
     
     console.log('檢查第一行卦名格子數量:', cells.length);
     
-    // 遍歷所有格子，找到本卦和變卦
+    // 根據實際的 colspan 值來匹配
     for (let i = 0; i < cells.length; i++) {
         const cell = cells[i];
         const colspan = cell.getAttribute('colspan');
@@ -3344,23 +3347,26 @@ function getGuaNamesFromTable() {
         
         console.log(`格子 ${i}: colspan=${colspan}, 內容="${text}"`);
         
-        if (colspan === '6' && text && text !== 'GN' && text !== '本卦') {
+        // 修正：本卦是 colspan=5
+        if (colspan === '5' && text && text !== 'GN' && text !== '本卦') {
             benGuaName = text;
             console.log('找到本卦名:', benGuaName);
-        } else if (colspan === '4' && text && text !== 'BGN' && text !== '變卦' && text !== '') {
+        } 
+        // 修正：變卦是 colspan=3
+        else if (colspan === '3' && text && text !== 'BGN' && text !== '變卦' && text !== '') {
             bianGuaName = text;
             console.log('找到變卦名:', bianGuaName);
         }
     }
     
-    // 如果沒找到變卦，可能是沒有動爻
+    // 如果沒找到變卦，檢查是否確實無動爻
     if (!bianGuaName) {
         const dongYaoList = getDongYaoList();
         if (dongYaoList.length === 0) {
             bianGuaName = ''; // 確實無變卦
+            console.log('無動爻，無變卦');
         } else {
-            console.log('有動爻但沒找到變卦名，可能是表格結構問題');
-            // 嘗試從其他方式獲取
+            console.log('有動爻但沒找到變卦名，使用備用方法');
             bianGuaName = getBianGuaNameAlternative();
         }
     }
