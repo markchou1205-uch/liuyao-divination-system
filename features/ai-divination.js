@@ -151,10 +151,12 @@ ${customQuestion ? `具體問題：${customQuestion}` : ''}
 // 修改這個函數，從直接調用 Google AI 改為調用自己的後端
 async callAIAPI(guaData, questionType) {
     try {
-        const prompt = this.generatePrompt(guaData, questionType);
-        
-        console.log('呼叫 API:', '/api/ai-divination');
-        console.log('Prompt:', prompt);
+        const aiGuaData = extractAIGuaData(questionType, guaData.customQuestion);
+        if (!aiGuaData) {
+            throw new Error('無法提取解卦數據');
+        }
+        const prompt = generateAIPrompt(aiGuaData);
+        console.log('生成的 AI Prompt:', prompt);
         
         const response = await fetch('/api/ai-divination.js', {
             method: 'POST',
