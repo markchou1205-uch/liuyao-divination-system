@@ -156,7 +156,7 @@ async callAIAPI(guaData, questionType) {
         console.log('呼叫 API:', '/api/ai-divination');
         console.log('Prompt:', prompt);
         
-        const response = await fetch('/api/ai-divination', {
+        const response = await fetch('/api/ai-divination.js', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
