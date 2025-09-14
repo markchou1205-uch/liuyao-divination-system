@@ -3107,20 +3107,57 @@ function handleLearningModeErrors(error) {
  * 修正變卦六親（後處理函數）
  * 在表格建構完成後執行，重新計算變卦六親
  */
+/**
+ * 修正變卦六親（後處理函數）- 通用版本
+ * 適用於問卦界面和卦師界面
+ */
 function correctChangeGuaLiuqin() {
     console.log('=== 開始修正變卦六親 ===');
     
     try {
-        // 1. 取得本卦的宮位五行
-        const mainGuaName = getMainGuaName();
-        if (!mainGuaName) {
-            console.error('無法取得本卦名稱');
-            return;
+        // 1. 取得本卦的宮位五行 - 改用多種方法
+        let mainGuaBinary = null;
+        let mainGuaName = null;
+        
+        // 方法1：嘗試從函數獲取（問卦界面）
+        if (typeof getMainGuaName === 'function') {
+            mainGuaName = getMainGuaName();
+            if (mainGuaName) {
+                mainGuaBinary = findGuaCodeByName(mainGuaName);
+            }
         }
         
-        const mainGuaBinary = findGuaCodeByName(mainGuaName);
+        // 方法2：從表格第一列獲取卦名（通用方法）
         if (!mainGuaBinary) {
-            console.error('無法找到本卦二進制:', mainGuaName);
+            const table = document.querySelector('table.main-table');
+            if (table) {
+                const firstRow = table.querySelector('tr');
+                if (firstRow) {
+                    const cells = firstRow.querySelectorAll('td');
+                    // 找第一個colspan=6的格子（本卦名稱）
+                    for (let cell of cells) {
+                        if (cell.getAttribute('colspan') === '6') {
+                            mainGuaName = cell.textContent.trim();
+                            if (mainGuaName && mainGuaName !== 'GN') {
+                                mainGuaBinary = findGuaCodeByName(mainGuaName);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 方法3：從全域變數推算（備用方法）
+        if (!mainGuaBinary && window.dice1 !== undefined) {
+            const liuyaoResults = [window.dice1, window.dice2, window.dice3, window.dice4, window.dice5, window.dice6];
+            const guaNames = AdvancedCalculator.calculateGuaNames(liuyaoResults);
+            mainGuaBinary = guaNames.originalBinary;
+            mainGuaName = guaNames.gn;
+        }
+        
+        if (!mainGuaBinary) {
+            console.log('無法取得本卦資訊，跳過修正');
             return;
         }
         
@@ -3131,7 +3168,7 @@ function correctChangeGuaLiuqin() {
         }
         
         const mainPalaceWuxing = mainGuaData.wuxing;
-        console.log(`本卦: ${mainGuaName}, 宮位五行: ${mainPalaceWuxing}`);
+        console.log(`本卦: ${mainGuaName || '未知'}, 宮位五行: ${mainPalaceWuxing}`);
         
         // 2. 找到 main-table 並處理變卦欄位
         const mainTable = document.querySelector('table.main-table');
@@ -3182,7 +3219,7 @@ function correctChangeGuaLiuqin() {
                     // 如果有變更，標記顏色
                     if (originalLiuqin !== correctLiuqin) {
                         changeGuaLiuqinCell.style.backgroundColor = '#ffe6e6'; // 淺紅色背景表示已修正
-                        changeGuaLiuqinCell.title = `已修正：${originalLiuqin} → ${correctLiuqin} (基於本卦${mainGuaName}宮)`;
+                        changeGuaLiuqinCell.title = `已修正：${originalLiuqin} → ${correctLiuqin} (基於本卦${mainGuaName || '未知'}宮)`;
                     }
                     
                     correctedCount++;
@@ -3196,7 +3233,21 @@ function correctChangeGuaLiuqin() {
         console.error('修正變卦六親時發生錯誤:', error);
     }
 }
-
+/**
+ * 根據卦名找到二進制代碼
+ */
+function findGuaCodeByName(guaName) {
+    if (!guaName) return null;
+    
+    // 遍歷 GUA_64_COMPLETE 常數
+    for (const [binaryCode, guaInfo] of Object.entries(AdvancedCalculator.GUA_64_COMPLETE)) {
+        if (guaInfo.name === guaName) {
+            return binaryCode;
+        }
+    }
+    
+    return null;
+}
 /**
  * 輔助函數：從文字中提取五行
  */
