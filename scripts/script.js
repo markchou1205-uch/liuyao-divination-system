@@ -74,14 +74,10 @@ const DIZHI_CHONGHE = {
 
 // 計算指定日期的干支
 function calculateGanZhiForDate(date) {
-    console.log('計算日期:', date);
-    
     // 檢查 GanZhiCalculator 是否可用
     if (typeof GanZhiCalculator !== 'undefined') {
-        console.log('使用 GanZhiCalculator 計算');
         return GanZhiCalculator.calculateGanZhi(date);
     } else {
-        console.log('GanZhiCalculator 不可用，使用簡化計算');
         // 簡化的干支計算（降級處理）
         return {
             year: '乙巳',
@@ -101,12 +97,10 @@ function getCurrentGanZhi() {
 
 // 更新時間顯示
 function updateTimeDisplay() {
-    console.log('updateTimeDisplay 被調用');
-    
+  
     try {
         // 獲取干支信息
         const ganZhi = getCurrentGanZhi();
-        console.log('獲得干支結果:', ganZhi);
         
         // 獲取顯示元素
         const elements = {
@@ -116,8 +110,6 @@ function updateTimeDisplay() {
             t4: document.getElementById('t4'),
             k: document.getElementById('k')
         };
-        
-        console.log('元素檢查:', elements);
         
         // 更新干支顯示
         if (elements.t1) elements.t1.textContent = ganZhi.year || '乙巳';
@@ -133,15 +125,11 @@ function updateTimeDisplay() {
             if (typeof GuaCalculator !== 'undefined' && ganZhi.day) {
                 try {
                     xunKong = GuaCalculator.getXunKongDisplay(ganZhi.day);
-                    console.log('使用計算好的旬空:', xunKong);
                 } catch (error) {
-                    console.log('旬空計算失敗:', error);
                     xunKong = '申、酉'; // 降級處理
-                    console.log('降級計算旬空:', xunKong);
                 }
             } else {
                 xunKong = '申、酉'; // 預設值
-                console.log('使用預設旬空:', xunKong);
             }
             
             elements.k.textContent = xunKong;
@@ -150,9 +138,7 @@ function updateTimeDisplay() {
         // 更新五行神煞顯示（暫時使用預設值，等待後續說明）
         updateWuxingDisplay();
         
-        console.log('更新完成');
     } catch (error) {
-        console.error('updateTimeDisplay 錯誤:', error);
     }
 }
 
@@ -161,15 +147,13 @@ function updateWuxingDisplay() {
     try {
         // 獲取當前干支數據
         const ganZhi = getCurrentGanZhi();
-        console.log('更新五行神煞，干支數據:', ganZhi);
         
         // 檢查 AdvancedCalculator 是否可用
         if (typeof AdvancedCalculator !== 'undefined') {
             // 計算五行旺衰
             const monthZhi = ganZhi.month.charAt(1);
             const wuxingState = AdvancedCalculator.calculateWuxingState(monthZhi);
-            console.log('五行旺衰狀態:', wuxingState);
-            
+           
             // 更新五行旺衰表
             const wuxingElements = {
                 w1: document.getElementById('w1'), // 木
@@ -187,8 +171,7 @@ function updateWuxingDisplay() {
             
             // 計算神煞
             const shensha = AdvancedCalculator.calculateShensha(ganZhi);
-            console.log('神煞數據:', shensha);
-            
+           
             // 更新神煞表
             const shenshaElements = {
                 o1: document.getElementById('o1'), // 驛馬
@@ -202,9 +185,7 @@ function updateWuxingDisplay() {
             if (shenshaElements.o3) shenshaElements.o3.textContent = shensha.taohua || '--';
             if (shenshaElements.o4) shenshaElements.o4.textContent = shensha.lucun || '--';
             
-            console.log('五行神煞更新完成');
         } else {
-            console.log('AdvancedCalculator 不可用，使用預設值');
             // 使用預設值
             const wuxingElements = {
                 w1: document.getElementById('w1'),
@@ -223,7 +204,6 @@ function updateWuxingDisplay() {
             });
         }
     } catch (error) {
-        console.error('更新五行神煞時發生錯誤:', error);
         // 錯誤處理：設置為預設值
         const allElements = ['w1', 'w2', 'w3', 'w4', 'w5', 'o1', 'o2', 'o3', 'o4'];
         allElements.forEach(id => {
@@ -235,17 +215,13 @@ function updateWuxingDisplay() {
 
 // 用神選擇處理函數
 function handleYongshenSelection() {
-    console.log('開始處理取用神');
-    
     const yongshenSelect = document.getElementById('yongshen-method');
     if (!yongshenSelect || !yongshenSelect.value) {
-        console.log('未選擇用神');
         return;
     }
     
     const selectedYongshen = yongshenSelect.value;
-    console.log('選擇的用神:', selectedYongshen);
-    
+   
     // 清除之前的用神標記
     clearYongshenMarks();
     
@@ -259,8 +235,7 @@ function handleYongshenSelection() {
 
 // 處理世應用神
 function handleShiYingYongshen(type) {
-    console.log('處理世應用神:', type);
-    
+  
     // 獲取世應位置數據
     let shiYingData = null;
     
@@ -290,8 +265,7 @@ function handleShiYingYongshen(type) {
     }
     
     const targetPosition = type === 'shi' ? shiYingData.shi : shiYingData.ying;
-    console.log('目標爻位:', targetPosition);
-    
+   
     if (targetPosition) {
         markYongshen(targetPosition);
         calculateYuanJishen(targetPosition);
@@ -300,8 +274,6 @@ function handleShiYingYongshen(type) {
 
 // 修正：處理六親用神
 function handleLiuqinYongshen(liuqinType) {
-    console.log('處理六親用神:', liuqinType);
-    
     const liuqinMap = {
         'xiongdi': '兄弟',
         'zisun': '子孫',
@@ -311,36 +283,27 @@ function handleLiuqinYongshen(liuqinType) {
     };
     
     const targetLiuqin = liuqinMap[liuqinType];
-    console.log('目標六親:', targetLiuqin);
     const matchedYao = [];
     
     // 搜索六親欄位E1-E6
     const table = document.querySelector('.main-table');
     if (!table) {
-        console.log('找不到主表格');
         return;
     }
     
     const rows = table.querySelectorAll('tr');
-    console.log('表格總行數:', rows.length);
     
     // 修正：更寬鬆的篩選條件，直接找有足夠單元格的行
     const dataRows = Array.from(rows).filter(row => {
         const cells = row.querySelectorAll('td');
         return cells.length >= 5; // 至少要有5個單元格（包含六親欄位）
     });
-    
-    console.log('找到數據行數:', dataRows.length);
-    console.log('數據行內容檢查:');
     dataRows.forEach((row, index) => {
         const cells = row.querySelectorAll('td');
         if (cells.length >= 5) {
-            console.log(`行${index}: 第1列="${cells[0].textContent.trim()}", 第5列="${cells[4].textContent.trim()}"`);
         }
     });
     
-    // 從表格結構來看，我們需要跳過前面的標題行，直接處理數據行
-    // 根據日誌，實際的數據行應該從某個位置開始
     let actualDataRows = [];
     dataRows.forEach((row, index) => {
         const cells = row.querySelectorAll('td');
@@ -355,7 +318,6 @@ function handleLiuqinYongshen(liuqinType) {
         }
     });
     
-    console.log('實際數據行數:', actualDataRows.length);
     
     actualDataRows.forEach((item, idx) => {
         const { row } = item;
@@ -365,16 +327,12 @@ function handleLiuqinYongshen(liuqinType) {
         
         if (liuqinCell) {
             const cellText = liuqinCell.textContent.trim();
-            console.log(`第${yaoPosition}爻六親內容: "${cellText}"`);
-            
+          
             if (cellText === targetLiuqin) {
                 matchedYao.push(yaoPosition);
-                console.log(`找到匹配的爻位: 第${yaoPosition}爻`);
             }
         }
     });
-    
-    console.log('所有匹配的爻位:', matchedYao);
     
     if (matchedYao.length === 1) {
         // 只有一個用神
@@ -385,15 +343,12 @@ function handleLiuqinYongshen(liuqinType) {
         showYongshenSelectionModal(matchedYao, targetLiuqin);
     } else {
         // 用神不現，檢查伏神
-        console.log('未找到匹配的六親，進入伏神檢查');
         handleHiddenYongshen(targetLiuqin);
     }
 }
 
 // 顯示用神選擇modal
 function showYongshenSelectionModal(matchedYao, liuqinName) {
-    console.log('顯示用神選擇modal');
-    
     // 創建modal
     const modalOverlay = document.createElement('div');
     modalOverlay.id = 'yongshen-selection-modal';
@@ -477,28 +432,16 @@ function closeYongshenModal() {
 
 // 處理伏神用神
 function handleHiddenYongshen(targetLiuqin) {
-    console.log('處理伏神用神:', targetLiuqin);
-    
-    // 獲取伏神數據
-    // 這裡需要根據不同的起卦方式獲取伏神數據
-    // 簡化處理，假設能獲取到伏神數據
-    
+
     // 檢查日月地支
     const ganZhi = getCurrentGanZhi();
     const dayZhi = ganZhi.day.charAt(1);
     const monthZhi = ganZhi.month.charAt(1);
-    
-    console.log('日支:', dayZhi, '月支:', monthZhi);
-    
-    // 這裡需要更複雜的邏輯來檢查伏神和日月關係
-    // 暫時顯示基本提示
     alert('用神伏藏不現');
 }
 
 // 標記用神
 function markYongshen(yaoPosition) {
-    console.log('標記用神，爻位:', yaoPosition);
-    
     const table = document.querySelector('.main-table');
     if (!table) return;
     
@@ -519,8 +462,6 @@ function markYongshen(yaoPosition) {
         }
     });
     
-    console.log('找到實際數據行數:', actualDataRows.length);
-    
     actualDataRows.forEach((row, index) => {
         const tableYaoPosition = 6 - index; // 從上到下對應第6爻到第1爻
         
@@ -537,7 +478,6 @@ function markYongshen(yaoPosition) {
                         <span style="position: absolute; top: -5px; right: -5px; color: #28a745; font-weight: bold; font-size: 14px;">用</span>
                     </div>
                 `;
-                console.log(`第${yaoPosition}爻標記為用神，原文字: ${originalText}`);
             }
         }
     });
@@ -546,16 +486,12 @@ function markYongshen(yaoPosition) {
 // 計算元神忌神
 // 修正：計算元神忌神 - 修正六親關係表
 function calculateYuanJishen(yongshenPosition) {
-    console.log('計算元神忌神，用神爻位:', yongshenPosition);
-    
+   
     // 獲取用神的六親
     const yongshenLiuqin = getYaoLiuqin(yongshenPosition);
     if (!yongshenLiuqin) {
-        console.log('無法獲取用神六親');
         return;
     }
-    
-    console.log('用神六親:', yongshenLiuqin);
     
     // 修正：正確的六親關係定義元神和忌神
     const liuqinRelations = {
@@ -568,11 +504,8 @@ function calculateYuanJishen(yongshenPosition) {
     
     const relation = liuqinRelations[yongshenLiuqin];
     if (!relation) {
-        console.log('未知的六親關係:', yongshenLiuqin);
         return;
     }
-    
-    console.log(`用神${yongshenLiuqin}的元神: ${relation.yuan}, 忌神: ${relation.ji}`);
     
     // 檢查其他爻的六親關係
     for (let yao = 1; yao <= 6; yao++) {
@@ -581,24 +514,19 @@ function calculateYuanJishen(yongshenPosition) {
         const yaoLiuqin = getYaoLiuqin(yao);
         if (!yaoLiuqin) continue;
         
-        console.log(`第${yao}爻六親:`, yaoLiuqin);
-        
         // 檢查是否為元神
         if (yaoLiuqin === relation.yuan) {
             markYuanJishen(yao, '元', '#dc3545'); // 紅色
-            console.log(`第${yao}爻為元神`);
         }
         // 檢查是否為忌神
         else if (yaoLiuqin === relation.ji) {
             markYuanJishen(yao, '忌', '#000000'); // 黑色
-            console.log(`第${yao}爻為忌神`);
         }
     }
 }
 // 修正：獲取爻的六親 - 使用表格行位置而非內容篩選
 // 修正：獲取爻的六親 - 修正備用方法
 function getYaoLiuqin(yaoPosition) {
-    console.log('獲取第' + yaoPosition + '爻的六親');
     
     const table = document.querySelector('.main-table');
     if (!table) return null;
@@ -607,9 +535,6 @@ function getYaoLiuqin(yaoPosition) {
     
     // 根據固定的表格結構定位：標題行(0) + 卦名行(1) + 數據行(2-7)
     const dataRowIndex = 2 + (6 - yaoPosition); // 第1爻在第8行，第6爻在第3行
-    
-    console.log(`第${yaoPosition}爻預期對應表格第${dataRowIndex}行`);
-    
     if (dataRowIndex < rows.length) {
         const targetRow = rows[dataRowIndex];
         const cells = targetRow.querySelectorAll('td');
@@ -619,25 +544,11 @@ function getYaoLiuqin(yaoPosition) {
             const fifthCellText = fifthCell.textContent || fifthCell.innerText || '';
             const cleanText = fifthCellText.trim().replace(/[用元忌]/g, '').replace(/\s+/g, ''); // 移除標記和多餘空白
             
-            console.log(`第${yaoPosition}爻，行${dataRowIndex}，原始文字: "${fifthCellText.trim()}"，清理後: "${cleanText}"`);
-            
             if (['兄弟', '父母', '子孫', '妻財', '官鬼'].includes(cleanText)) {
-                console.log(`第${yaoPosition}爻六親: "${cleanText}"`);
                 return cleanText;
             }
         }
     }
-    
-    // 如果直接定位失敗，使用備用方法：根據實際填入的數據
-    console.log('直接定位失敗，使用備用方法');
-    
-    // 從最新的日誌可以看到實際的順序：
-    // 第6爻: 妻財 
-    // 第5爻: 官鬼 
-    // 第4爻: 子孫 
-    // 第3爻: 兄弟
-    // 第2爻: 子孫
-    // 第1爻: 妻財
     
     const expectedLiuqin = {
         6: '妻財',
@@ -649,15 +560,11 @@ function getYaoLiuqin(yaoPosition) {
     };
     
     const result = expectedLiuqin[yaoPosition];
-    console.log(`第${yaoPosition}爻備用方法六親: "${result}"`);
     return result || null;
 }
 
 // 標記元神忌神
-// 修正 markYuanJishen 函數（約1217行）
 function markYuanJishen(yaoPosition, mark, color) {
-    console.log('標記元神忌神，爻位:', yaoPosition, '標記:', mark);
-    
     const table = document.querySelector('.main-table');
     if (!table) return;
     
@@ -711,7 +618,6 @@ function markYuanJishen(yaoPosition, mark, color) {
                         </div>
                     `;
                 }
-                console.log(`第${yaoPosition}爻標記為${mark}神，原始六親: ${originalText}`);
             }
         }
     });
@@ -743,34 +649,24 @@ function clearYongshenMarks() {
 }
 
 // 更新大卦表中的卦名（GN和BGN）
-// 修正：更新大卦表中的卦名（GN和BGN）
 function updateGuaNames(guaNames) {
-    console.log('=== updateGuaNames 開始 ===');
-    console.log('輸入的卦名數據:', guaNames);
-    
     if (!guaNames) {
-        console.log('無卦名數據');
         return;
     }
     
     // 查找大卦表
     const table = document.querySelector('.main-table');
     if (!table) {
-        console.error('找不到主表格');
         return;
     }
     
     const rows = table.querySelectorAll('tr');
-    console.log('找到表格行數:', rows.length);
     
     // 修正：現在卦名行是第1行（索引0）
     if (rows.length >= 1) {
         const gnBgnRow = rows[0]; // 第一行（索引0）
         const cells = gnBgnRow.querySelectorAll('td');
-        
-        console.log('GN/BGN行單元格數量:', cells.length);
-        console.log('各單元格colspan:', Array.from(cells).map(cell => cell.getAttribute('colspan')));
-        
+       
         if (cells.length >= 2) {
             // 找到所有有colspan屬性的單元格
             let gnUpdated = false;
