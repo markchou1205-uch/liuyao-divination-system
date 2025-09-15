@@ -223,3 +223,180 @@
     .main-table tr td:nth-child(3) { width: 15% !important; } /* 縮小卦象欄 */
     .main-table tr td:nth-child(9) { width: 15% !important; } /* 縮小卦象欄 */
 }
+/* 引導流程精靈樣式 */
+.tutorial-content h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.tutorial-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #34495e;
+    margin-bottom: 20px;
+}
+
+.tutorial-image-placeholder {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.image-placeholder {
+    border: 2px dashed #bdc3c7;
+    padding: 40px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.image-placeholder span {
+    display: block;
+    font-size: 18px;
+    color: #7f8c8d;
+    margin-bottom: 10px;
+}
+
+.image-placeholder small {
+    color: #95a5a6;
+    font-size: 14px;
+}
+
+.preparation-note {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+.examples {
+    margin-top: 15px;
+}
+
+.examples h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.wrong-example {
+    color: #e74c3c;
+    margin: 5px 0;
+}
+
+.correct-example {
+    color: #27ae60;
+    margin: 5px 0;
+}
+
+.method-selection {
+    margin: 20px 0;
+}
+
+.method-option {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.method-radio {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.method-radio input[type="radio"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+.radio-label {
+    font-size: 16px;
+}
+
+.method-description {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #5a6c7d;
+}
+
+.liuyao-steps {
+    margin-top: 10px;
+}
+
+.step-navigation {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.step-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.step-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #bdc3c7;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.step-dot.active {
+    background: #3498db;
+}
+
+.step-dot:hover {
+    background: #7fb3d3;
+}
+
+.step-content {
+    min-height: 60px;
+}
+
+.step-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #5a6c7d;
+}
+
+.tutorial-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #ecf0f1;
+}
+
+.step-indicator {
+    font-size: 14px;
+    color: #7f8c8d;
+    font-weight: bold;
+}
+
+.final-step-buttons {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.final-step-buttons .btn {
+    margin: 0 10px;
+}
+
+/* 高亮效果 */
+.tutorial-highlight {
+    animation: pulse-highlight 2s infinite;
+}
+
+@keyframes pulse-highlight {
+    0% { box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.8); }
+    50% { box-shadow: 0 0 0 8px rgba(74, 144, 226, 0.4); }
+    100% { box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.8); }
+}
