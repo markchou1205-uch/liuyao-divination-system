@@ -9,7 +9,17 @@ class DivinationTutorial {
         this.overlay = null;
         this.modal = null;
     }
+resetTutorialSettings() {
+    localStorage.removeItem('divination_tutorial_status');
+    localStorage.removeItem('divination_tutorial_seen');
+    console.log('引導精靈設定已重設');
+    alert('引導精靈設定已重設，重新載入頁面後將會顯示引導');
+}
 
+// 強制顯示引導（無論設定如何）
+forceShowTutorial() {
+    this.startTutorial();
+}
     // 檢查是否需要顯示引導
 checkIfNeedTutorial() {
     const tutorialStatus = localStorage.getItem('divination_tutorial_status');
