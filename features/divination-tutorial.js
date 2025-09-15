@@ -413,13 +413,14 @@ showTutorialAgain() {
     this.startTutorial();
 }
 
-});
-// 創建全域實例
+}
+// 創建全域實例（移到類定義外部）
 const divinationTutorial = new DivinationTutorial();
 
-// 頁面載入完成後檢查是否需要顯示引導
+// 頁面載入完成後檢查是否需要顯示引導（移到類定義外部）
 document.addEventListener('DOMContentLoaded', function() {
     // 延遲一點時間確保其他腳本都載入完成
     setTimeout(() => {
         divinationTutorial.checkIfNeedTutorial();
     }, 1000);
+});
