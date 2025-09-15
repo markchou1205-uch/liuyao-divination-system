@@ -400,3 +400,139 @@
     50% { box-shadow: 0 0 0 8px rgba(74, 144, 226, 0.4); }
     100% { box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.8); }
 }
+/* 引導流程精靈樣式 - 放大字體版本 */
+.tutorial-content h2 {
+    color: #2c3e50;
+    margin-bottom: 25px;
+    text-align: center;
+    font-size: 28px; /* 原本沒設置，現在設為28px */
+}
+
+.tutorial-text {
+    font-size: 20px; /* 從16px增加到20px */
+    line-height: 1.7;
+    color: #34495e;
+    margin-bottom: 25px;
+}
+
+.tutorial-text p {
+    font-size: 20px; /* 確保段落也是20px */
+    margin-bottom: 15px;
+}
+
+.image-placeholder span {
+    display: block;
+    font-size: 22px; /* 從18px增加到22px */
+    color: #7f8c8d;
+    margin-bottom: 10px;
+}
+
+.image-placeholder small {
+    color: #95a5a6;
+    font-size: 16px; /* 從14px增加到16px */
+}
+
+.preparation-note {
+    background: #f8f9fa;
+    padding: 20px; /* 從15px增加到20px */
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+    font-size: 18px; /* 新增字體大小 */
+}
+
+.preparation-note p {
+    font-size: 18px; /* 確保段落字體 */
+    margin-bottom: 12px;
+}
+
+.examples h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 20px; /* 新增字體大小 */
+}
+
+.wrong-example, .correct-example {
+    margin: 8px 0;
+    font-size: 18px; /* 從預設增加到18px */
+}
+
+.wrong-example {
+    color: #e74c3c;
+}
+
+.correct-example {
+    color: #27ae60;
+}
+
+.method-option {
+    margin-bottom: 25px; /* 從20px增加到25px */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px; /* 從15px增加到20px */
+}
+
+.radio-label {
+    font-size: 20px; /* 從16px增加到20px */
+}
+
+.method-description {
+    margin-top: 15px; /* 從10px增加到15px */
+    padding: 15px; /* 從10px增加到15px */
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 18px; /* 從14px增加到18px */
+    color: #5a6c7d;
+}
+
+.step-text {
+    font-size: 18px; /* 從14px增加到18px */
+    line-height: 1.6;
+    color: #5a6c7d;
+}
+
+.step-indicator {
+    font-size: 18px; /* 從14px增加到18px */
+    color: #7f8c8d;
+    font-weight: bold;
+}
+
+/* 按鈕樣式調整 */
+.tutorial-navigation .btn,
+.final-step-buttons .btn {
+    font-size: 18px; /* 增加按鈕字體 */
+    padding: 12px 24px; /* 增加按鈕內距 */
+    margin: 0 8px;
+}
+
+.btn-tertiary {
+    background: #95a5a6;
+    color: white;
+    border: 1px solid #95a5a6;
+}
+
+.btn-tertiary:hover {
+    background: #7f8c8d;
+    border-color: #7f8c8d;
+}
+
+/* 歡迎頁面導航特殊樣式 */
+.welcome-navigation {
+    justify-content: space-between;
+}
+
+.final-step-buttons {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.final-step-buttons .btn {
+    display: inline-block;
+    margin: 8px 10px;
+    min-width: 180px; /* 確保按鈕有足夠寬度 */
+}
+
+/* Modal整體樣式調整 */
+#tutorial-modal {
+    max-width: 700px; /* 從600px增加到700px，適應更大字體 */
+    padding: 40px; /* 從30px增加到40px */
+}
