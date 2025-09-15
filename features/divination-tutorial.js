@@ -11,12 +11,13 @@ class DivinationTutorial {
     }
 
     // 檢查是否需要顯示引導
-    checkIfNeedTutorial() {
-        const hasSeenTutorial = localStorage.getItem('divination_tutorial_seen');
-        if (!hasSeenTutorial) {
-            this.startTutorial();
-        }
+checkIfNeedTutorial() {
+    const tutorialStatus = localStorage.getItem('divination_tutorial_status');
+    // 只有明確設置為 'never_show' 才不顯示
+    if (tutorialStatus !== 'never_show') {
+        this.startTutorial();
     }
+}
 
     // 開始引導流程
     startTutorial() {
@@ -91,19 +92,27 @@ class DivinationTutorial {
     }
 
     // 第一步：歡迎界面
-    showWelcomeStep() {
-        this.modal.innerHTML = `
-            <div class="tutorial-content">
-                <h2>歡迎使用命理教觀室</h2>
-                <div class="tutorial-text">
-                    <p>歡迎您使用命理教觀室-免費排卦解卦系統。</p>
-                    <p>以下將一步一步告訴您如何正確的起卦及取得解卦結果。</p>
-                </div>
-                ${this.createNavigationButtons()}
+showWelcomeStep() {
+    this.modal.innerHTML = `
+        <div class="tutorial-content">
+            <h2>歡迎使用命理教觀室</h2>
+            <div class="tutorial-text">
+                <p>歡迎您使用命理教觀室-免費排卦解卦系統。</p>
+                <p>以下將一步一步告訴您如何正確的起卦及取得解卦結果。</p>
             </div>
-        `;
-        this.removeHighlight();
-    }
+            <div class="tutorial-navigation welcome-navigation">
+                <button class="btn btn-secondary" onclick="divinationTutorial.closeTemporarily()">
+                    關閉
+                </button>
+                <span class="step-indicator">${this.currentStep} / ${this.totalSteps}</span>
+                <button class="btn btn-primary" onclick="divinationTutorial.nextStep()">
+                    下一步
+                </button>
+            </div>
+        </div>
+    `;
+    this.removeHighlight();
+}
 
     // 第二步：占卦準備1
     showPreparation1Step() {
@@ -225,28 +234,35 @@ class DivinationTutorial {
         this.setupMethodSelectionListeners();
     }
 
-    // 第六步：開始起卦
-    showStartDivinationStep() {
-        this.modal.innerHTML = `
-            <div class="tutorial-content">
-                <h2>開始起卦</h2>
-                <div class="tutorial-text">
-                    <p>現在請點擊「開始起卦」按鈕開始您的占卦過程。</p>
-                    <p>系統將根據您選擇的起卦方式引導您完成起卦。</p>
-                </div>
-                <div class="final-step-buttons">
-                    <button class="btn btn-primary" onclick="divinationTutorial.completeTutorial()">
-                        我知道了，開始起卦
-                    </button>
-                    <button class="btn btn-secondary" onclick="divinationTutorial.skipTutorial()">
-                        跳過引導
-                    </button>
-                </div>
+showStartDivinationStep() {
+    this.modal.innerHTML = `
+        <div class="tutorial-content">
+            <h2>開始起卦</h2>
+            <div class="tutorial-text">
+                <p>現在請點擊「開始起卦」按鈕開始您的占卦過程。</p>
+                <p>系統將根據您選擇的起卦方式引導您完成起卦。</p>
             </div>
-        `;
-        
-        this.highlightElement('button[onclick="startDivination()"]');
-    }
+            <div class="final-step-buttons">
+                <button class="btn btn-primary" onclick="divinationTutorial.completeTutorial()">
+                    我知道了，開始起卦
+                </button>
+                <button class="btn btn-secondary" onclick="divinationTutorial.skipTutorial()">
+                    跳過引導
+                </button>
+                <button class="btn btn-tertiary" onclick="divinationTutorial.neverShowAgain()">
+                    下次不用再提醒我
+                </button>
+            </div>
+        </div>
+    `;
+    
+    this.highlightElement('button[onclick="startDivination()"]');
+}
+    // 新增：臨時關閉（下次還會顯示）
+closeTemporarily() {
+    // 不設置任何localStorage，保持下次會顯示的狀態
+    this.closeTutorial();
+}
 
     // 設置方法選擇監聽器
     setupMethodSelectionListeners() {
@@ -357,16 +373,20 @@ class DivinationTutorial {
     }
 
     // 完成引導
-    completeTutorial() {
-        localStorage.setItem('divination_tutorial_seen', 'true');
-        this.closeTutorial();
-    }
+completeTutorial() {
+    // 不設置localStorage，保持下次會顯示的狀態
+    this.closeTutorial();
+}
 
     // 跳過引導
-    skipTutorial() {
-        localStorage.setItem('divination_tutorial_seen', 'true');
-        this.closeTutorial();
-    }
+skipTutorial() {
+    // 不設置localStorage，保持下次會顯示的狀態
+    this.closeTutorial();
+}
+neverShowAgain() {
+    localStorage.setItem('divination_tutorial_status', 'never_show');
+    this.closeTutorial();
+}
 
     // 關閉引導
     closeTutorial() {
@@ -378,10 +398,9 @@ class DivinationTutorial {
     }
 
     // 重新顯示引導（用於設置或幫助選單）
-    showTutorialAgain() {
-        localStorage.removeItem('divination_tutorial_seen');
-        this.startTutorial();
-    }
+showTutorialAgain() {
+    localStorage.removeItem('divination_tutorial_status');
+    this.startTutorial();
 }
 
 // 創建全域實例
