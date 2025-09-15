@@ -413,6 +413,7 @@ showTutorialAgain() {
     this.startTutorial();
 }
 
+});
 // 創建全域實例
 const divinationTutorial = new DivinationTutorial();
 
@@ -422,4 +423,3 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         divinationTutorial.checkIfNeedTutorial();
     }, 1000);
-});
