@@ -536,3 +536,32 @@
     max-width: 700px; /* 從600px增加到700px，適應更大字體 */
     padding: 40px; /* 從30px增加到40px */
 }
+/* 教學圖片樣式 */
+.tutorial-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin: 10px 0;
+    display: block;
+}
+
+.tutorial-image-placeholder {
+    text-align: center;
+    margin: 20px 0;
+    min-height: 200px; /* 確保有足夠空間 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 載入失敗時的預留位置樣式保持不變 */
+.image-placeholder {
+    border: 2px dashed #bdc3c7;
+    padding: 40px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+}
