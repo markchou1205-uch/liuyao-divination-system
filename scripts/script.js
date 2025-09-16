@@ -2263,19 +2263,19 @@ setTimeout(() => {
 triggerLearningModeAfterDivination();
 }
 
-// 隨機起卦功能 - 更安全的版本
+// 隨機起卦功能 - 調整機率版本
 function randomDivination() {
     console.log('開始執行隨機起卦');
     
-    // 生成隨機的六爻結果（0-3）
+    // 生成有權重的隨機六爻結果
     const results = [];
     for (let i = 0; i < 6; i++) {
-        results.push(Math.floor(Math.random() * 4));
+        results.push(generateWeightedRandom());
     }
     
     console.log('隨機生成的六爻結果:', results);
     
-    // 存儲到全域變數 - 確保與手動六爻起卦完全一致
+    // 存儲到全域變數 - 與手動六爻起卦完全一致
     window.dice1 = results[0];
     window.dice2 = results[1];
     window.dice3 = results[2];
@@ -2303,6 +2303,27 @@ function randomDivination() {
     const hasMovingYao = results.some(dice => dice === 0 || dice === 3);
     const resultText = `隨機起卦完成：${results.join(', ')}${hasMovingYao ? ' (有動爻)' : ' (無動爻)'}`;
     showResult(resultText);
+}
+
+/**
+ * 產生有權重的隨機數
+ * 0: 12.5% (0.125)
+ * 1: 37.5% (0.375) 
+ * 2: 37.5% (0.375)
+ * 3: 12.5% (0.125)
+ */
+function generateWeightedRandom() {
+    const random = Math.random(); // 0-1 之間的隨機數
+    
+    if (random < 0.125) {
+        return 0; // 老陰，機率 12.5%
+    } else if (random < 0.5) {
+        return 1; // 少陽，機率 37.5% (0.125 + 0.375)
+    } else if (random < 0.875) {
+        return 2; // 少陰，機率 37.5% (0.5 + 0.375)
+    } else {
+        return 3; // 老陽，機率 12.5% (0.875 + 0.125)
+    }
 }
 
 // 更新指定日期的干支
