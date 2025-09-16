@@ -135,12 +135,10 @@ showWelcomeStep() {
                 </div>
                 <div class="tutorial-image-placeholder">
                     <div class="image-placeholder">
-                        <img src="/assets/images/tutorial/table.png" 
+                        <img src="images/tutorial/table.png" 
                      alt="整齊的桌椅環境" 
                      class="tutorial-image"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <span>圖片位置預留</span>
-                        <small>建議圖片：整齊的桌椅環境</small>
                     </div>
                 </div>
                 ${this.createNavigationButtons()}
