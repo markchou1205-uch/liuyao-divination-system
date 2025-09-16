@@ -135,9 +135,7 @@ showWelcomeStep() {
                 </div>
                 <div class="tutorial-image-placeholder">
                     <div class="image-placeholder">
-                        <img src="images/tutorial/table.png" 
-                     alt="整齊的桌椅環境" 
-                     class="tutorial-image"
+                        <img src="images/tutorial/table.png" alt="整齊的桌椅環境" class="tutorial-image"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                     </div>
                 </div>
