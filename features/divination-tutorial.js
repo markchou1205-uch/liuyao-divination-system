@@ -1314,7 +1314,7 @@ class DivinationTutorial {
         alert('引導精靈設定已重設，重新載入頁面後將會顯示引導');
     }
 
-    }
+    
 }
 
 // 創建全域實例
