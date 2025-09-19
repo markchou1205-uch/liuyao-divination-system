@@ -161,11 +161,11 @@ class DivinationTutorial {
                     <p>並選擇有桌椅且安靜不受打擾的場所。</p>
                 </div>
                 <div class="tutorial-image-container">
-                    <img src="/assets/images/tutorial/table.png" 
-                         alt="整齊的桌椅環境" 
-                         class="tutorial-image"
-                         onload="this.style.display='block';"
-                         onerror="this.style.display='none';">
+                    <div class="preparation-items">
+                        <div class="item">🧼 洗手洗臉</div>
+                        <div class="item">👔 穿著整齊</div>
+                        <div class="item">🪑 安靜場所</div>
+                    </div>
                 </div>
                 ${this.createNavigationButtons()}
             </div>
@@ -173,16 +173,23 @@ class DivinationTutorial {
                 .tutorial-image-container {
                     text-align: center;
                     margin: 20px 0;
-                    min-height: 150px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                 }
-                .tutorial-image {
-                    max-width: 100%;
-                    max-height: 200px;
+                .preparation-items {
+                    display: flex;
+                    justify-content: space-around;
+                    margin: 30px 0;
+                    width: 100%;
+                }
+                .item {
+                    text-align: center;
+                    font-size: 18px;
+                    padding: 15px;
+                    background: #f8f9fa;
                     border-radius: 8px;
-                    display: none;
+                    min-width: 120px;
                 }
             </style>
         `;
@@ -195,7 +202,7 @@ class DivinationTutorial {
             <div class="tutorial-content">
                 <h2>占卦準備 (2/3)</h2>
                 <div class="tutorial-text">
-                    <p>請準備紙、筆、以及三枚面額、形式相同的硬幣置於桌上。</p>
+                    <p>請準備紙、筆，以及三枚面額、形式相同的硬幣置於桌上。</p>
                     <p>同時請您放鬆自在的坐於桌前。</p>
                 </div>
                 <div class="tutorial-image-container">
@@ -234,7 +241,7 @@ class DivinationTutorial {
                 <div class="tutorial-text">
                     <p><strong>在心中默唸您所要問的問題</strong></p>
                     <div class="preparation-note">
-                        <p>向神靈自我介紹、說明現在的狀況、以及想問的問題。</p>
+                        <p>向神靈自我介紹、說明現在的狀況，以及想問的問題。</p>
                         <p><strong>注意：</strong>問題要明確，答案要單純，儘量避免「好不好？」之類模擬兩可的問題，因為凡事有好有壞。</p>
                         
                         <div class="examples">
@@ -416,7 +423,7 @@ class DivinationTutorial {
         this.setupMethodSelectionListeners();
     }
 
-    // 第六步：選擇問題類型（新增）
+    // 第六步：選擇問題類型（修正版）
     showQuestionSelectionStep() {
         if (!this.userData.method) {
             alert('請先選擇起卦方式');
@@ -489,7 +496,7 @@ class DivinationTutorial {
                         <div class="char-counter">
                             <span id="char-count">0</span>/500 字
                         </div>
-                        <p class="note">如果選單中沒有看到您要問的問題，請在此輸入完整問題，我們將依照六爻卦理為您判斷及解卦。</p>
+                        <p class="note">如果清單中沒有看到您要問的問題，請在此輸入完整問題，我們將依照六爻卦理為您判斷及解卦。</p>
                     </div>
                 </div>
                 ${this.createNavigationButtons()}
@@ -554,7 +561,7 @@ class DivinationTutorial {
         });
     }
 
-    // 第七步：解卦方式選擇（新增）
+    // 第七步：解卦方式選擇（修正版）
     showDivinationOptionsStep() {
         // 收集問題數據
         this.collectQuestionData();
@@ -806,17 +813,141 @@ class DivinationTutorial {
     selectAIDivination() {
         console.log('用戶選擇AI解卦');
         
-        // 檢查AI解卦限制
-        if (typeof aiDivination !== 'undefined' && !aiDivination.canUseAIDivination()) {
-            if (typeof aiDivination.showUsageLimitModal === 'function') {
-                aiDivination.showUsageLimitModal();
-            } else {
-                alert('今日AI解卦次數已用完，請明天再試或選擇卦師解卦');
-            }
+        // 檢查今日AI解卦使用次數
+        const today = new Date().toDateString();
+        const usage = localStorage.getItem('ai_divination_usage');
+        const usageData = usage ? JSON.parse(usage) : {};
+        const todayUsage = usageData[today] || 0;
+        
+        // 如果今日已使用過，顯示限制提示
+        if (todayUsage > 0) {
+            this.showUsageLimitModal();
             return;
         }
         
+        // 記錄使用次數
+        usageData[today] = 1;
+        localStorage.setItem('ai_divination_usage', JSON.stringify(usageData));
+        
         // 顯示AI解卦結果
+        this.showAIDivinationResult();
+    }
+
+    // 顯示使用次數限制提示
+    showUsageLimitModal() {
+        this.modal.innerHTML = `
+            <div class="tutorial-content">
+                <h2>AI解卦使用限制</h2>
+                <div class="usage-limit-info">
+                    <p>您今日已使用過AI解卦，每日限用1次。</p>
+                    <p>如需更多解卦服務，可選擇以下方案：</p>
+                </div>
+                
+                <div class="usage-options">
+                    <div class="option-card" onclick="divinationTutorial.showPurchaseModal()">
+                        <h3>購買AI解卦</h3>
+                        <p>單次使用</p>
+                        <div class="option-price">NT$ 39</div>
+                    </div>
+                    
+                    <div class="option-card" onclick="divinationTutorial.selectMasterDivination()">
+                        <h3>卦師解卦</h3>
+                        <p>專業卦師親自為您解卦</p>
+                        <div class="option-price">NT$ 300</div>
+                    </div>
+                    
+                    <div class="option-card tomorrow-option" onclick="divinationTutorial.closeTutorial()">
+                        <h3>明日再占</h3>
+                        <p>明天可再次免費使用</p>
+                        <div class="option-free">免費</div>
+                    </div>
+                </div>
+            </div>
+            <style>
+                .usage-limit-info {
+                    background: #fff3cd;
+                    border: 1px solid #ffeaa7;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin: 20px 0;
+                    text-align: center;
+                }
+                .usage-options {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 15px;
+                    margin-top: 30px;
+                }
+                .option-card {
+                    border: 2px solid #ddd;
+                    border-radius: 10px;
+                    padding: 20px;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    background: white;
+                }
+                .option-card:hover {
+                    border-color: #007bff;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+                }
+                .option-card h3 {
+                    margin: 0 0 10px 0;
+                    color: #333;
+                }
+                .option-card p {
+                    margin: 0 0 15px 0;
+                    color: #666;
+                    font-size: 14px;
+                }
+                .option-price {
+                    color: #007bff;
+                    font-weight: bold;
+                    font-size: 18px;
+                }
+                .option-free {
+                    color: #28a745;
+                    font-weight: bold;
+                    font-size: 16px;
+                }
+                .tomorrow-option {
+                    border-color: #28a745;
+                }
+                @media (max-width: 768px) {
+                    .usage-options {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            </style>
+        `;
+    }
+
+    // 顯示購買AI解卦視窗
+    showPurchaseModal() {
+        // 暫時顯示付費視窗提示
+        alert('付費功能開發中，暫時無法使用。請選擇其他方案或明日再占。');
+        // TODO: 整合綠界科技支付API
+        // 付費完成後調用 this.completePurchase()
+    }
+    
+    // 完成付費後的處理
+    completePurchase() {
+        console.log('AI解卦付費完成');
+        
+        // 記錄付費使用
+        const today = new Date().toDateString();
+        const paidUsage = localStorage.getItem('ai_paid_usage') || '{}';
+        const paidUsageData = JSON.parse(paidUsage);
+        
+        if (!paidUsageData[today]) {
+            paidUsageData[today] = 0;
+        }
+        paidUsageData[today]++;
+        
+        localStorage.setItem('ai_paid_usage', JSON.stringify(paidUsageData));
+        
+        // 進入AI解卦流程
         this.showAIDivinationResult();
     }
 
@@ -852,18 +983,20 @@ class DivinationTutorial {
                     <div class="ai-result">
                         <h3>AI分析結果</h3>
                         <div id="ai-content">
-                            <div class="loading-spinner">
-                                <div class="spinner"></div>
-                                <p>AI正在分析卦象，請稍候...</p>
+                            <div class="ai-progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progress-fill"></div>
+                                </div>
+                                <div class="progress-text" id="progress-text">起卦中...</div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="result-actions">
-                    <button class="btn btn-secondary" onclick="divinationTutorial.closeTutorial()">
-                        完成
+                    <button class="btn btn-primary" onclick="divinationTutorial.continueReading()" id="continue-btn">
+                        繼續起卦
                     </button>
-                    <button class="btn btn-primary" onclick="divinationTutorial.downloadResult()" id="download-btn" style="display: none;">
+                    <button class="btn btn-secondary" onclick="divinationTutorial.downloadResult()" id="download-btn" style="display: none;">
                         下載解卦報告
                     </button>
                     <button class="btn btn-tertiary" onclick="divinationTutorial.selectMasterDivination()">
@@ -886,23 +1019,34 @@ class DivinationTutorial {
                     margin: 0 0 15px 0;
                     color: #333;
                 }
-                .loading-spinner {
+                
+                /* AI進度條樣式 */
+                .ai-progress-container {
                     text-align: center;
-                    padding: 30px;
+                    padding: 40px 20px;
                 }
-                .spinner {
-                    border: 4px solid #f3f3f3;
-                    border-top: 4px solid #007bff;
-                    border-radius: 50%;
-                    width: 40px;
-                    height: 40px;
-                    animation: spin 1s linear infinite;
-                    margin: 0 auto 15px;
+                .progress-bar {
+                    width: 100%;
+                    height: 20px;
+                    background: #f0f0f0;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    margin-bottom: 20px;
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
                 }
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
+                .progress-fill {
+                    height: 100%;
+                    background: linear-gradient(90deg, #007bff, #0056b3);
+                    width: 0%;
+                    transition: width 0.5s ease;
+                    border-radius: 10px;
                 }
+                .progress-text {
+                    font-size: 16px;
+                    color: #333;
+                    font-weight: 500;
+                }
+                
                 .result-actions {
                     display: flex;
                     gap: 15px;
@@ -925,6 +1069,78 @@ class DivinationTutorial {
         
         // 調用AI解卦
         this.performAIDivination();
+    }
+
+    // 執行AI解卦
+    async performAIDivination() {
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        
+        if (!progressFill || !progressText) return;
+        
+        // 進度步驟
+        const progressSteps = [
+            { text: "起卦中", progress: 15, delay: 800 },
+            { text: "正在生成卦象", progress: 30, delay: 1000 },
+            { text: "解析用神衰旺", progress: 50, delay: 1200 },
+            { text: "解析本卦與變卦", progress: 70, delay: 1000 },
+            { text: "解讀卦象", progress: 85, delay: 1500 },
+            { text: "建立批卦報告", progress: 100, delay: 800 }
+        ];
+        
+        try {
+            // 逐步執行進度
+            for (let i = 0; i < progressSteps.length; i++) {
+                const step = progressSteps[i];
+                
+                // 更新進度條
+                progressFill.style.width = step.progress + '%';
+                progressText.textContent = step.text;
+                
+                // 等待指定時間
+                await new Promise(resolve => setTimeout(resolve, step.delay));
+            }
+            
+            // 檢查AI解卦功能是否可用
+            if (typeof aiDivination === 'undefined') {
+                throw new Error('AI解卦功能未載入');
+            }
+            
+            // 增加使用次數
+            if (typeof aiDivination.incrementUsage === 'function') {
+                aiDivination.incrementUsage();
+            }
+            
+            // 調用現有的AI解卦功能
+            const customQuestion = this.userData.customQuestion || 
+                                 `關於${this.getQuestionTypeText()}的問題`;
+            
+            const aiResponse = await this.callAIDirectly(customQuestion);
+            this.displayAIResult(aiResponse);
+            
+        } catch (error) {
+            console.error('AI解卦失敗:', error);
+            const aiContentDiv = document.getElementById('ai-content');
+            if (aiContentDiv) {
+                aiContentDiv.innerHTML = `
+                    <div class="error-message">
+                        <h4>AI分析暫時無法使用</h4>
+                        <p>系統暫時無法提供AI解卦服務，建議您選擇卦師親自解卦。</p>
+                    </div>
+                    <style>
+                        .error-message {
+                            text-align: center;
+                            padding: 30px;
+                            color: #666;
+                        }
+                        .error-message h4 {
+                            color: #dc3545;
+                            margin-bottom: 15px;
+                        }
+                    </style>
+                `;
+            }
+        }
     }
 
     // 設置起卦環境（為了讓現有功能正常運作）
@@ -1034,57 +1250,6 @@ class DivinationTutorial {
         guaInfoDiv.innerHTML = guaInfo;
     }
 
-    // 執行AI解卦
-    async performAIDivination() {
-        const aiContentDiv = document.getElementById('ai-content');
-        if (!aiContentDiv) return;
-        
-        try {
-            // 檢查AI解卦功能是否可用
-            if (typeof aiDivination === 'undefined') {
-                throw new Error('AI解卦功能未載入');
-            }
-            
-            // 增加使用次數
-            if (typeof aiDivination.incrementUsage === 'function') {
-                aiDivination.incrementUsage();
-            }
-            
-            // 調用現有的AI解卦功能
-            if (typeof generateAIInterpretation === 'function') {
-                // 使用現有的AI解卦函數
-                const customQuestion = this.userData.customQuestion || 
-                                     `關於${this.getQuestionTypeText()}的問題`;
-                
-                // 模擬調用generateAIInterpretation但不顯示modal
-                const aiResponse = await this.callAIDirectly(customQuestion);
-                this.displayAIResult(aiResponse);
-            } else {
-                throw new Error('AI解卦功能不可用');
-            }
-            
-        } catch (error) {
-            console.error('AI解卦失敗:', error);
-            aiContentDiv.innerHTML = `
-                <div class="error-message">
-                    <h4>AI分析暫時無法使用</h4>
-                    <p>系統暫時無法提供AI解卦服務，建議您選擇卦師親自解卦。</p>
-                </div>
-                <style>
-                    .error-message {
-                        text-align: center;
-                        padding: 30px;
-                        color: #666;
-                    }
-                    .error-message h4 {
-                        color: #dc3545;
-                        margin-bottom: 15px;
-                    }
-                </style>
-            `;
-        }
-    }
-
     // 直接調用AI解卦
     async callAIDirectly(customQuestion) {
         try {
@@ -1163,6 +1328,24 @@ class DivinationTutorial {
             .replace(/【([^】]+)】/g, '<h5>$1</h5>')
             .replace(/\n/g, '<br>')
             .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    }
+
+    // 繼續起卦功能
+    continueReading() {
+        console.log('用戶選擇繼續起卦');
+        
+        // 重置用戶數據，保持方法選擇
+        const currentMethod = this.userData.method;
+        this.userData = {
+            method: currentMethod,
+            liuyaoData: [],
+            questionType: '',
+            customQuestion: '',
+            divinationResult: null
+        };
+        
+        // 直接跳轉到第五步（選擇起卦方式）
+        this.showStep(5);
     }
 
     // 下載結果
@@ -1314,7 +1497,10 @@ class DivinationTutorial {
         alert('引導精靈設定已重設，重新載入頁面後將會顯示引導');
     }
 
-    
+    // 強制顯示引導（備用方法）
+    forceShowTutorial() {
+        this.startTutorial();
+    }
 }
 
 // 創建全域實例
@@ -1330,42 +1516,4 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    // 檢查當前頁面是否為求卦頁面
-    const isDivinationPage = window.location.pathname.includes('divination.html') || 
-                            document.title.includes('免費求卦');
-    
-    console.log('是否為求卦頁面:', isDivinationPage);
-    
-    if (isDivinationPage) {
-        // 延遲一點時間確保其他腳本都載入完成
-        setTimeout(() => {
-            console.log('準備顯示引導精靈');
-            divinationTutorial.checkIfNeedTutorial();
-        }, 1500);
-    }
-});
-
-// 備用初始化方法
-window.addEventListener('load', function() {
-    console.log('Window load - 備用初始化');
-    
-    if (typeof divinationTutorial !== 'undefined') {
-        const isDivinationPage = window.location.pathname.includes('divination.html') || 
-                               document.title.includes('免費求卦');
-        
-        if (isDivinationPage) {
-            setTimeout(() => {
-                const tutorialStatus = localStorage.getItem('divination_tutorial_status');
-                console.log('Tutorial status:', tutorialStatus);
-                
-                if (tutorialStatus !== 'never_show') {
-                    console.log('強制顯示引導精靈');
-                    divinationTutorial.forceShowTutorial();
-                }
-            }, 2000);
-        }
-    }
-});
-
-// 全域函數，供外部調用
-window.divinationTutorial = divinationTutorial;
+    //
