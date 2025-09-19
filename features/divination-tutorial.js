@@ -1322,10 +1322,50 @@ const divinationTutorial = new DivinationTutorial();
 
 // 頁面載入完成後檢查是否需要顯示引導
 document.addEventListener('DOMContentLoaded', function() {
-    // 延遲一點時間確保其他腳本都載入完成
-    setTimeout(() => {
-        divinationTutorial.checkIfNeedTutorial();
-    }, 1000);
+    console.log('DOMContentLoaded - 檢查引導精靈');
+    
+    // 多重檢查確保腳本正確載入
+    if (typeof divinationTutorial === 'undefined') {
+        console.error('divinationTutorial 未定義');
+        return;
+    }
+    
+    // 檢查當前頁面是否為求卦頁面
+    const isDiv
+inationPage = window.location.pathname.includes('divination.html') || 
+                           document.title.includes('免費求卦');
+    
+    console.log('是否為求卦頁面:', isDivinationPage);
+    
+    if (isDivinationPage) {
+        // 延遲一點時間確保其他腳本都載入完成
+        setTimeout(() => {
+            console.log('準備顯示引導精靈');
+            divinationTutorial.checkIfNeedTutorial();
+        }, 1500);
+    }
+});
+
+// 備用初始化方法
+window.addEventListener('load', function() {
+    console.log('Window load - 備用初始化');
+    
+    if (typeof divinationTutorial !== 'undefined') {
+        const isDivinationPage = window.location.pathname.includes('divination.html') || 
+                               document.title.includes('免費求卦');
+        
+        if (isDivinationPage) {
+            setTimeout(() => {
+                const tutorialStatus = localStorage.getItem('divination_tutorial_status');
+                console.log('Tutorial status:', tutorialStatus);
+                
+                if (tutorialStatus !== 'never_show') {
+                    console.log('強制顯示引導精靈');
+                    divinationTutorial.forceShowTutorial();
+                }
+            }, 2000);
+        }
+    }
 });
 
 // 全域函數，供外部調用
