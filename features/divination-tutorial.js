@@ -1331,9 +1331,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 檢查當前頁面是否為求卦頁面
-    const isDiv
-inationPage = window.location.pathname.includes('divination.html') || 
-                           document.title.includes('免費求卦');
+    const isDivinationPage = window.location.pathname.includes('divination.html') || 
+                            document.title.includes('免費求卦');
     
     console.log('是否為求卦頁面:', isDivinationPage);
     
