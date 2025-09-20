@@ -565,7 +565,7 @@ showQuestionSelectionStep() {
     });
 }
 
-    // 第七步：解卦方式選擇（新增）
+    // 第七步：解卦方式選擇
     showDivinationOptionsStep() {
     const radioButtons = document.querySelectorAll('input[name="question-type"]');
     const customQuestionElement = document.getElementById('custom-question');
@@ -1100,23 +1100,41 @@ async performAIDivinationWithProgress() {
 }
 
     // 選擇卦師解卦
-    selectMasterDivination() {
-        console.log('用戶選擇卦師解卦');
-        
+selectMasterDivination() {
+    console.log('用戶選擇卦師解卦');
+    
+    // 先設置好起卦環境
+    this.setupDivinationEnvironment();
+    
+    // 準備問題內容
+    const questionText = this.userData.customQuestion || '';
+    const questionType = this.userData.questionType;
+    
+    // 關閉引導精靈
+    this.closeTutorial();
+    
+    // 延遲顯示卦師解卦modal，確保引導精靈完全關閉
+    setTimeout(() => {
         // 調用現有的卦師解卦功能
         if (typeof showMasterDivinationModal === 'function') {
-            // 關閉引導精靈
-            this.closeTutorial();
+            // 顯示卦師解卦modal並傳入問題
+            showMasterDivinationModal(questionType, questionText);
             
-            // 先設置好起卦環境
-            this.setupDivinationEnvironment();
-            
-            // 顯示卦師解卦modal
-            showMasterDivinationModal(this.userData.questionType);
+            // 如果有問題內容，自動填入表單
+            if (questionText) {
+                setTimeout(() => {
+                    const questionInput = document.querySelector('#master-question, [name="question"], textarea[placeholder*="問題"]');
+                    if (questionInput) {
+                        questionInput.value = questionText;
+                        console.log('已自動填入問題內容:', questionText);
+                    }
+                }, 200);
+            }
         } else {
             alert('卦師解卦功能暫時無法使用，請稍後再試');
         }
-    }
+    }, 100);
+}
 
     // 顯示AI解卦結果
     async showAIDivinationResult() {
@@ -1590,14 +1608,27 @@ continueReading() {
         this.closeTutorial();
     }
 
-    // 關閉引導
-    closeTutorial() {
-        this.removeHighlight();
-        if (this.overlay) {
-            document.body.removeChild(this.overlay);
+// 關閉引導
+closeTutorial() {
+    this.removeHighlight();
+    
+    // 安全地移除 overlay
+    if (this.overlay && this.overlay.parentNode) {
+        try {
+            this.overlay.parentNode.removeChild(this.overlay);
+            console.log('成功移除引導精靈 overlay');
+        } catch (error) {
+            console.error('移除 overlay 時發生錯誤:', error);
         }
-        this.isActive = false;
     }
+    
+    // 清理引用
+    this.overlay = null;
+    this.modal = null;
+    this.isActive = false;
+    
+    console.log('引導精靈已關閉');
+}
 
     // 重設功能
     resetTutorialSettings() {
