@@ -20,12 +20,17 @@ class DivinationTutorial {
     }
 
     // 檢查是否需要顯示引導
-    checkIfNeedTutorial() {
-        const tutorialStatus = localStorage.getItem('divination_tutorial_status');
-        if (tutorialStatus !== 'never_show') {
-            this.startTutorial();
-        }
+checkIfNeedTutorial() {
+    // 如果正在處理卦師解卦，不要觸發引導精靈
+    if (this.isProcessingMasterDivination) {
+        return;
     }
+    
+    const tutorialStatus = localStorage.getItem('divination_tutorial_status');
+    if (tutorialStatus !== 'never_show') {
+        this.startTutorial();
+    }
+}
 
     // 強制顯示引導精靈（無論設定如何）
     forceShowTutorial() {
@@ -1100,8 +1105,12 @@ async performAIDivinationWithProgress() {
 }
 
     // 選擇卦師解卦
+// 選擇卦師解卦 - 修正版本
 selectMasterDivination() {
     console.log('用戶選擇卦師解卦');
+    
+    // 設置標記，防止重複觸發
+    this.isProcessingMasterDivination = true;
     
     // 先設置好起卦環境
     this.setupDivinationEnvironment();
@@ -1110,30 +1119,43 @@ selectMasterDivination() {
     const questionText = this.userData.customQuestion || '';
     const questionType = this.userData.questionType;
     
-    // 關閉引導精靈
+    // 立即關閉引導精靈
     this.closeTutorial();
     
     // 延遲顯示卦師解卦modal，確保引導精靈完全關閉
     setTimeout(() => {
+        // 再次確認引導精靈已關閉
+        if (document.getElementById('tutorial-overlay')) {
+            document.getElementById('tutorial-overlay').remove();
+        }
+        
         // 調用現有的卦師解卦功能
         if (typeof showMasterDivinationModal === 'function') {
-            // 顯示卦師解卦modal並傳入問題
-            showMasterDivinationModal(questionType, questionText);
-            
-            // 如果有問題內容，自動填入表單
-            if (questionText) {
-                setTimeout(() => {
-                    const questionInput = document.querySelector('#master-question, [name="question"], textarea[placeholder*="問題"]');
-                    if (questionInput) {
-                        questionInput.value = questionText;
-                        console.log('已自動填入問題內容:', questionText);
-                    }
-                }, 200);
+            try {
+                showMasterDivinationModal(questionType, questionText);
+                
+                // 如果有問題內容，自動填入表單
+                if (questionText) {
+                    setTimeout(() => {
+                        const questionInput = document.querySelector('#master-question, [name="question"], textarea[placeholder*="問題"]');
+                        if (questionInput) {
+                            questionInput.value = questionText;
+                            console.log('已自動填入問題內容:', questionText);
+                        }
+                    }, 200);
+                }
+            } catch (error) {
+                console.error('顯示卦師解卦modal時發生錯誤:', error);
+                alert('卦師解卦功能暫時無法使用，請稍後再試');
             }
         } else {
+            console.error('找不到 showMasterDivinationModal 函數');
             alert('卦師解卦功能暫時無法使用，請稍後再試');
         }
-    }, 100);
+        
+        // 重置標記
+        this.isProcessingMasterDivination = false;
+    }, 200);
 }
 
     // 顯示AI解卦結果
@@ -1612,22 +1634,25 @@ continueReading() {
 closeTutorial() {
     this.removeHighlight();
     
-    // 安全地移除 overlay
-    if (this.overlay && this.overlay.parentNode) {
-        try {
-            this.overlay.parentNode.removeChild(this.overlay);
-            console.log('成功移除引導精靈 overlay');
-        } catch (error) {
-            console.error('移除 overlay 時發生錯誤:', error);
+    // 強制移除所有可能的引導精靈元素
+    const overlays = document.querySelectorAll('#tutorial-overlay, [id*="tutorial"]');
+    overlays.forEach(overlay => {
+        if (overlay && overlay.parentNode) {
+            try {
+                overlay.parentNode.removeChild(overlay);
+                console.log('移除引導精靈元素:', overlay.id);
+            } catch (error) {
+                console.error('移除元素時發生錯誤:', error);
+            }
         }
-    }
+    });
     
     // 清理引用
     this.overlay = null;
     this.modal = null;
     this.isActive = false;
     
-    console.log('引導精靈已關閉');
+    console.log('引導精靈已完全關閉');
 }
 
     // 重設功能
