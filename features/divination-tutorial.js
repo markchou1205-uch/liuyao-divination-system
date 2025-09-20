@@ -561,10 +561,29 @@ showQuestionSelectionStep() {
 
     // 第七步：解卦方式選擇（新增）
     showDivinationOptionsStep() {
-    if (!this.collectQuestionData()) {
-        this.previousStep();
-        return;
+    const radioButtons = document.querySelectorAll('input[name="question-type"]');
+    const customQuestionElement = document.getElementById('custom-question');
+    const customQuestion = customQuestionElement ? customQuestionElement.value.trim() : '';
+    let selectedType = '';
+    radioButtons.forEach(radio => {
+        if (radio.checked) {
+            selectedType = radio.value;
+        }
+    });
+    // 檢查兩個都要填寫，但不清除已輸入的內容
+    if (!selectedType && !customQuestion) {
+        alert('請選擇問題類型並輸入問題內容');
+        return; // 直接返回，不執行 previousStep()
+    } else if (!selectedType) {
+        alert('請選擇問題類型');
+        return; // 直接返回，不執行 previousStep()
+    } else if (!customQuestion) {
+        alert('請輸入問題內容');
+        return; // 直接返回，不執行 previousStep()
     }
+            // 驗證通過，保存數據
+    this.userData.questionType = selectedType;
+    this.userData.customQuestion = customQuestion;
         // 執行起卦
         this.performDivination();
 
