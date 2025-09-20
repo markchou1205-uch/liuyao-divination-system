@@ -1248,6 +1248,17 @@ selectMasterDivination() {
 
     // 設置起卦環境（為了讓現有功能正常運作）
     setupDivinationEnvironment() {
+            // 暫存原始函數
+    if (typeof handleHiddenYongshen === 'function' && !this.originalHandleHiddenYongshen) {
+        this.originalHandleHiddenYongshen = window.handleHiddenYongshen;
+        
+        // 在引導模式中覆寫為空函數
+        window.handleHiddenYongshen = function(targetLiuqin) {
+            console.log('引導模式：跳過用神伏藏警告');
+            // 不顯示alert，直接返回
+            return;
+        };
+    }
         // 更新時間顯示
         if (typeof updateTimeDisplay === 'function') {
             updateTimeDisplay();
@@ -1633,7 +1644,12 @@ continueReading() {
 // 關閉引導
 closeTutorial() {
     this.removeHighlight();
-    
+        // 恢復原始的handleHiddenYongshen函數
+    if (this.originalHandleHiddenYongshen) {
+        window.handleHiddenYongshen = this.originalHandleHiddenYongshen;
+        this.originalHandleHiddenYongshen = null;
+        console.log('已恢復原始的用神伏藏警告函數');
+    }
     // 強制移除所有可能的引導精靈元素
     const overlays = document.querySelectorAll('#tutorial-overlay, [id*="tutorial"]');
     overlays.forEach(overlay => {
