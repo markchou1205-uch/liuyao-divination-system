@@ -27,6 +27,12 @@ class DivinationTutorial {
         }
     }
 
+    // 強制顯示引導精靈（無論設定如何）
+    forceShowTutorial() {
+        console.log('強制顯示引導精靈');
+        this.startTutorial();
+    }
+
     // 開始引導流程
     startTutorial() {
         this.isActive = true;
