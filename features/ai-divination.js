@@ -783,7 +783,7 @@ function downloadInterpretation() {
     document.head.appendChild(script);
 }
 // 5. 卦師解卦 Modal
-function showMasterDivinationModal(questionType) {
+function showMasterDivinationModal(questionType, questionText = '') {
     const modalHTML = `
         <div id="master-divination-modal" class="modal" style="display: flex;">
             <div class="modal-content large-modal">
@@ -796,7 +796,7 @@ function showMasterDivinationModal(questionType) {
                         <textarea id="master-question" 
                                  placeholder="請詳細說明您想問的問題..."
                                  rows="4" 
-                                 required></textarea>
+                                 required>${questionText}</textarea>
                     </div>
                     
                     <div class="form-group">
@@ -830,6 +830,14 @@ function showMasterDivinationModal(questionType) {
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+        if (questionText) {
+        setTimeout(() => {
+            const questionInput = document.querySelector('#master-question, [name="question"], textarea[placeholder*="問題"]');
+            if (questionInput) {
+                questionInput.value = questionText;
+            }
+        }, 100);
+    }
 }
 
 function closeMasterDivinationModal() {
