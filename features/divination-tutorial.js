@@ -417,154 +417,154 @@ class DivinationTutorial {
     }
 
     // 第六步：選擇問題類型（新增）
-    showQuestionSelectionStep() {
-        if (!this.userData.method) {
-            alert('請先選擇起卦方式');
+// 第六步：選擇問題類型（修正版）
+showQuestionSelectionStep() {
+    if (!this.userData.method) {
+        alert('請先選擇起卦方式');
+        this.previousStep();
+        return;
+    }
+
+    if (this.userData.method === 'liuyao' && this.userData.liuyaoData.length === 0) {
+        this.collectLiuyaoData();
+        if (this.userData.liuyaoData.length === 0) {
+            alert('請完成六爻擲幣輸入');
             this.previousStep();
             return;
         }
+    }
 
-        // 如果選擇六爻起卦但沒有輸入數據，收集數據
-        if (this.userData.method === 'liuyao' && this.userData.liuyaoData.length === 0) {
-            this.collectLiuyaoData();
-            if (this.userData.liuyaoData.length === 0) {
-                alert('請完成六爻擲幣輸入');
-                this.previousStep();
-                return;
-            }
-        }
-
-        this.modal.innerHTML = `
-            <div class="tutorial-content">
-                <h2>選擇問題類型</h2>
-                <div class="question-selection">
-                    <div class="question-options">
-                        <h4>常用問題：</h4>
-                        <div class="question-grid">
-                            <label class="question-option">
-                                <input type="radio" name="question-type" value="love-female">
-                                <span>感情/問女方</span>
-                            </label>
-                            <label class="question-option">
-                                <input type="radio" name="question-type" value="love-male">
-                                <span>感情/問男方</span>
-                            </label>
-                            <label class="question-option">
-                                <input type="radio" name="question-type" value="parents">
-                                <span>問父母</span>
-                            </label>
-                            <label class="question-option">
-                                <input type="radio" name="question-type" value="children">
-                                <span>問子女</span>
-                            </label>
-                            <label class="question-option">
-                                <input type="radio" name="question-type" value="career">
-                                <span>問事業</span>
-                            </label>
-                            <label class="question-option">
-                                <input type="radio" name="question-type" value="health">
-                                <span>問健康</span>
-                            </label>
-                            <label class="question-option">
-                                <input type="radio" name="question-type" value="wealth">
-                                <span>問財官</span>
-                            </label>
-                            <label class="question-option">
-                                <input type="radio" name="question-type" value="partnership">
-                                <span>問合作合夥</span>
-                            </label>
-                            <label class="question-option">
-                                <input type="radio" name="question-type" value="lawsuit">
-                                <span>問官司</span>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="custom-question">
-                        <h4>或輸入您的完整問題：</h4>
-                        <textarea id="custom-question" 
-                                 placeholder="請詳細描述您想問的問題..."
-                                 rows="4" 
-                                 maxlength="500"></textarea>
-                        <div class="char-counter">
-                            <span id="char-count">0</span>/500 字
-                        </div>
-                        <p class="note">如果選單中沒有看到您要問的問題，請在此輸入完整問題，我們將依照六爻卦理為您判斷及解卦。</p>
+    this.modal.innerHTML = `
+        <div class="tutorial-content">
+            <h2>選擇問題類型</h2>
+            <div class="question-selection">
+                <div class="question-options">
+                    <h4>1. 請選擇問題類型：</h4>
+                    <div class="question-grid">
+                        <label class="question-option">
+                            <input type="radio" name="question-type" value="love-female">
+                            <span>感情/問女方</span>
+                        </label>
+                        <label class="question-option">
+                            <input type="radio" name="question-type" value="love-male">
+                            <span>感情/問男方</span>
+                        </label>
+                        <label class="question-option">
+                            <input type="radio" name="question-type" value="parents">
+                            <span>問父母</span>
+                        </label>
+                        <label class="question-option">
+                            <input type="radio" name="question-type" value="children">
+                            <span>問子女</span>
+                        </label>
+                        <label class="question-option">
+                            <input type="radio" name="question-type" value="career">
+                            <span>問事業</span>
+                        </label>
+                        <label class="question-option">
+                            <input type="radio" name="question-type" value="health">
+                            <span>問健康</span>
+                        </label>
+                        <label class="question-option">
+                            <input type="radio" name="question-type" value="wealth">
+                            <span>問財官</span>
+                        </label>
+                        <label class="question-option">
+                            <input type="radio" name="question-type" value="partnership">
+                            <span>問合作合夥</span>
+                        </label>
+                        <label class="question-option">
+                            <input type="radio" name="question-type" value="lawsuit">
+                            <span>問官司</span>
+                        </label>
                     </div>
                 </div>
-                ${this.createNavigationButtons()}
+                
+                <div class="custom-question">
+                    <h4>2. 輸入問題內容，並儘量詳細：</h4>
+                    <textarea id="custom-question" 
+                             placeholder="請詳細描述您想問的問題..."
+                             rows="4" 
+                             maxlength="500"
+                             required></textarea>
+                    <div class="char-counter">
+                        <span id="char-count">0</span>/500 字
+                    </div>
+                    <p class="note">請先選擇上方的問題類型，然後在此處輸入您的具體問題內容。</p>
+                </div>
             </div>
-            <style>
-                .question-grid {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 10px;
-                    margin: 15px 0;
-                }
-                .question-option {
-                    display: flex;
-                    align-items: center;
-                    padding: 10px;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    transition: background-color 0.2s;
-                }
-                .question-option:hover {
-                    background-color: #f0f0f0;
-                }
-                .question-option input {
-                    margin-right: 8px;
-                }
-                .custom-question {
-                    margin-top: 30px;
-                    padding-top: 20px;
-                    border-top: 1px solid #eee;
-                }
-                .custom-question textarea {
-                    width: 100%;
-                    padding: 10px;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                    font-family: inherit;
-                    resize: vertical;
-                    margin-top: 10px;
-                }
-                .char-counter {
-                    text-align: right;
-                    font-size: 12px;
-                    color: #666;
-                    margin-top: 5px;
-                }
-                .note {
-                    font-size: 14px;
-                    color: #666;
-                    margin-top: 10px;
-                    line-height: 1.4;
-                }
-            </style>
-        `;
+            ${this.createNavigationButtons()}
+        </div>
+        <style>
+            .question-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+                margin: 15px 0;
+            }
+            .question-option {
+                display: flex;
+                align-items: center;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+            .question-option:hover {
+                background-color: #f0f0f0;
+            }
+            .question-option input {
+                margin-right: 8px;
+            }
+            .custom-question {
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+            }
+            .custom-question textarea {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                font-family: inherit;
+                resize: vertical;
+                margin-top: 10px;
+            }
+            .custom-question textarea:focus {
+                border-color: #007bff;
+                outline: none;
+            }
+            .char-counter {
+                text-align: right;
+                font-size: 12px;
+                color: #666;
+                margin-top: 5px;
+            }
+            .note {
+                font-size: 14px;
+                color: #666;
+                margin-top: 10px;
+                line-height: 1.4;
+            }
+        </style>
+    `;
 
-        // 添加字數計算
-        const textarea = document.getElementById('custom-question');
-        const charCount = document.getElementById('char-count');
-        
-        textarea.addEventListener('input', function() {
-            charCount.textContent = this.value.length;
-        });
-    }
+    // 添加字數計算
+    const textarea = document.getElementById('custom-question');
+    const charCount = document.getElementById('char-count');
+    
+    textarea.addEventListener('input', function() {
+        charCount.textContent = this.value.length;
+    });
+}
 
     // 第七步：解卦方式選擇（新增）
     showDivinationOptionsStep() {
-        // 收集問題數據
-        this.collectQuestionData();
-        
-        if (!this.userData.questionType && !this.userData.customQuestion) {
-            alert('請選擇問題類型或輸入自定義問題');
-            this.previousStep();
-            return;
-        }
-
+    if (!this.collectQuestionData()) {
+        this.previousStep();
+        return;
+    }
         // 執行起卦
         this.performDivination();
 
@@ -715,20 +715,33 @@ class DivinationTutorial {
     }
 
     // 收集問題數據
-    collectQuestionData() {
-        const radioButtons = document.querySelectorAll('input[name="question-type"]');
-        const customQuestion = document.getElementById('custom-question').value.trim();
-        
-        let selectedType = '';
-        radioButtons.forEach(radio => {
-            if (radio.checked) {
-                selectedType = radio.value;
-            }
-        });
-        
-        this.userData.questionType = selectedType;
-        this.userData.customQuestion = customQuestion;
+// 收集問題數據（加入驗證）
+collectQuestionData() {
+    const radioButtons = document.querySelectorAll('input[name="question-type"]');
+    const customQuestion = document.getElementById('custom-question').value.trim();
+    
+    let selectedType = '';
+    radioButtons.forEach(radio => {
+        if (radio.checked) {
+            selectedType = radio.value;
+        }
+    });
+    
+    // 檢查兩個都要填寫
+    if (!selectedType) {
+        alert('請選擇問題類型');
+        return false;
     }
+    
+    if (!customQuestion) {
+        alert('請輸入問題內容');
+        return false;
+    }
+    
+    this.userData.questionType = selectedType;
+    this.userData.customQuestion = customQuestion;
+    return true;
+}
 
     // 執行起卦
     performDivination() {
@@ -879,6 +892,9 @@ showUsageLimitModal() {
                 cursor: pointer;
                 transition: all 0.3s ease;
                 background: white;
+                display: flex;
+                flex-direction: column;
+                height: 140px;
             }
             .option-card:hover {
                 border-color: #007bff;
@@ -888,21 +904,25 @@ showUsageLimitModal() {
             .option-card h3 {
                 margin: 0 0 10px 0;
                 color: #333;
+                font-size: 18px;
             }
             .option-card p {
-                margin: 0 0 15px 0;
+                margin: 0 0 auto 0;
                 color: #666;
                 font-size: 14px;
+                flex-grow: 1;
             }
             .option-price {
                 color: #007bff;
                 font-weight: bold;
                 font-size: 18px;
+                margin-top: 10px;
             }
             .option-free {
                 color: #28a745;
                 font-weight: bold;
                 font-size: 16px;
+                margin-top: 10px;
             }
             .tomorrow-option {
                 border-color: #28a745;
@@ -910,6 +930,9 @@ showUsageLimitModal() {
             @media (max-width: 768px) {
                 .usage-options {
                     grid-template-columns: 1fr;
+                }
+                .option-card {
+                    height: auto;
                 }
             }
         </style>
