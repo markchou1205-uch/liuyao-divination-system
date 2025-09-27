@@ -37,7 +37,7 @@ const modalHTML = `
           <!-- 底圖用 <img> -->
           <img
             class="bg-img"
-            src="/img/pray.png"
+            src="/public/img/pray.png"
             alt="我要求卦"
             loading="eager"
             onload="this.style.display='block'"
@@ -59,7 +59,7 @@ const modalHTML = `
           <!-- 底圖用 <img> -->
           <img
             class="bg-img"
-            src="/img/pro.png"
+            src="/public/img/pro.png"
             alt="我是卦師"
             loading="eager"
             onload="this.style.display='block'"
