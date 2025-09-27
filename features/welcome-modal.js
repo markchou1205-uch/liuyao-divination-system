@@ -48,8 +48,7 @@ const modalHTML = `
 
           <!-- 文字 -->
           <div class="copy">
-            <span class="welcome-option-icon">🔮</span>
-            <h3>我要求卦</h3>
+            <h4>我要求卦</h4>
             <p>有任何困惑都可以來這裡免費求卦，本站提供免費解卦的參考，也可以請老師為您解卦</p>
           </div>
         </div>
@@ -70,8 +69,7 @@ const modalHTML = `
 
           <!-- 文字 -->
           <div class="copy">
-            <span class="welcome-option-icon">👨‍🏫</span>
-            <h3>我是卦師</h3>
+            <h4>我是卦師</h4>
             <p>提供專業的線上排卦程式，您可以在這裡得到市面上最詳細的解卦資訊，也可以透過本站批卦、列印專業解卦報告並管理您的批卦記錄</p>
           </div>
         </div>
