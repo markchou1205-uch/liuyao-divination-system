@@ -25,33 +25,41 @@ class WelcomeModal {
             return;
         }
 
-        const modalHTML = `
-            <div id="${this.modalId}" class="welcome-modal">
-                <div class="welcome-modal-content">
-                    <div class="welcome-modal-header">
-                        <h2>歡迎來到命理教觀室 - 文王卦排卦系統</h2>
-                    </div>
-                    <div class="welcome-modal-body">
-                        <div class="welcome-option" onclick="welcomeModal.selectOption('divination')">
-                            <span class="welcome-option-icon">🔮</span>
-                            <h3>我要求卦</h3>
-                            <p>有任何困惑都可以來這裡免費求卦，本站提供免費解卦的參考，也可以請老師為您解卦</p>
-                        </div>
-                        <div class="welcome-option" onclick="welcomeModal.selectOption('professional')">
-                            <span class="welcome-option-icon">👨‍🏫</span>
-                            <h3>我是卦師</h3>
-                            <p>提供專業的線上排卦程式，您可以在這裡得到市面上最詳細的解卦資訊，也可以透過本站批卦、列印專業解卦報告並管理您的批卦記錄</p>
-                        </div>
-                    </div>
-                    <div class="welcome-modal-footer">
-                        <div class="no-show-again" onclick="welcomeModal.toggleNoShowAgain()">
-                            <input type="checkbox" id="no-show-checkbox">
-                            <label for="no-show-checkbox">下次不用再顯示這個視窗</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+const modalHTML = `
+  <div id="${this.modalId}" class="welcome-modal">
+    <div class="welcome-modal-content">
+      <div class="welcome-modal-header">
+        <h2>歡迎來到命理教觀室 - 文王卦排卦系統</h2>
+      </div>
+      <div class="welcome-modal-body">
+        <!-- 左：我要求卦 -->
+        <div class="welcome-option card-bg ask-bg" onclick="welcomeModal.selectOption('divination')">
+          <div class="copy">
+            <span class="welcome-option-icon">🔮</span>
+            <h3>我要求卦</h3>
+            <p>有任何困惑都可以來這裡免費求卦，本站提供免費解卦的參考，也可以請老師為您解卦</p>
+          </div>
+        </div>
+
+        <!-- 右：我是卦師 -->
+        <div class="welcome-option card-bg master-bg" onclick="welcomeModal.selectOption('professional')">
+          <div class="copy">
+            <span class="welcome-option-icon">👨‍🏫</span>
+            <h3>我是卦師</h3>
+            <p>提供專業的線上排卦程式，您可以在這裡得到市面上最詳細的解卦資訊，也可以透過本站批卦、列印專業解卦報告並管理您的批卦記錄</p>
+          </div>
+        </div>
+      </div>
+      <div class="welcome-modal-footer">
+        <div class="no-show-again" onclick="welcomeModal.toggleNoShowAgain()">
+          <input type="checkbox" id="no-show-checkbox">
+          <label for="no-show-checkbox">下次不用再顯示這個視窗</label>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
