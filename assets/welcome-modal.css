@@ -497,3 +497,66 @@
 /* 3) 基本高度，避免背景載到但容器高度是 0 */
 .welcome-modal .welcome-option { min-height: 260px; }
 @media (max-width: 768px) { .welcome-modal .welcome-option { min-height: 300px; } }
+/* 清舊背景（避免任何 background: ... 把底圖吃掉） */
+.welcome-modal .welcome-option {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  min-height: 260px;
+  background: none !important;
+}
+
+/* 底圖 <img> 要鋪滿容器 */
+.welcome-modal .welcome-option .bg-img {
+  display: block;                 /* onload 會顯示 */
+  position: absolute;
+  inset: 0;                       /* top/right/bottom/left: 0 */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 兩張圖的視覺重點位置，可依需要微調： */
+  object-position: 65% center;    /* 這行對左卡作用 */
+  z-index: 0;
+  pointer-events: none;           /* 點擊整卡仍可觸發 onclick */
+}
+
+/* 右卡單獨調整 object-position */
+#welcome-master .bg-img {
+  object-position: 55% center;
+}
+
+/* 半透明遮罩，強化文字對比 */
+.welcome-modal .welcome-option .bg-mask{
+  position: absolute; inset: 0;
+  z-index: 1; pointer-events: none; display: block;
+}
+.welcome-modal .welcome-option .bg-mask--ask{
+  background: linear-gradient(135deg, rgba(84,41,168,.78) 0%, rgba(0,0,0,.15) 45%, rgba(0,0,0,.55) 100%);
+}
+.welcome-modal .welcome-option .bg-mask--master{
+  background: linear-gradient(135deg, rgba(168,108,41,.78) 0%, rgba(0,0,0,.15) 45%, rgba(0,0,0,.55) 100%);
+}
+
+/* 文案固定在卡片底部，壓在遮罩上層 */
+.welcome-modal .welcome-option .copy {
+  position: absolute; left: 16px; right: 16px; bottom: 16px;
+  z-index: 2; text-align: left; color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+.welcome-modal .welcome-option .welcome-option-icon {
+  display: inline-block; font-size: 22px; margin-right: 6px; transform: translateY(2px);
+  text-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+.welcome-modal .welcome-option .copy h3 {
+  display: inline-block; margin: 0 0 8px; font-size: 20px; font-weight: 700; color: #fff;
+}
+.welcome-modal .welcome-option .copy p {
+  margin: 0; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.95);
+}
+
+/* RWD 高度微調 */
+@media (max-width: 768px) {
+  .welcome-modal .welcome-option { min-height: 300px; }
+  .welcome-modal .welcome-option .copy h3 { font-size: 18px; }
+  .welcome-modal .welcome-option .copy p  { font-size: 13px; }
+}
