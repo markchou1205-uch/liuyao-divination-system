@@ -206,13 +206,13 @@
 
 /* 左：我要求卦 → pray.png */
 .welcome-option.card-bg.ask-bg {
-  background-image: url('../img/pray.png');
+  background-image: url('/img/pray.png');
   background-position: 65% center; /* 稍往右，騰出文字空間 */
 }
 
 /* 右：我是卦師 → pro.png */
 .welcome-option.card-bg.master-bg {
-  background-image: url('../img/pro.png');
+  background-image: url('/img/pro.png');
   background-position: 55% center;
 }
 
