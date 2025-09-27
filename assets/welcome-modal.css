@@ -442,3 +442,58 @@
   .welcome-modal .welcome-option .copy h3{ font-size:18px; }
   .welcome-modal .welcome-option .copy p{ font-size:13px; }
 }
+/* 1) 殺掉舊卡片背景與漸層覆蓋層 */
+.welcome-modal .welcome-option {
+  background: none !important;            /* 防止 shorthand 清掉 background-image */
+  position: relative;                      /* 確保文字能絕對定位 */
+}
+
+/* 常見兩種覆蓋：偽元素 或 內部 overlay 節點 */
+.welcome-modal .welcome-option::before,
+.welcome-modal .welcome-option::after {
+  content: none !important;
+}
+
+.welcome-modal .welcome-option > .overlay,
+.welcome-modal .welcome-option > .mask,
+.welcome-modal .welcome-option > .bg,
+.welcome-modal .welcome-option > .gradient {
+  display: none !important;
+}
+
+/* 2) 讓我們的文案浮在最上層（避免被任何殘餘層蓋住） */
+.welcome-modal .welcome-option .copy {
+  position: absolute;
+  left: 16px; right: 16px; bottom: 16px;
+  z-index: 3;                               /* 高於任何遮罩 */
+  text-align: left;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+
+.welcome-modal .welcome-option .welcome-option-icon {
+  display: inline-block;
+  font-size: 22px;
+  margin-right: 6px;
+  transform: translateY(2px);
+  text-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+
+.welcome-modal .welcome-option .copy h3 {
+  display: inline-block;
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.welcome-modal .welcome-option .copy p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255,255,255,.95);
+}
+
+/* 3) 基本高度，避免背景載到但容器高度是 0 */
+.welcome-modal .welcome-option { min-height: 260px; }
+@media (max-width: 768px) { .welcome-modal .welcome-option { min-height: 300px; } }
