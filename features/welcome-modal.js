@@ -33,21 +33,51 @@ const modalHTML = `
       </div>
       <div class="welcome-modal-body">
         <!-- 左：我要求卦 -->
-        <div class="welcome-option card-bg ask-bg" onclick="welcomeModal.selectOption('divination')">
+        <div
+          id="welcome-ask"
+          class="welcome-option"
+          onclick="welcomeModal.selectOption('divination')"
+          style="
+            position:relative;
+            overflow:hidden;
+            border-radius:16px;
+            min-height:260px;
+            background-image:url('/img/pray.png');
+            background-size:cover;
+            background-position:65% center;
+            color:#fff;
+          "
+        >
           <div class="copy">
-            <span class="welcome-option-icon"></span>
+            <span class="welcome-option-icon">🔮</span>
             <h3>我要求卦</h3>
             <p>有任何困惑都可以來這裡免費求卦，本站提供免費解卦的參考，也可以請老師為您解卦</p>
           </div>
+          <span class="bg-mask bg-mask--ask"></span>
         </div>
 
         <!-- 右：我是卦師 -->
-        <div class="welcome-option card-bg master-bg" onclick="welcomeModal.selectOption('professional')">
+        <div
+          id="welcome-master"
+          class="welcome-option"
+          onclick="welcomeModal.selectOption('professional')"
+          style="
+            position:relative;
+            overflow:hidden;
+            border-radius:16px;
+            min-height:260px;
+            background-image:url('/img/pro.png');
+            background-size:cover;
+            background-position:55% center;
+            color:#fff;
+          "
+        >
           <div class="copy">
-            <span class="welcome-option-icon"></span>
+            <span class="welcome-option-icon">👨‍🏫</span>
             <h3>我是卦師</h3>
             <p>提供專業的線上排卦程式，您可以在這裡得到市面上最詳細的解卦資訊，也可以透過本站批卦、列印專業解卦報告並管理您的批卦記錄</p>
           </div>
+          <span class="bg-mask bg-mask--master"></span>
         </div>
       </div>
       <div class="welcome-modal-footer">
@@ -59,6 +89,7 @@ const modalHTML = `
     </div>
   </div>
 `;
+
 
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
