@@ -192,3 +192,103 @@
         font-size: 14px;
     }
 }
+/* ==== Welcome Modal 卡片底圖與文字樣式（新增） ==== */
+.welcome-option.card-bg {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  min-height: 260px;           /* 視需要調整 */
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  isolation: isolate;          /* 讓遮罩層不影響子元素 */
+}
+
+/* 左：我要求卦 → pray.png */
+.welcome-option.card-bg.ask-bg {
+  background-image: url('img/pray.png');
+  background-position: 65% center; /* 稍往右，騰出文字空間 */
+}
+
+/* 右：我是卦師 → pro.png */
+.welcome-option.card-bg.master-bg {
+  background-image: url('img/pro.png');
+  background-position: 55% center;
+}
+
+/* 紫調遮罩（左） */
+.welcome-option.card-bg.ask-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(84, 41, 168, .78) 0%,
+    rgba(0, 0, 0, .15) 45%,
+    rgba(0, 0, 0, .55) 100%
+  );
+  z-index: 0;
+}
+
+/* 金暖遮罩（右） */
+.welcome-option.card-bg.master-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(168, 108, 41, .78) 0%,
+    rgba(0, 0, 0, .15) 45%,
+    rgba(0, 0, 0, .55) 100%
+  );
+  z-index: 0;
+}
+
+/* 文字區塊：固定在卡片底部 */
+.welcome-option.card-bg .copy {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1;                  /* 高於遮罩 */
+  text-align: left;
+}
+
+.welcome-option.card-bg .welcome-option-icon {
+  display: inline-block;
+  font-size: 22px;
+  margin-right: 6px;
+  transform: translateY(2px);
+  text-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+
+.welcome-option.card-bg .copy h3 {
+  display: inline-block;
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+
+.welcome-option.card-bg .copy p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255,255,255,.95);
+  text-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+
+/* Hover 效果（可移除） */
+.welcome-option.card-bg:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+/* RWD 微調 */
+@media (max-width: 768px) {
+  .welcome-option.card-bg { min-height: 300px; }
+  .welcome-option.card-bg .copy h3 { font-size: 18px; }
+  .welcome-option.card-bg .copy p  { font-size: 13px; }
+}
