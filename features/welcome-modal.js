@@ -90,8 +90,6 @@ const modalHTML = `
   </div>
 `;
 
-
-
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
 
