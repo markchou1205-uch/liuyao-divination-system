@@ -2,23 +2,23 @@
   "version": 2,
   "builds": [
     { "src": "api/**/*.js",   "use": "@vercel/node" },
-    { "src": "public/**/*", "use": "@vercel/static" },        
+    { "src": "public/**/*",   "use": "@vercel/static" },
     { "src": "pages/**/*",    "use": "@vercel/static" },
     { "src": "assets/**/*",   "use": "@vercel/static" },
     { "src": "scripts/**/*",  "use": "@vercel/static" },
     { "src": "features/**/*", "use": "@vercel/static" },
     { "src": "admin/**/*",    "use": "@vercel/static" }
   ],
-  "routes": [
-    { "src": "/api/(.*)",      "dest": "/api/$1" },
-    { "src": "/assets/(.*)",   "dest": "/assets/$1" },
-    { "src": "/scripts/(.*)",  "dest": "/scripts/$1" },
-    { "src": "/features/(.*)", "dest": "/features/$1" },
-    { "src": "/admin/(.*)",    "dest": "/admin/$1" },
-    { "src": "/img/(.*)", "dest": "/img/$1" },             
-    { "src": "/divination",    "dest": "/pages/divination.html" },
-    { "src": "/admin",         "dest": "/admin/admin.html" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/api/:path*",      "destination": "/api/:path*" },
+    { "source": "/assets/:path*",   "destination": "/assets/:path*" },
+    { "source": "/scripts/:path*",  "destination": "/scripts/:path*" },
+    { "source": "/features/:path*", "destination": "/features/:path*" },
+    { "source": "/admin/:path*",    "destination": "/admin/:path*" },
+    { "source": "/img/:path*",      "destination": "/img/:path*" },
+    { "source": "/divination",      "destination": "/pages/divination.html" },
+    { "source": "/admin",           "destination": "/admin/admin.html" },
+    { "source": "/:path*",          "destination": "/pages/index.html" }
   ],
   "headers": [
     {
