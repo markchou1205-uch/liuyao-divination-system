@@ -31,6 +31,7 @@ const modalHTML = `
       <div class="welcome-modal-header">
         <h2>歡迎來到命理教觀室 - 文王卦排卦系統</h2>
       </div>
+      <img src="/assets/images/tutorial/table.png" 
       <div class="welcome-modal-body">
         <!-- 左：我要求卦 -->
         <div
