@@ -47,15 +47,6 @@ const modalHTML = `
             color:#fff;
           "
         >
-        //--
-                        <div class="tutorial-image-container">
-                    <img src="/assets/images/tutorial/table.png" 
-                         alt="整齊的桌椅環境" 
-                         class="tutorial-image"
-                         onload="this.style.display='block';"
-                         onerror="this.style.display='none';">
-                </div>
-        //--
           <div class="copy">
             <span class="welcome-option-icon">🔮</span>
             <h3>我要求卦</h3>
