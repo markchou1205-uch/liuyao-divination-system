@@ -292,3 +292,73 @@
   .welcome-option.card-bg .copy h3 { font-size: 18px; }
   .welcome-option.card-bg .copy p  { font-size: 13px; }
 }
+/* 先把原本卡片背景清掉，避免被舊的 background: ... 蓋掉 */
+.welcome-modal .welcome-option {
+  background: none !important;
+}
+
+/* 卡片共同樣式（如果已加過可略過） */
+.welcome-modal .welcome-option.card-bg {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  min-height: 260px;
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  isolation: isolate;
+}
+
+/* 左：我要求卦（用絕對路徑 & !important） */
+.welcome-modal .welcome-option.card-bg.ask-bg {
+  background-image: url('/img/pray.png') !important;
+  background-position: 65% center;
+}
+
+/* 右：我是卦師（用絕對路徑 & !important） */
+.welcome-modal .welcome-option.card-bg.master-bg {
+  background-image: url('/img/pro.png') !important;
+  background-position: 55% center;
+}
+
+/* 紫調遮罩（左） */
+.welcome-modal .welcome-option.card-bg.ask-bg::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg,
+    rgba(84, 41, 168, .78) 0%,
+    rgba(0, 0, 0, .15) 45%,
+    rgba(0, 0, 0, .55) 100%);
+  z-index: 0;
+}
+
+/* 金暖遮罩（右） */
+.welcome-modal .welcome-option.card-bg.master-bg::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg,
+    rgba(168, 108, 41, .78) 0%,
+    rgba(0, 0, 0, .15) 45%,
+    rgba(0, 0, 0, .55) 100%);
+  z-index: 0;
+}
+
+/* 文字固定在卡片底部 */
+.welcome-modal .welcome-option.card-bg .copy {
+  position: absolute; left: 16px; right: 16px; bottom: 16px;
+  z-index: 1; text-align: left;
+}
+.welcome-modal .welcome-option.card-bg .welcome-option-icon {
+  display: inline-block; font-size: 22px; margin-right: 6px;
+  transform: translateY(2px);
+  text-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+.welcome-modal .welcome-option.card-bg .copy h3 {
+  display: inline-block; margin: 0 0 8px; font-size: 20px; font-weight: 700;
+  color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+.welcome-modal .welcome-option.card-bg .copy p {
+  margin: 0; font-size: 14px; line-height: 1.6;
+  color: rgba(255,255,255,.95);
+  text-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
