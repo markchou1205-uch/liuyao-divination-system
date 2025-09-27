@@ -1,4 +1,4 @@
-// 歡迎Modal管理1231
+// 歡迎Modal管理1231456
 class WelcomeModal {
     constructor() {
         this.modalId = 'welcome-modal';
