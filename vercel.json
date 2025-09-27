@@ -2,6 +2,7 @@
   "version": 2,
   "builds": [
     { "src": "api/**/*.js",   "use": "@vercel/node" },
+    { "src": "public/**/*",   "use": "@vercel/static" },        // <-- 加這行！
     { "src": "pages/**/*",    "use": "@vercel/static" },
     { "src": "assets/**/*",   "use": "@vercel/static" },
     { "src": "scripts/**/*",  "use": "@vercel/static" },
@@ -14,7 +15,7 @@
     { "src": "/scripts/(.*)",  "dest": "/scripts/$1" },
     { "src": "/features/(.*)", "dest": "/features/$1" },
     { "src": "/admin/(.*)",    "dest": "/admin/$1" },
-    { "src": "/img/(.*)",      "dest": "/img/$1" },       
+    { "src": "/img/(.*)",      "dest": "/img/$1" },             // 這行可保留，但 public 需設靜態
     { "src": "/divination",    "dest": "/pages/divination.html" },
     { "src": "/admin",         "dest": "/admin/admin.html" },
     { "src": "/(.*)",          "dest": "/pages/index.html" }
