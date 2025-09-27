@@ -2,21 +2,21 @@
   "version": 2,
   "builds": [
     { "src": "pages/**/*.html", "use": "@vercel/static" },
+    { "src": "public/**/*",     "use": "@vercel/static" },
     { "src": "assets/**/*",     "use": "@vercel/static" },
     { "src": "scripts/**/*",    "use": "@vercel/static" },
-    { "src": "public/**/*",     "use": "@vercel/static" },
     { "src": "api/**/*.js",     "use": "@vercel/node" }
   ],
-  "routes": [
-    { "src": "/favicon.ico",      "dest": "/favicon.ico" },
-    { "src": "/img/(.*)",         "dest": "/img/$1" },
-    { "src": "/assets/(.*)",      "dest": "/assets/$1" },
-    { "src": "/scripts/(.*)",     "dest": "/scripts/$1" },
+  "rewrites": [
+    { "source": "/favicon.ico",    "destination": "/favicon.ico" },
+    { "source": "/img/:path*",     "destination": "/img/:path*" },
+    { "source": "/assets/:path*",  "destination": "/assets/:path*" },
+    { "source": "/scripts/:path*", "destination": "/scripts/:path*" },
 
-    { "src": "/divination",       "dest": "/pages/divination.html" },
-    { "src": "/",                 "dest": "/pages/index.html" },
+    { "source": "/divination",     "destination": "/pages/divination.html" },
+    { "source": "/",               "destination": "/pages/index.html" },
 
-    { "src": "/(.*)",             "dest": "/pages/index.html" }
+    { "source": "/:path*",         "destination": "/pages/index.html" }
   ],
   "headers": [
     {
