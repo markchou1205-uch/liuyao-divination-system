@@ -1,12 +1,22 @@
 {
   "version": 2,
   "builds": [
-    { "src": "public/**/*",   "use": "@vercel/static" },
-    { "src": "api/**/*.js",   "use": "@vercel/node" }
+    { "src": "pages/**/*.html", "use": "@vercel/static" },
+    { "src": "assets/**/*",     "use": "@vercel/static" },
+    { "src": "scripts/**/*",    "use": "@vercel/static" },
+    { "src": "public/**/*",     "use": "@vercel/static" },
+    { "src": "api/**/*.js",     "use": "@vercel/node" }
   ],
-  "rewrites": [
-    { "source": "/img/:path*",      "destination": "/img/:path*" },
-    { "source": "/:path*",          "destination": "/pages/index.html" }
+  "routes": [
+    { "src": "/favicon.ico",      "dest": "/favicon.ico" },
+    { "src": "/img/(.*)",         "dest": "/img/$1" },
+    { "src": "/assets/(.*)",      "dest": "/assets/$1" },
+    { "src": "/scripts/(.*)",     "dest": "/scripts/$1" },
+
+    { "src": "/divination",       "dest": "/pages/divination.html" },
+    { "src": "/",                 "dest": "/pages/index.html" },
+
+    { "src": "/(.*)",             "dest": "/pages/index.html" }
   ],
   "headers": [
     {
