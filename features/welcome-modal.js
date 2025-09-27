@@ -25,60 +25,58 @@ class WelcomeModal {
         }
 
 const modalHTML = `
-  <div id="${this.modalId}" class="welcome-modal">
+  <div id="\${this.modalId}" class="welcome-modal">
     <div class="welcome-modal-content">
       <div class="welcome-modal-header">
         <h2>歡迎來到命理教觀室 - 文王卦排卦系統</h2>
       </div>
+
       <div class="welcome-modal-body">
         <!-- 左：我要求卦 -->
-        <div
-          id="welcome-ask"
-          class="welcome-option"
-          onclick="welcomeModal.selectOption('divination')"
-          style="
-            position:relative;
-            overflow:hidden;
-            border-radius:16px;
-            min-height:260px;
-            background-image:url('/img/pray.png');
-            background-size:cover;
-            background-position:65% center;
-            color:#fff;
-          "
-        >
+        <div id="welcome-ask" class="welcome-option" onclick="welcomeModal.selectOption('divination')">
+          <!-- 底圖用 <img> -->
+          <img
+            class="bg-img"
+            src="/img/pray.png"
+            alt="我要求卦"
+            loading="eager"
+            onload="this.style.display='block'"
+            onerror="this.style.display='none'"
+          />
+          <!-- 遮罩（紫調） -->
+          <span class="bg-mask bg-mask--ask" aria-hidden="true"></span>
+
+          <!-- 文字 -->
           <div class="copy">
             <span class="welcome-option-icon">🔮</span>
             <h3>我要求卦</h3>
             <p>有任何困惑都可以來這裡免費求卦，本站提供免費解卦的參考，也可以請老師為您解卦</p>
           </div>
-          <span class="bg-mask bg-mask--ask"></span>
         </div>
 
         <!-- 右：我是卦師 -->
-        <div
-          id="welcome-master"
-          class="welcome-option"
-          onclick="welcomeModal.selectOption('professional')"
-          style="
-            position:relative;
-            overflow:hidden;
-            border-radius:16px;
-            min-height:260px;
-            background-image:url('/img/pro.png');
-            background-size:cover;
-            background-position:55% center;
-            color:#fff;
-          "
-        >
+        <div id="welcome-master" class="welcome-option" onclick="welcomeModal.selectOption('professional')">
+          <!-- 底圖用 <img> -->
+          <img
+            class="bg-img"
+            src="/img/pro.png"
+            alt="我是卦師"
+            loading="eager"
+            onload="this.style.display='block'"
+            onerror="this.style.display='none'"
+          />
+          <!-- 遮罩（暖金調） -->
+          <span class="bg-mask bg-mask--master" aria-hidden="true"></span>
+
+          <!-- 文字 -->
           <div class="copy">
             <span class="welcome-option-icon">👨‍🏫</span>
             <h3>我是卦師</h3>
             <p>提供專業的線上排卦程式，您可以在這裡得到市面上最詳細的解卦資訊，也可以透過本站批卦、列印專業解卦報告並管理您的批卦記錄</p>
           </div>
-          <span class="bg-mask bg-mask--master"></span>
         </div>
       </div>
+
       <div class="welcome-modal-footer">
         <div class="no-show-again" onclick="welcomeModal.toggleNoShowAgain()">
           <input type="checkbox" id="no-show-checkbox">
@@ -88,6 +86,7 @@ const modalHTML = `
     </div>
   </div>
 `;
+
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
