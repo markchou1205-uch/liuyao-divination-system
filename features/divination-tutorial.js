@@ -292,7 +292,7 @@ showMethodSelectionStep() {
         <!-- 左欄：點擊區 -->
         <div class="sixi-left">
           <div class="sixi-topbar">
-            <button id="btn-reset-sixi" class="text-btn">重新起卦</button>
+            <button id="btn-reset-sixi" class="text-btn disabled" disabled>重新起卦</button>
           </div>
 
           <div class="sixi-anim-bg" aria-hidden="true"></div>
@@ -308,13 +308,15 @@ showMethodSelectionStep() {
         <!-- 右欄：結果顯示（由下到上） -->
         <div class="sixi-right">
           <div id="sixi-gua-name" class="gua-name" aria-live="polite" aria-atomic="true"></div>
-          <ol id="sixi-yao-list" class="yao-list" reversed>
-            <li data-slot="6" class="yao-slot"></li>
-            <li data-slot="5" class="yao-slot"></li>
-            <li data-slot="4" class="yao-slot"></li>
-            <li data-slot="3" class="yao-slot"></li>
-            <li data-slot="2" class="yao-slot"></li>
+
+          <!-- 注意：這裡的順序刻意是 1→6，配合 flex-end 讓 slot6 在最底 -->
+          <ol id="sixi-yao-list" class="yao-list">
             <li data-slot="1" class="yao-slot"></li>
+            <li data-slot="2" class="yao-slot"></li>
+            <li data-slot="3" class="yao-slot"></li>
+            <li data-slot="4" class="yao-slot"></li>
+            <li data-slot="5" class="yao-slot"></li>
+            <li data-slot="6" class="yao-slot"></li>
           </ol>
         </div>
 
@@ -349,7 +351,8 @@ showMethodSelectionStep() {
       .sixi-right { position: relative; padding: 16px; border: 1px solid #ddd; border-radius: 8px; display: flex; flex-direction: column; }
 
       .sixi-topbar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
-      .text-btn { background: transparent; border: none; color: #2563eb; cursor: pointer; }
+      .text-btn { background: transparent; border: 1px solid #d1d5db; padding: 6px 10px; border-radius: 8px; color: #2563eb; cursor: pointer; }
+      .text-btn.disabled { opacity: .5; pointer-events: none; cursor: not-allowed; }
 
       .sixi-anim-bg { position: absolute; inset: 0; opacity: .22; pointer-events: none;
         background: radial-gradient(120% 80% at 10% 10%, #94a3b8 0, transparent 50%),
@@ -364,11 +367,19 @@ showMethodSelectionStep() {
 
       .gua-name { min-height: 28px; font-weight: 600; text-align: center; margin-bottom: 12px; }
 
-      .yao-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; gap: 8px; flex: 1; justify-content: flex-end; }
+      /* 讓 6 條爻靠底對齊（初爻位於最底），不再中間漂浮 */
+      .yao-list {
+        list-style: none; margin: 0; padding: 0;
+        display: flex; flex-direction: column; justify-content: flex-end;
+        min-height: 220px; flex: 1;
+      }
       .yao-slot { height: 26px; display: grid; place-items: center; }
-      /* 改用字元條顯示 */
-      .yao-text { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-                  font-size: 18px; letter-spacing: 1px; line-height: 1; }
+
+      /* 字元條顯示 */
+      .yao-text {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 18px; letter-spacing: 1px; line-height: 1;
+      }
       .yao-text.moving { color: #ef4444; } /* 老陽/老陰 = 紅色 */
 
       .countdown, .confirm { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.4); z-index: 50; }
@@ -379,8 +390,6 @@ showMethodSelectionStep() {
       .ghost { border: 1px solid #d1d5db; background: white; padding: 10px 14px; border-radius: 10px; }
       .danger { background: #ef4444; color: white; border: none; padding: 10px 14px; border-radius: 10px; }
 
-      @keyframes popin { from { transform: scaleX(.94); opacity: .5 } to { transform: scaleX(1); opacity: 1 } }
-
       @media (max-width: 760px) {
         .sixi.two-col { grid-template-columns: 1fr; }
         .sixi-main-cta { margin-top: 80px; }
@@ -388,13 +397,12 @@ showMethodSelectionStep() {
     </style>
   `;
 
-  // ✅ 這一步起卦方式固定為六爻
+  // 固定本步方式為六爻
   this.userData.method = 'liuyao';
 
-  // 啟用六次點擊流程
+  // 啟用六次點擊流程與導航鎖定
   this.setupSixiListeners();
 }
-
 
 // 第六步：選擇問題類型（修正版）
 showQuestionSelectionStep() {
@@ -680,6 +688,7 @@ initSixiState() {
     mode: 'rolling',     // rolling | ready
     timerId: null,
     countdownRemain: 60,
+    nav: { prev: null, next: null, reset: null, main: null }
   };
 }
 
@@ -691,22 +700,19 @@ sixiWeightedPick() {
   if (r <= 6) return 2;
   return 3;
 }
-
 sixiIsYang(v) { return v === 1 || v === 3; }
-sixiIsMoving(v) { return v === 0 || v === 3; } // 動爻（若你有其它定義可調整）
+sixiIsMoving(v) { return v === 0 || v === 3; } // 0=老陰, 3=老陽
 
+/* 爻渲染：字元條（陽＝連條，陰＝中斷，老爻紅色） */
 sixiRenderYao(slotIndex, v) {
   const slot = this.modal.querySelector(`.yao-slot[data-slot="${slotIndex}"]`);
   if (!slot) return;
-  // 陽：▇▇▇▇▇▇▇▇▇   陰：▇▇▇▇␠␠▇▇▇▇
   const isYang = this.sixiIsYang(v);
-  const isMoving = this.sixiIsMoving(v); // 0=老陰, 3=老陽
+  const isMoving = this.sixiIsMoving(v);
   const text = isYang ? '▇▇▇▇▇▇▇▇▇' : '▇▇▇▇  ▇▇▇▇';
-
   const span = document.createElement('span');
   span.className = 'yao-text' + (isMoving ? ' moving' : '');
   span.textContent = text;
-
   slot.innerHTML = '';
   slot.appendChild(span);
 }
@@ -719,18 +725,17 @@ sixiClearUI() {
 }
 
 sixiComputeGuaNameByBits(bits /* 初→上, 1=陽,0=陰 */) {
-  if (typeof GUA_64_COMPLETE === 'object' && GUA_64_COMPLETE) {
-    const keyBottomUp = bits.join('');             // 初→上
-    const e1 = GUA_64_COMPLETE[keyBottomUp];
-    if (e1 && e1.name) return e1.name;
-
+  const dict = (typeof window !== 'undefined' && window.GUA_64_COMPLETE)
+             || this.GUA_64_COMPLETE
+             || (typeof GUA_64_COMPLETE !== 'undefined' ? GUA_64_COMPLETE : null);
+  if (dict && typeof dict === 'object') {
+    const keyBottomUp = bits.join('');               // 初→上（常見）
+    if (dict[keyBottomUp] && dict[keyBottomUp].name) return dict[keyBottomUp].name;
     const keyTopDown = bits.slice().reverse().join(''); // 上→初（fallback）
-    const e2 = GUA_64_COMPLETE[keyTopDown];
-    if (e2 && e2.name) return e2.name;
+    if (dict[keyTopDown] && dict[keyTopDown].name) return dict[keyTopDown].name;
   }
   return '';
 }
-
 
 sixiRenderGuaNameIfReady() {
   if (!this._sixi || this._sixi.n !== 6) return;
@@ -749,13 +754,17 @@ sixiResetStateOnly() {
   this._sixi.mode = 'rolling';
   if (this.userData) this.userData.liuyaoData = [];
 
-  this.sixiClearUI();
-  const cnt = this.modal.querySelector('#sixi-count');
-  const btn = this.modal.querySelector('#btn-sixi-main');
-  if (cnt) cnt.textContent = '0';
-  if (btn) btn.textContent = '擲一次（0/6）';
-}
+  // UI 清空
+  this.modal.querySelectorAll('.yao-slot').forEach(li => (li.innerHTML = ''));
+  const nameEl = this.modal.querySelector('#sixi-gua-name'); if (nameEl) nameEl.textContent = '';
+  const cnt = this.modal.querySelector('#sixi-count'); if (cnt) cnt.textContent = '0';
+  const btn = this.modal.querySelector('#btn-sixi-main'); if (btn) btn.textContent = '擲一次（0/6）';
 
+  // 導航與重置按鈕狀態：初始禁止 reset、禁止 next、允許 prev
+  this.sixiSetResetDisabled(true);
+  this.sixiSetPrevDisabled(false);
+  this.sixiSetNextDisabled(true);
+}
 // 倒數視窗
 sixiOpenCountdown() {
   const mask = this.modal.querySelector('#sixi-countdown');
@@ -781,7 +790,7 @@ sixiCloseCountdown() {
   if (mask) mask.classList.add('hidden');
 }
 
-// 重新起卦確認框
+/* 確認框 */
 sixiOpenConfirm() {
   const dlg = this.modal.querySelector('#sixi-confirm');
   if (dlg) dlg.classList.remove('hidden');
@@ -790,20 +799,35 @@ sixiCloseConfirm() {
   const dlg = this.modal.querySelector('#sixi-confirm');
   if (dlg) dlg.classList.add('hidden');
 }
-
+sixiSetPrevDisabled(disabled) {
+  if (!this._sixi.nav.prev) return;
+  this._sixi.nav.prev.toggleAttribute('disabled', !!disabled);
+  this._sixi.nav.prev.classList.toggle('disabled', !!disabled);
+}
+sixiSetNextDisabled(disabled) {
+  if (!this._sixi.nav.next) return;
+  this._sixi.nav.next.toggleAttribute('disabled', !!disabled);
+  this._sixi.nav.next.classList.toggle('disabled', !!disabled);
+}
+sixiSetResetDisabled(disabled) {
+  const resetBtn = this.modal.querySelector('#btn-reset-sixi');
+  if (!resetBtn) return;
+  resetBtn.toggleAttribute('disabled', !!disabled);
+  resetBtn.classList.toggle('disabled', !!disabled);
+}
 // 主按鈕行為
 sixiOnMainClick() {
   if (!this._sixi) this.initSixiState();
   if (this._sixi.locked) return;
 
-  // 已完成 6 次 → 進入解卦
-if (this._sixi.mode === 'ready') {
-  this.userData.method = 'liuyao'; // ✅ 保險：強制以六爻進入
-  if (typeof this.performLiuyaoDivination === 'function') {
-    this.performLiuyaoDivination();
+  // 已完成 6 次 → 進入解卦（並保證 method=liuyao）
+  if (this._sixi.mode === 'ready') {
+    this.userData.method = 'liuyao';
+    if (typeof this.performLiuyaoDivination === 'function') {
+      this.performLiuyaoDivination();
+    }
+    return;
   }
-  return;
-}
 
   if (this._sixi.n >= 6) return;
 
@@ -813,25 +837,29 @@ if (this._sixi.mode === 'ready') {
   this._sixi.data.push(v);
   this._sixi.n += 1;
 
-  // 同步寫入你原本的資料結構
-  if (this.userData) {
-    this.userData.liuyaoData = this._sixi.data.slice();
-  }
+  if (this.userData) this.userData.liuyaoData = this._sixi.data.slice();
 
-  // 由下到上：n=1→slot=6, n=2→5 ... n=6→1
+  // 初→上：n=1→slot6（最底），n=2→slot5 … n=6→slot1（最上）
   const slotIndex = 7 - this._sixi.n;
   this.sixiRenderYao(slotIndex, v);
+
+  // 第一次按下後：允許 reset；同時永久鎖「上一步」
+  if (this._sixi.n === 1) {
+    this.sixiSetResetDisabled(false);   // #3：開始後才可重來
+    this.sixiSetPrevDisabled(true);     // #2：一旦有點擊就禁止上一步
+  }
 
   // 次數顯示
   const cnt = this.modal.querySelector('#sixi-count');
   if (cnt) cnt.textContent = String(this._sixi.n);
 
-  // 第 6 次完成：顯示卦名、改按鈕
+  // 第 6 次完成：顯示卦名、改按鈕、放開「下一步」（若你仍使用下一步）
   if (this._sixi.n === 6) {
     this._sixi.mode = 'ready';
     this.sixiRenderGuaNameIfReady();
     const btn = this.modal.querySelector('#btn-sixi-main');
     if (btn) btn.textContent = '開始解卦';
+    this.sixiSetNextDisabled(false);    // #1：未滿 6 次禁用；滿 6 次才放開
   }
 
   setTimeout(() => { this._sixi.locked = false; }, 250);
@@ -840,6 +868,12 @@ if (this._sixi.mode === 'ready') {
 // 綁定此步驟的所有監聽
 setupSixiListeners() {
   this.initSixiState();
+
+  // 導航按鈕（依你 createNavigationButtons 的 ID 命名，如果不同請改這裡）
+  this._sixi.nav.prev = this.modal.querySelector('#tutorial-prev');
+  this._sixi.nav.next = this.modal.querySelector('#tutorial-next');
+
+  // 初始狀態：禁止 next；允許 prev；reset 禁用（未點擊前不可用）
   this.sixiResetStateOnly();
 
   const mainBtn = this.modal.querySelector('#btn-sixi-main');
@@ -848,6 +882,7 @@ setupSixiListeners() {
   const cancelBtn = this.modal.querySelector('#sixi-confirm-cancel');
 
   if (mainBtn) mainBtn.addEventListener('click', () => this.sixiOnMainClick());
+
   if (resetBtn) resetBtn.addEventListener('click', () => this.sixiOpenConfirm());
   if (cancelBtn) cancelBtn.addEventListener('click', () => this.sixiCloseConfirm());
   if (okBtn) okBtn.addEventListener('click', () => {
@@ -855,6 +890,21 @@ setupSixiListeners() {
     this.sixiOpenCountdown();
   });
 
+  // 將 next/prev 在本步加保護（若你的全域導航沒檢查 disabled，就在這裡阻擋）
+  if (this._sixi.nav.next) {
+    this._sixi.nav.next.addEventListener('click', (e) => {
+      if (this._sixi.n < 6) { // #1：未滿 6 次，不允許下一步
+        e.preventDefault(); e.stopPropagation();
+      }
+    }, true);
+  }
+  if (this._sixi.nav.prev) {
+    this._sixi.nav.prev.addEventListener('click', (e) => {
+      if (this._sixi.n > 0) { // #2：已經點擊過，就不允許上一步
+        e.preventDefault(); e.stopPropagation();
+      }
+    }, true);
+  }
   // Space鍵支援（倒數/確認中停用）
   window.addEventListener('keydown', (e) => {
     const cdOpen = !this.modal.querySelector('#sixi-countdown').classList.contains('hidden');
@@ -865,7 +915,11 @@ setupSixiListeners() {
       this.sixiOnMainClick();
     }
   }, { passive: false });
+
+  // 保險：本步方式固定為六爻
+  this.userData.method = 'liuyao';
 }
+
 
     // 設置方法選擇監聽器
     setupMethodSelectionListeners() {
