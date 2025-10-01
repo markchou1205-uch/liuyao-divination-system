@@ -365,10 +365,11 @@ showMethodSelectionStep() {
       .gua-name { min-height: 28px; font-weight: 600; text-align: center; margin-bottom: 12px; }
 
       .yao-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; gap: 8px; flex: 1; justify-content: flex-end; }
-      .yao-slot { height: 22px; display: grid; place-items: center; }
-      .yao-line { width: 100%; height: 6px; border-radius: 3px; background: #111; position: relative; transform-origin: center; animation: popin .15s ease; }
-      .yao-line.yin::after { content: ""; position: absolute; left: 50%; top: 0; width: 24px; height: 100%; background: white; transform: translateX(-50%); }
-      .yao-line.moving { box-shadow: 0 0 0 2px #f59e0b inset; }
+      .yao-slot { height: 26px; display: grid; place-items: center; }
+      /* 改用字元條顯示 */
+      .yao-text { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                  font-size: 18px; letter-spacing: 1px; line-height: 1; }
+      .yao-text.moving { color: #ef4444; } /* 老陽/老陰 = 紅色 */
 
       .countdown, .confirm { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.4); z-index: 50; }
       .countdown.hidden, .confirm.hidden { display: none; }
@@ -380,7 +381,6 @@ showMethodSelectionStep() {
 
       @keyframes popin { from { transform: scaleX(.94); opacity: .5 } to { transform: scaleX(1); opacity: 1 } }
 
-      /* 窄螢幕時上下排版 */
       @media (max-width: 760px) {
         .sixi.two-col { grid-template-columns: 1fr; }
         .sixi-main-cta { margin-top: 80px; }
@@ -388,24 +388,32 @@ showMethodSelectionStep() {
     </style>
   `;
 
+  // ✅ 這一步起卦方式固定為六爻
+  this.userData.method = 'liuyao';
+
   // 啟用六次點擊流程
   this.setupSixiListeners();
 }
 
+
 // 第六步：選擇問題類型（修正版）
 showQuestionSelectionStep() {
+    // ✅ 不再要求使用者手選起卦方式；若已有六爻資料，默認為六爻
     if (!this.userData.method) {
-        alert('請先選擇起卦方式');
-        this.previousStep();
-        return;
+        if (this.userData.liuyaoData && this.userData.liuyaoData.length === 6) {
+            this.userData.method = 'liuyao';
+        } else {
+            // 仍在新流程下，預設就是六爻
+            this.userData.method = 'liuyao';
+        }
     }
 
+    // ✅ 舊流程的手動輸入保留容錯（若你不再用可移除）
     if (this.userData.method === 'liuyao' && this.userData.liuyaoData.length === 0) {
         this.collectLiuyaoData();
         if (this.userData.liuyaoData.length === 0) {
-            alert('請完成六爻擲幣輸入');
-            this.previousStep();
-            return;
+            // 這裡不跳回去、不警告，直接允許先選問題再回前一步補起卦
+            console.warn('尚未完成六爻輸入，允許先選問題內容');
         }
     }
 
@@ -690,14 +698,19 @@ sixiIsMoving(v) { return v === 0 || v === 3; } // 動爻（若你有其它定義
 sixiRenderYao(slotIndex, v) {
   const slot = this.modal.querySelector(`.yao-slot[data-slot="${slotIndex}"]`);
   if (!slot) return;
+  // 陽：▇▇▇▇▇▇▇▇▇   陰：▇▇▇▇␠␠▇▇▇▇
   const isYang = this.sixiIsYang(v);
-  const moving = this.sixiIsMoving(v);
+  const isMoving = this.sixiIsMoving(v); // 0=老陰, 3=老陽
+  const text = isYang ? '▇▇▇▇▇▇▇▇▇' : '▇▇▇▇  ▇▇▇▇';
 
-  const line = document.createElement('div');
-  line.className = 'yao-line ' + (isYang ? 'yang' : 'yin') + (moving ? ' moving' : '');
+  const span = document.createElement('span');
+  span.className = 'yao-text' + (isMoving ? ' moving' : '');
+  span.textContent = text;
+
   slot.innerHTML = '';
-  slot.appendChild(line);
+  slot.appendChild(span);
 }
+
 
 sixiClearUI() {
   this.modal.querySelectorAll('.yao-slot').forEach(li => (li.innerHTML = ''));
@@ -706,14 +719,18 @@ sixiClearUI() {
 }
 
 sixiComputeGuaNameByBits(bits /* 初→上, 1=陽,0=陰 */) {
-  // 若你專案有全域 64 卦表，例如 GUA_64_COMPLETE['111111'].name
   if (typeof GUA_64_COMPLETE === 'object' && GUA_64_COMPLETE) {
-    const key = bits.join('');
-    const entry = GUA_64_COMPLETE[key];
-    if (entry && entry.name) return entry.name;
+    const keyBottomUp = bits.join('');             // 初→上
+    const e1 = GUA_64_COMPLETE[keyBottomUp];
+    if (e1 && e1.name) return e1.name;
+
+    const keyTopDown = bits.slice().reverse().join(''); // 上→初（fallback）
+    const e2 = GUA_64_COMPLETE[keyTopDown];
+    if (e2 && e2.name) return e2.name;
   }
   return '';
 }
+
 
 sixiRenderGuaNameIfReady() {
   if (!this._sixi || this._sixi.n !== 6) return;
@@ -780,12 +797,13 @@ sixiOnMainClick() {
   if (this._sixi.locked) return;
 
   // 已完成 6 次 → 進入解卦
-  if (this._sixi.mode === 'ready') {
-    if (typeof this.performLiuyaoDivination === 'function') {
-      this.performLiuyaoDivination();
-    }
-    return;
+if (this._sixi.mode === 'ready') {
+  this.userData.method = 'liuyao'; // ✅ 保險：強制以六爻進入
+  if (typeof this.performLiuyaoDivination === 'function') {
+    this.performLiuyaoDivination();
   }
+  return;
+}
 
   if (this._sixi.n >= 6) return;
 
