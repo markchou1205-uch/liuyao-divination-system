@@ -282,152 +282,116 @@ checkIfNeedTutorial() {
         this.removeHighlight();
     }
 
-    // 第五步：選擇起卦方式（實際功能）
-    showMethodSelectionStep() {
-        this.modal.innerHTML = `
-            <div class="tutorial-content">
-                <h2>選擇起卦方式</h2>
-                <div class="method-selection">
-                    <div class="method-option">
-                        <label class="method-radio">
-                            <input type="radio" name="tutorial-method" value="random" id="tutorial-random">
-                            <span class="radio-label">隨機起卦（簡易）</span>
-                        </label>
-                        <div class="method-description" id="random-description" style="display: none;">
-                            由系統隨機起卦，您不需要做其它動作，只需在心中專心默唸您的問題。
-                        </div>
-                    </div>
-                    
-                    <div class="method-option">
-                        <label class="method-radio">
-                            <input type="radio" name="tutorial-method" value="liuyao" id="tutorial-liuyao">
-                            <span class="radio-label">六爻起卦（進階）</span>
-                        </label>
-                        <div class="method-description" id="liuyao-description" style="display: none;">
-                            <div class="liuyao-instruction">
-                                <p><strong>六爻起卦步驟：</strong></p>
-                                <ol>
-                                    <li>將3枚硬幣置於掌心合起，輕輕搖晃，讓硬幣在掌中滾動後，將硬幣輕擲於桌上</li>
-                                    <li>觀察三枚硬幣中，陽面（正面/人頭面）出現的次數並記錄下來</li>
-                                    <li>重複前述步驟，總共6次，會得到6個0-3的數字</li>
-                                </ol>
-                                <div id="liuyao-inputs" style="display: none;">
-                                    <p><strong>請輸入6次擲幣結果：</strong></p>
-                                    <div class="dice-inputs">
-                                        <div class="dice-row">
-                                            <span>第1次：</span>
-                                            <select id="dice-1">
-                                                <option value="0">0個正面</option>
-                                                <option value="1">1個正面</option>
-                                                <option value="2">2個正面</option>
-                                                <option value="3">3個正面</option>
-                                            </select>
-                                        </div>
-                                        <div class="dice-row">
-                                            <span>第2次：</span>
-                                            <select id="dice-2">
-                                                <option value="0">0個正面</option>
-                                                <option value="1">1個正面</option>
-                                                <option value="2">2個正面</option>
-                                                <option value="3">3個正面</option>
-                                            </select>
-                                        </div>
-                                        <div class="dice-row">
-                                            <span>第3次：</span>
-                                            <select id="dice-3">
-                                                <option value="0">0個正面</option>
-                                                <option value="1">1個正面</option>
-                                                <option value="2">2個正面</option>
-                                                <option value="3">3個正面</option>
-                                            </select>
-                                        </div>
-                                        <div class="dice-row">
-                                            <span>第4次：</span>
-                                            <select id="dice-4">
-                                                <option value="0">0個正面</option>
-                                                <option value="1">1个正面</option>
-                                                <option value="2">2個正面</option>
-                                                <option value="3">3個正面</option>
-                                            </select>
-                                        </div>
-                                        <div class="dice-row">
-                                            <span>第5次：</span>
-                                            <select id="dice-5">
-                                                <option value="0">0個正面</option>
-                                                <option value="1">1個正面</option>
-                                                <option value="2">2個正面</option>
-                                                <option value="3">3個正面</option>
-                                            </select>
-                                        </div>
-                                        <div class="dice-row">
-                                            <span>第6次：</span>
-                                            <select id="dice-6">
-                                                <option value="0">0個正面</option>
-                                                <option value="1">1個正面</option>
-                                                <option value="2">2個正面</option>
-                                                <option value="3">3個正面</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                ${this.createNavigationButtons()}
-            </div>
-            <style>
-                .method-option {
-                    margin: 20px 0;
-                    border: 1px solid #ddd;
-                    border-radius: 8px;
-                    padding: 15px;
-                }
-                .method-radio {
-                    display: flex;
-                    align-items: center;
-                    cursor: pointer;
-                    font-weight: bold;
-                    font-size: 16px;
-                }
-                .method-radio input {
-                    margin-right: 10px;
-                }
-                .method-description {
-                    margin-top: 15px;
-                    padding: 15px;
-                    background: #f8f9fa;
-                    border-radius: 5px;
-                }
-                .dice-inputs {
-                    margin-top: 15px;
-                }
-                .dice-row {
-                    display: flex;
-                    align-items: center;
-                    margin: 10px 0;
-                }
-                .dice-row span {
-                    width: 80px;
-                    font-weight: bold;
-                }
-                .dice-row select {
-                    margin-left: 10px;
-                    padding: 5px;
-                }
-                .liuyao-instruction ol {
-                    margin-left: 20px;
-                }
-                .liuyao-instruction li {
-                    margin: 8px 0;
-                }
-            </style>
-        `;
-        
-        this.setupMethodSelectionListeners();
-    }
+// 第五步：六次點擊起卦（整合隨機與六爻，無逐步撤銷）
+showMethodSelectionStep() {
+  this.modal.innerHTML = `
+    <div class="tutorial-content">
+      <h2>起卦（六次點擊）</h2>
 
-    // 第六步：選擇問題類型（新增）
+      <div id="sixi-container" class="sixi two-col" aria-live="polite">
+        <!-- 左欄：點擊區 -->
+        <div class="sixi-left">
+          <div class="sixi-topbar">
+            <button id="btn-reset-sixi" class="text-btn">重新起卦</button>
+          </div>
+
+          <div class="sixi-anim-bg" aria-hidden="true"></div>
+
+          <div class="sixi-main-cta">
+            <button id="btn-sixi-main" class="primary">
+              擲一次（<span id="sixi-count">0</span>/6）
+            </button>
+            <p class="hint">依序按 6 次，即可完成起卦</p>
+          </div>
+        </div>
+
+        <!-- 右欄：結果顯示（由下到上） -->
+        <div class="sixi-right">
+          <div id="sixi-gua-name" class="gua-name" aria-live="polite" aria-atomic="true"></div>
+          <ol id="sixi-yao-list" class="yao-list" reversed>
+            <li data-slot="6" class="yao-slot"></li>
+            <li data-slot="5" class="yao-slot"></li>
+            <li data-slot="4" class="yao-slot"></li>
+            <li data-slot="3" class="yao-slot"></li>
+            <li data-slot="2" class="yao-slot"></li>
+            <li data-slot="1" class="yao-slot"></li>
+          </ol>
+        </div>
+
+        <!-- 60 秒靜心倒數（遮罩） -->
+        <div id="sixi-countdown" class="countdown hidden" role="dialog" aria-modal="true" aria-labelledby="sixi-countdown-title">
+          <div class="countdown-card">
+            <h3 id="sixi-countdown-title">靜心倒數</h3>
+            <p class="lead">請調息、凝神，專注於所問之事……</p>
+            <div class="timer"><span id="sixi-timer">60</span> 秒</div>
+          </div>
+        </div>
+
+        <!-- 重新起卦確認 -->
+        <div id="sixi-confirm" class="confirm hidden" role="dialog" aria-modal="true" aria-labelledby="sixi-confirm-title">
+          <div class="confirm-card">
+            <h3 id="sixi-confirm-title">重新起卦</h3>
+            <p>重新起卦會重新計時 60 秒的靜心時間，請確認是否重新起卦？</p>
+            <div class="confirm-actions">
+              <button id="sixi-confirm-cancel" class="ghost">取消</button>
+              <button id="sixi-confirm-ok" class="danger">確認</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${this.createNavigationButtons()}
+    </div>
+
+    <style>
+      .sixi.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; min-height: 420px; }
+      .sixi-left { position: relative; padding: 16px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+      .sixi-right { position: relative; padding: 16px; border: 1px solid #ddd; border-radius: 8px; display: flex; flex-direction: column; }
+
+      .sixi-topbar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+      .text-btn { background: transparent; border: none; color: #2563eb; cursor: pointer; }
+
+      .sixi-anim-bg { position: absolute; inset: 0; opacity: .22; pointer-events: none;
+        background: radial-gradient(120% 80% at 10% 10%, #94a3b8 0, transparent 50%),
+                    radial-gradient(90% 80% at 90% 80%, #a5b4fc 0, transparent 50%);
+        animation: drift 12s linear infinite alternate;
+      }
+      @keyframes drift { from{transform: translateY(-6%)} to{transform: translateY(6%)} }
+
+      .sixi-main-cta { position: relative; margin-top: 160px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+      .sixi-main-cta .primary { padding: 14px 22px; font-size: 16px; border-radius: 999px; cursor: pointer; }
+      .sixi-main-cta .hint { font-size: 12px; opacity: .75; }
+
+      .gua-name { min-height: 28px; font-weight: 600; text-align: center; margin-bottom: 12px; }
+
+      .yao-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; gap: 8px; flex: 1; justify-content: flex-end; }
+      .yao-slot { height: 22px; display: grid; place-items: center; }
+      .yao-line { width: 100%; height: 6px; border-radius: 3px; background: #111; position: relative; transform-origin: center; animation: popin .15s ease; }
+      .yao-line.yin::after { content: ""; position: absolute; left: 50%; top: 0; width: 24px; height: 100%; background: white; transform: translateX(-50%); }
+      .yao-line.moving { box-shadow: 0 0 0 2px #f59e0b inset; }
+
+      .countdown, .confirm { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.4); z-index: 50; }
+      .countdown.hidden, .confirm.hidden { display: none; }
+      .countdown-card, .confirm-card { width: min(520px, 92vw); padding: 24px; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.15); text-align: center; }
+      .timer { font-size: 42px; font-weight: 800; margin-top: 10px; }
+      .confirm-actions { margin-top: 16px; display: flex; gap: 8px; justify-content: center; }
+      .ghost { border: 1px solid #d1d5db; background: white; padding: 10px 14px; border-radius: 10px; }
+      .danger { background: #ef4444; color: white; border: none; padding: 10px 14px; border-radius: 10px; }
+
+      @keyframes popin { from { transform: scaleX(.94); opacity: .5 } to { transform: scaleX(1); opacity: 1 } }
+
+      /* 窄螢幕時上下排版 */
+      @media (max-width: 760px) {
+        .sixi.two-col { grid-template-columns: 1fr; }
+        .sixi-main-cta { margin-top: 80px; }
+      }
+    </style>
+  `;
+
+  // 啟用六次點擊流程
+  this.setupSixiListeners();
+}
+
 // 第六步：選擇問題類型（修正版）
 showQuestionSelectionStep() {
     if (!this.userData.method) {
@@ -699,6 +663,191 @@ showQuestionSelectionStep() {
     showResultStep() {
         // 這步會在選擇解卦方式後動態生成
     }
+// --- 六次點擊：內部狀態 ---
+initSixiState() {
+  this._sixi = {
+    n: 0,                // 已擲次數 0..6
+    data: [],            // 每次結果 0..3
+    locked: false,       // 防連點
+    mode: 'rolling',     // rolling | ready
+    timerId: null,
+    countdownRemain: 60,
+  };
+}
+
+// 權重抽樣（0..3, weights 1:3:3:1）
+sixiWeightedPick() {
+  const r = Math.floor(Math.random() * 8); // 0..7
+  if (r === 0) return 0;
+  if (r <= 3) return 1;
+  if (r <= 6) return 2;
+  return 3;
+}
+
+sixiIsYang(v) { return v === 1 || v === 3; }
+sixiIsMoving(v) { return v === 0 || v === 3; } // 動爻（若你有其它定義可調整）
+
+sixiRenderYao(slotIndex, v) {
+  const slot = this.modal.querySelector(`.yao-slot[data-slot="${slotIndex}"]`);
+  if (!slot) return;
+  const isYang = this.sixiIsYang(v);
+  const moving = this.sixiIsMoving(v);
+
+  const line = document.createElement('div');
+  line.className = 'yao-line ' + (isYang ? 'yang' : 'yin') + (moving ? ' moving' : '');
+  slot.innerHTML = '';
+  slot.appendChild(line);
+}
+
+sixiClearUI() {
+  this.modal.querySelectorAll('.yao-slot').forEach(li => (li.innerHTML = ''));
+  const nameEl = this.modal.querySelector('#sixi-gua-name');
+  if (nameEl) nameEl.textContent = '';
+}
+
+sixiComputeGuaNameByBits(bits /* 初→上, 1=陽,0=陰 */) {
+  // 若你專案有全域 64 卦表，例如 GUA_64_COMPLETE['111111'].name
+  if (typeof GUA_64_COMPLETE === 'object' && GUA_64_COMPLETE) {
+    const key = bits.join('');
+    const entry = GUA_64_COMPLETE[key];
+    if (entry && entry.name) return entry.name;
+  }
+  return '';
+}
+
+sixiRenderGuaNameIfReady() {
+  if (!this._sixi || this._sixi.n !== 6) return;
+  const bits = this._sixi.data.map(v => (this.sixiIsYang(v) ? 1 : 0)); // 初→上
+  const name = this.sixiComputeGuaNameByBits(bits);
+  const el = this.modal.querySelector('#sixi-gua-name');
+  if (el) el.textContent = name ? `本卦：${name}` : '';
+}
+
+// 僅重置狀態與畫面（不啟動倒數）
+sixiResetStateOnly() {
+  if (!this._sixi) this.initSixiState();
+  this._sixi.n = 0;
+  this._sixi.data = [];
+  this._sixi.locked = false;
+  this._sixi.mode = 'rolling';
+  if (this.userData) this.userData.liuyaoData = [];
+
+  this.sixiClearUI();
+  const cnt = this.modal.querySelector('#sixi-count');
+  const btn = this.modal.querySelector('#btn-sixi-main');
+  if (cnt) cnt.textContent = '0';
+  if (btn) btn.textContent = '擲一次（0/6）';
+}
+
+// 倒數視窗
+sixiOpenCountdown() {
+  const mask = this.modal.querySelector('#sixi-countdown');
+  if (!mask) return;
+  mask.classList.remove('hidden');
+  this._sixi.countdownRemain = 60;
+  const timerEl = this.modal.querySelector('#sixi-timer');
+  if (timerEl) timerEl.textContent = this._sixi.countdownRemain;
+
+  this._sixi.timerId = setInterval(() => {
+    this._sixi.countdownRemain -= 1;
+    if (timerEl) timerEl.textContent = this._sixi.countdownRemain;
+    if (this._sixi.countdownRemain <= 0) {
+      clearInterval(this._sixi.timerId);
+      this._sixi.timerId = null;
+      this.sixiCloseCountdown();
+      this.sixiResetStateOnly();
+    }
+  }, 1000);
+}
+sixiCloseCountdown() {
+  const mask = this.modal.querySelector('#sixi-countdown');
+  if (mask) mask.classList.add('hidden');
+}
+
+// 重新起卦確認框
+sixiOpenConfirm() {
+  const dlg = this.modal.querySelector('#sixi-confirm');
+  if (dlg) dlg.classList.remove('hidden');
+}
+sixiCloseConfirm() {
+  const dlg = this.modal.querySelector('#sixi-confirm');
+  if (dlg) dlg.classList.add('hidden');
+}
+
+// 主按鈕行為
+sixiOnMainClick() {
+  if (!this._sixi) this.initSixiState();
+  if (this._sixi.locked) return;
+
+  // 已完成 6 次 → 進入解卦
+  if (this._sixi.mode === 'ready') {
+    if (typeof this.performLiuyaoDivination === 'function') {
+      this.performLiuyaoDivination();
+    }
+    return;
+  }
+
+  if (this._sixi.n >= 6) return;
+
+  this._sixi.locked = true;
+
+  const v = this.sixiWeightedPick();
+  this._sixi.data.push(v);
+  this._sixi.n += 1;
+
+  // 同步寫入你原本的資料結構
+  if (this.userData) {
+    this.userData.liuyaoData = this._sixi.data.slice();
+  }
+
+  // 由下到上：n=1→slot=6, n=2→5 ... n=6→1
+  const slotIndex = 7 - this._sixi.n;
+  this.sixiRenderYao(slotIndex, v);
+
+  // 次數顯示
+  const cnt = this.modal.querySelector('#sixi-count');
+  if (cnt) cnt.textContent = String(this._sixi.n);
+
+  // 第 6 次完成：顯示卦名、改按鈕
+  if (this._sixi.n === 6) {
+    this._sixi.mode = 'ready';
+    this.sixiRenderGuaNameIfReady();
+    const btn = this.modal.querySelector('#btn-sixi-main');
+    if (btn) btn.textContent = '開始解卦';
+  }
+
+  setTimeout(() => { this._sixi.locked = false; }, 250);
+}
+
+// 綁定此步驟的所有監聽
+setupSixiListeners() {
+  this.initSixiState();
+  this.sixiResetStateOnly();
+
+  const mainBtn = this.modal.querySelector('#btn-sixi-main');
+  const resetBtn = this.modal.querySelector('#btn-reset-sixi');
+  const okBtn = this.modal.querySelector('#sixi-confirm-ok');
+  const cancelBtn = this.modal.querySelector('#sixi-confirm-cancel');
+
+  if (mainBtn) mainBtn.addEventListener('click', () => this.sixiOnMainClick());
+  if (resetBtn) resetBtn.addEventListener('click', () => this.sixiOpenConfirm());
+  if (cancelBtn) cancelBtn.addEventListener('click', () => this.sixiCloseConfirm());
+  if (okBtn) okBtn.addEventListener('click', () => {
+    this.sixiCloseConfirm();
+    this.sixiOpenCountdown();
+  });
+
+  // Space鍵支援（倒數/確認中停用）
+  window.addEventListener('keydown', (e) => {
+    const cdOpen = !this.modal.querySelector('#sixi-countdown').classList.contains('hidden');
+    const cfOpen = !this.modal.querySelector('#sixi-confirm').classList.contains('hidden');
+    if (cdOpen || cfOpen) return;
+    if (e.code === 'Space') {
+      e.preventDefault();
+      this.sixiOnMainClick();
+    }
+  }, { passive: false });
+}
 
     // 設置方法選擇監聽器
     setupMethodSelectionListeners() {
