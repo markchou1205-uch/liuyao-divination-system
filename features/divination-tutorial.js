@@ -963,7 +963,7 @@ setupSixiListeners() {
     collectLiuyaoData() {
         const data = [];
         for (let i = 1; i <= 6; i++) {
-            const select = document.getElementById(`dice-${i}`);
+            const select = document.getElementById('dice-' + i);
             if (select) {
                 data.push(parseInt(select.value));
             }
