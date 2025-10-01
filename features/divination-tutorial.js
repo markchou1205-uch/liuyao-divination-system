@@ -886,7 +886,7 @@ sixiOnMainClick() {
   if (cnt) cnt.textContent = String(this._sixi.n);
   const main = this.modal.querySelector('#btn-sixi-main');
   if (main && this._sixi.n < 6) {
-    main.innerHTML = \`擲一次（<span id="sixi-count">\${this._sixi.n}</span>/6）\`;
+    main.innerHTML = `\擲一次（<span id="sixi-count">\${this._sixi.n}</span>/6）\`;
   }
 
   // 第 6 次完成：顯示卦名、改按鈕、放開「下一步」
