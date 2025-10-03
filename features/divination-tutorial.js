@@ -413,7 +413,7 @@ this.modal.innerHTML = `
   </style>
 `;
 
-
+  this.sixiSetCoinFaces(['正','正','正']);
   // 固定為六爻模式
   this.userData.method = 'liuyao';
 
@@ -745,26 +745,22 @@ sixiIsMoving(v) { return v === 0 || v === 3; }    // 0 老陰、3 老陽
 sixiRenderYao(slotIndex, v) {
   const slot = this.modal.querySelector(`.yao-slot[data-slot="${slotIndex}"]`);
   if (!slot) return;
-  const isYang = this.sixiIsYang(v);
-  const isMoving = this.sixiIsMoving(v);
-  const text = isYang ? '▇▇▇▇▇▇▇▇▇' : '▇▇▇▇  ▇▇▇▇';
 
-  const wrap = document.createElement('div');
-  wrap.className = 'yao-item' + (isMoving ? ' yao-moving' : '');
+  const map = {
+    6: '/assets/images/tutorial/red-ying.png', // 老陰
+    7: '/assets/images/tutorial/yan.png',      // 少陽
+    8: '/assets/images/tutorial/ying.png',     // 少陰
+    9: '/assets/images/tutorial/red-yan.png'   // 老陽
+  };
 
-  const num = document.createElement('span');
-  num.className = 'yao-num';
-  num.textContent = String(v);
-
-  const span = document.createElement('span');
-  span.className = 'yao-text';
-  span.textContent = text;
-
-  wrap.appendChild(num);
-  wrap.appendChild(span);
-  slot.innerHTML = '';
-  slot.appendChild(wrap);
+  slot.innerHTML = `
+    <div class="yao-item">
+      <span class="yao-num">${slotIndex}</span>
+      <img src="${map[v]}" alt="爻" class="yao-img" style="height:24px;" />
+    </div>
+  `;
 }
+
 
 
 sixiClearUI() {
@@ -792,12 +788,23 @@ sixiComputeGuaNameByBits(bits /* 初→上, 1=陽,0=陰 */) {
 }
 
 sixiRenderGuaNameIfReady() {
-  if (!this._sixi || this._sixi.n !== 6) return;
-  const bits = this._sixi.data.map(v => (this.sixiIsYang(v) ? 1 : 0)); // 初→上
-  const name = this.sixiComputeGuaNameByBits(bits);
+  if (!this._sixi || this._sixi.n < 6) return;
+
+  const bin = this._sixi.data
+    .map(v => (v===7||v===9 ? '1' : '0')) // 陽=1, 陰=0
+    .join('');
+
+  const gua = (this.constructor.GUA_64_COMPLETE || {})[bin];
   const el = this.modal.querySelector('#sixi-gua-name');
-  if (el) el.textContent = name ? `本卦：${name}` : '(未匹配到卦名，請查看 Console 的 [GUA DEBUG])';
+
+  if (gua) {
+    el.textContent = gua.name + '（' + gua.type + '）';
+  } else {
+    console.warn('[GUA DEBUG] 未匹配到卦名', bin);
+    if (el) el.textContent = '（未匹配到卦名）';
+  }
 }
+
 
 // 僅重置狀態與畫面（不啟動倒數）
 sixiResetStateOnly() {
@@ -938,8 +945,9 @@ sixiOnMainClick() {
     if (cnt) cnt.textContent = String(this._sixi.n);
 
     const main = this.modal.querySelector('#btn-sixi-main');
+    const orderMap = ['第一次','第二次','第三次','第四次','第五次','第六次'];
     if (main && this._sixi.n < 6) {
-      main.innerHTML = '擲一次（<span id="sixi-count">' + this._sixi.n + '</span>/6）';
+      main.innerHTML = `擲${orderMap[this._sixi.n]}（${this._sixi.n}/6）`;
     }
 
     // 若滿六爻 → 切換為「開始解卦」
