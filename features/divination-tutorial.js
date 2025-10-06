@@ -1079,12 +1079,12 @@ sixiOnMainClick() {
     // 若滿六爻 → 切換為「開始解卦」
 if (this._sixi.n === 6) {
   this._sixi.mode = 'ready';
-  // 固化 userData，避免後續切頁時資料遺失或被覆蓋
-  this.userData.method = 'liuyao';
-  this.userData.liuyaoData = this._sixi.data.slice();
-  if (!Array.isArray(this.userData.liuyaoData) || this.userData.liuyaoData.length !== 6) {
-    console.warn('[AI DEBUG] 六爻完成但 userData.liuyaoData 異常：', this.userData.liuyaoData);
-  }
+// 固化 userData，避免後續切換步驟導致送出空陣列
+this.userData.method = 'liuyao';
+this.userData.liuyaoData = this._sixi.data.slice();
+if (!Array.isArray(this.userData.liuyaoData) || this.userData.liuyaoData.length !== 6) {
+  console.warn('[AI DEBUG] 六爻完成但 userData.liuyaoData 異常：', this.userData.liuyaoData);
+}
 
   if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
 
@@ -1611,53 +1611,112 @@ async showAIDivinationResultWithProgress() {
     this.performAIDivinationWithProgress();
 }
 
-// 執行AI解卦（進度條版本）
+// 進度條版 AI 解卦：強化除錯 / 成功才扣額度 / 失敗自動離線版（不扣額度）
 async performAIDivinationWithProgress() {
-    const progressFill = document.getElementById('progress-fill');
-    const progressText = document.getElementById('progress-text');
-    
-    if (!progressFill || !progressText) return;
-    
-    const progressSteps = [
-        { text: "起卦中", progress: 15, delay: 800 },
-        { text: "正在生成卦象", progress: 30, delay: 1000 },
-        { text: "解析用神衰旺", progress: 50, delay: 1200 },
-        { text: "解析本卦與變卦", progress: 70, delay: 1000 },
-        { text: "解讀卦象", progress: 85, delay: 1500 },
-        { text: "建立批卦報告", progress: 100, delay: 800 }
-    ];
-    
-    try {
-        for (let i = 0; i < progressSteps.length; i++) {
-            const step = progressSteps[i];
-            progressFill.style.width = step.progress + '%';
-            progressText.textContent = step.text;
-            await new Promise(resolve => setTimeout(resolve, step.delay));
-        }
-        
-        const customQuestion = this.userData.customQuestion || 
-                             `關於${this.getQuestionTypeText()}的問題`;
-        
-        const aiResponse = await this.callAIDirectly(customQuestion);
-        // 只有成功才扣額度
-        if (aiResponse && typeof aiDivination.incrementUsage === 'function') {
-          aiDivination.incrementUsage();
-        }
-        this.displayAIResult(aiResponse);
-        
-    } catch (error) {
-        console.error('AI解卦失敗:', error);
-        const aiContentDiv = document.getElementById('ai-content');
-        if (aiContentDiv) {
-            aiContentDiv.innerHTML = `
-                <div class="error-message">
-                    <h4>AI分析暫時無法使用</h4>
-                    <p>系統暫時無法提供AI解卦服務，建議您選擇卦師親自解卦。</p>
-                </div>
-            `;
-        }
+  const progressFill = document.getElementById('progress-fill');
+  const progressText = document.getElementById('progress-text');
+  const aiContentDiv = document.getElementById('ai-content');
+
+  const setProgress = (pct, txt) => {
+    if (progressFill) progressFill.style.width = pct + '%';
+    if (progressText)  progressText.textContent = txt || '';
+  };
+
+  try {
+    setProgress(10, '準備資料…');
+
+    // 準備問題文字
+    const customQuestion = (this.userData?.customQuestion && this.userData.customQuestion.trim())
+      ? this.userData.customQuestion.trim()
+      : `關於${this.getQuestionTypeText()}的問題`;
+
+    // 前置檢查（可快速辨識是不是 payload 有問題）
+    const ly = Array.isArray(this.userData?.liuyaoData) ? [...this.userData.liuyaoData] : [];
+    if (ly.length !== 6) {
+      console.warn('[AI DEBUG] userData.liuyaoData 長度不是 6：', ly);
     }
+
+    setProgress(30, '分析卦象…');
+
+    // 送出（內部會把 payload 與關鍵欄位印到 console）
+    const aiResponse = await this.callAIDirectly(customQuestion);
+
+    setProgress(80, '整理建議…');
+
+    // ✅ 成功才扣額度
+    if (aiResponse && typeof aiDivination?.incrementUsage === 'function') {
+      aiDivination.incrementUsage();
+    }
+
+    // 顯示結果
+    this.displayAIResult(aiResponse);
+    setProgress(100, '完成');
+
+  } catch (error) {
+    console.error('AI解卦失敗:', error);
+    setProgress(95, '伺服器暫時無法服務，切換離線分析…');
+
+    // ⛑️ 離線簡化版（不中斷流程，不扣額度）
+    let offline;
+    if (typeof this.generateSimpleAIResponse === 'function') {
+      offline = this.generateSimpleAIResponse(
+        this.userData?.customQuestion || `關於${this.getQuestionTypeText()}的問題`
+      );
+    } else {
+      // 最小離線版，避免沒有函式時崩潰
+      offline = {
+        success: true,
+        mode: 'offline',
+        title: '暫時以離線簡化分析',
+        summary: '伺服器忙碌或維護中，以下為根據本卦、變卦與問題主旨所做的簡化參考。',
+        advice: ['建議稍後再重試 AI 解卦，以獲得完整專業版內容。']
+      };
+    }
+
+    this.displayAIResult(offline);
+    setProgress(100, '已切換離線分析');
+
+    // 在結果區塊加上「重試」與「複製除錯資訊」兩個按鈕
+    if (aiContentDiv) {
+      const bar = document.createElement('div');
+      bar.style.marginTop = '12px';
+      bar.style.display = 'flex';
+      bar.style.gap = '8px';
+      bar.style.flexWrap = 'wrap';
+
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'btn';
+      retryBtn.textContent = '重試 AI 解卦';
+      retryBtn.onclick = () => this.performAIDivinationWithProgress();
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'btn btn-secondary';
+      copyBtn.textContent = '複製除錯資訊';
+      copyBtn.onclick = async () => {
+        try {
+          const payload = this.lastAIDebugPayload || {};
+          const text = JSON.stringify(payload, null, 2);
+          await navigator.clipboard.writeText(text);
+          alert('已複製送出 payload 與參數到剪貼簿（可貼到 curl 測試用）');
+          console.log('[AI DEBUG] 已複製：', payload);
+        } catch (e) {
+          console.warn('Clipboard 寫入失敗：', e);
+        }
+      };
+
+      bar.appendChild(retryBtn);
+      bar.appendChild(copyBtn);
+      aiContentDiv.appendChild(bar);
+
+      const tip = document.createElement('div');
+      tip.style.color = '#a67c00';
+      tip.style.marginTop = '6px';
+      tip.textContent = (error && (error.message || '').slice(0,200)) || 'AI 服務暫時無法使用';
+      aiContentDiv.appendChild(tip);
+    }
+  }
 }
+
 
     // 選擇卦師解卦
 // 選擇卦師解卦 - 修正版本
@@ -1956,19 +2015,19 @@ async performAIDivination() {
   }
 }
 
-// 直接調用AI解卦 —— 強化版（只改前端），保證 payload 完整、除錯詳盡、必要時自動修正端點再重試一次
+// 直接調用AI解卦 —— 強化版（記錄 lastAIDebugPayload，便於一鍵複製）
 async callAIDirectly(customQuestion) {
-  // 1) 讀目前的使用者選擇與六爻資料
+  // 1) 基本來源
   const questionType = this.userData?.questionType || '';
   const liuyaoDataRaw = Array.isArray(this.userData?.liuyaoData) ? this.userData.liuyaoData.slice() : [];
 
-  // 2) 從現有全域工具補齊資訊（若可）
+  // 2) 輔助資訊
   let mainGuaName = '';
   let changeGuaName = '';
   try { if (typeof getMainGuaName === 'function') mainGuaName = getMainGuaName() || ''; } catch {}
   try { if (typeof getChangeGuaName === 'function') changeGuaName = getChangeGuaName() || ''; } catch {}
 
-  // 3) 若 extractHexagramData 可用，當作主來源；否則就自行組基本 payload
+  // 3) extractHexagramData 優先
   let hexagramData = null;
   let usedExtract = false;
   try {
@@ -1981,11 +2040,7 @@ async callAIDirectly(customQuestion) {
   }
   if (!hexagramData || typeof hexagramData !== 'object') hexagramData = {};
 
-  // 4) 補齊必要欄位（舊版後端常見需求）
-  //   - liuyaoData: 6 個整數（0..3）
-  //   - customQuestion: 非空字串
-  //   - mainGuaName / changeGuaName: 儘量提供（空字串也可）
-  //   - 其他輔助欄位：timestamp、questionType 等
+  // 4) 補齊必要欄位
   const ly = Array.isArray(hexagramData.liuyaoData) ? hexagramData.liuyaoData : liuyaoDataRaw;
   hexagramData.liuyaoData = Array.isArray(ly) ? ly.slice() : [];
 
@@ -2001,75 +2056,54 @@ async callAIDirectly(customQuestion) {
   hexagramData.meta.questionType = questionType || 'unknown';
   hexagramData.meta.fromExtract = !!usedExtract;
 
-  // 5) 前置檢查（這裡直接輸出「實際值」避免 console 只顯示 Array(6)）
-  const issues = [];
+  // 5) 除錯輸出（實值）
   const lyCopy = Array.isArray(hexagramData.liuyaoData) ? [...hexagramData.liuyaoData] : [];
+  const issues = [];
   if (lyCopy.length !== 6) issues.push(`liuyaoData 長度不是 6（實際 ${lyCopy.length}）`);
   const invalidVals = lyCopy.filter(v => ![0,1,2,3].includes(v));
   if (invalidVals.length) issues.push(`liuyaoData 含非法值: [${invalidVals.join(', ')}]`);
   if (!hexagramData.customQuestion || !hexagramData.customQuestion.trim()) issues.push('customQuestion 為空');
-  // 讓你一眼看到實際內容
+
+  // 組合並保存「送出前」除錯 payload（提供複製）
+  this.lastAIDebugPayload = {
+    endpoint: (typeof aiDivination?.endpoint === 'string') ? aiDivination.endpoint : '(由 ai-divination.js 內部決定)',
+    questionType,
+    body: hexagramData
+  };
+
   console.groupCollapsed('%c[AI DEBUG] 準備送出 AI 請求 payload', 'color:#0b6');
+  console.log('endpoint =', this.lastAIDebugPayload.endpoint);
   console.log('questionType =', questionType);
   console.log('customQuestion =', hexagramData.customQuestion);
-  console.log('liuyaoData =', lyCopy);      // ← 顯示實值，不只 Array(6)
+  console.log('liuyaoData =', lyCopy);
   console.log('mainGuaName =', hexagramData.mainGuaName, '| changeGuaName =', hexagramData.changeGuaName);
   console.log('meta =', hexagramData.meta);
   if (issues.length) console.warn('前置檢查警告：', issues);
-  // 粗略估 payload 大小
   try { console.log('payload bytes ≈', new Blob([JSON.stringify(hexagramData)]).size); } catch {}
   console.groupEnd();
 
-  // 6) 呼叫 API：不改 ai-divination.js，但在必要時「臨時修正 endpoint」再重試一次
-  const tryCall = async () => {
-    if (typeof aiDivination?.callAIAPI !== 'function') {
-      throw new Error('aiDivination.callAIAPI 不存在');
-    }
-    return aiDivination.callAIAPI(hexagramData, questionType);
-  };
+  // 6) 呼叫 API（不改 ai-divination.js）
+  if (typeof aiDivination?.callAIAPI !== 'function') {
+    throw new Error('aiDivination.callAIAPI 不存在');
+  }
 
-  // 先試一次
   try {
-    const resp = await tryCall();
+    const resp = await aiDivination.callAIAPI(hexagramData, questionType);
     console.groupCollapsed('%c[AI DEBUG] 伺服器回應（成功）', 'color:#06c');
     console.log('keys:', resp && typeof resp === 'object' ? Object.keys(resp) : resp);
     console.groupEnd();
     return resp;
-  } catch (err1) {
-    // 如果是 500，且 endpoint 看起來像誤指到 *.js 路徑，嘗試自動修正再重試一次
-    const endpointNow = aiDivination && aiDivination.endpoint ? String(aiDivination.endpoint) : '';
-    const maybeDotJs = endpointNow.endsWith('.js') || /\/api\/ai-divination\.js\b/.test(endpointNow);
-    const canFlip = typeof aiDivination === 'object' && 'endpoint' in aiDivination;
-
+  } catch (err) {
     console.group('%c[AI DEBUG] 第一次呼叫失敗', 'color:#c00');
-    console.log('error:', err1?.message || err1);
-    console.log('endpointNow =', endpointNow, ' | canFlip =', canFlip, ' | maybeDotJs =', maybeDotJs);
+    console.log('error:', err?.message || err);
+    // 這裡列出 ai-divination.js 目前可見的 endpoint（若無，代表那支檔案內部決定路徑）
+    const endpointNow = (typeof aiDivination?.endpoint === 'string') ? aiDivination.endpoint : '';
+    console.log('endpointNow =', endpointNow || '(ai-divination.js 內部 fetch)');
     console.groupEnd();
-
-    if (canFlip && maybeDotJs) {
-      // 將 .../api/ai-divination.js → .../api/ai-divination （或移除副檔名）
-      const flipped = endpointNow.replace(/\/api\/ai-divination\.js\b/, '/api/ai-divination');
-      if (flipped !== endpointNow) {
-        try {
-          aiDivination.endpoint = flipped;
-          console.warn('[AI DEBUG] 偵測到 .js 端點，已臨時更正為：', aiDivination.endpoint);
-          const resp2 = await tryCall();
-          console.groupCollapsed('%c[AI DEBUG] 第二次呼叫（修正端點後）成功', 'color:#06c');
-          console.log('keys:', resp2 && typeof resp2 === 'object' ? Object.keys(resp2) : resp2);
-          console.groupEnd();
-          return resp2;
-        } catch (err2) {
-          console.group('%c[AI DEBUG] 第二次呼叫（修正端點）仍失敗', 'color:#c00');
-          console.log('error2:', err2?.message || err2);
-          console.log('endpoint used =', aiDivination.endpoint);
-          console.groupEnd();
-          throw err2;
-        }
-      }
-    }
-    throw err1;
+    throw err;
   }
 }
+
 
 
 // 繼續起卦功能
