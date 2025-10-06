@@ -915,56 +915,56 @@ sixiSetNextDisabled(disabled) {
   this._sixi.nav.next.classList.toggle('disabled', !!disabled);
 }
 /**
- * 控制「下一步」按鈕在起卦階段的顯示與行為
+ * 起卦步驟的導覽按鈕狀態：
+ * - n === 0：顯示「取消」，允許上一步
+ * - 0 < n < 6：顯示「取消」，鎖住上一步
+ * - n === 6：顯示「下一步」，解鎖上一步
  */
 sixiSetNextButtonState() {
   const nextBtn = this.modal.querySelector('#btn-next');
   const prevBtn = this.modal.querySelector('#btn-prev');
   if (!nextBtn) return;
 
-  // 尚未擲滿六次
-  if (this._sixi.n < 6) {
+  // 未滿六次：顯示「取消」
+  if (this._sixi && this._sixi.n < 6) {
     nextBtn.textContent = '取消';
     nextBtn.classList.remove('disabled');
     nextBtn.removeAttribute('disabled');
 
-    // 禁用上一步
+    // n===0 允許上一步；n>=1 鎖住上一步
     if (prevBtn) {
-      prevBtn.classList.add('disabled');
-      prevBtn.setAttribute('disabled', '');
+      if (this._sixi.n === 0) {
+        prevBtn.classList.remove('disabled');
+        prevBtn.removeAttribute('disabled');
+      } else {
+        prevBtn.classList.add('disabled');
+        prevBtn.setAttribute('disabled', '');
+      }
     }
 
-    // 點擊彈出確認框
+    // 點擊取消：確認後回到前一步（依你的實際步號調整 4）
     nextBtn.onclick = () => {
       if (confirm('確定取消問卦？')) {
-        // 重置卦象
         this.sixiResetStateOnly();
-        // 可考慮跳回前一步（例如方法選擇步）
-        if (typeof this.goToStep === 'function') {
-          this.goToStep(4); // ← 回前一個步驟，可依你實際步驟號調整
-        }
+        if (typeof this.goToStep === 'function') this.goToStep(4);
       }
     };
-  } else {
-    // 六爻完成
-    nextBtn.textContent = '下一步';
-    nextBtn.classList.remove('disabled');
-    nextBtn.removeAttribute('disabled');
-
-    // 解鎖上一步
-    if (prevBtn) {
-      prevBtn.classList.remove('disabled');
-      prevBtn.removeAttribute('disabled');
-    }
-
-    // 恢復預設行為
-    nextBtn.onclick = () => {
-      if (typeof this.goToStep === 'function') {
-        this.goToStep(6);
-      }
-    };
+    return;
   }
+
+  // 滿六次：顯示「下一步」
+  nextBtn.textContent = '下一步';
+  nextBtn.classList.remove('disabled');
+  nextBtn.removeAttribute('disabled');
+  if (prevBtn) {
+    prevBtn.classList.remove('disabled');
+    prevBtn.removeAttribute('disabled');
+  }
+  nextBtn.onclick = () => {
+    if (typeof this.goToStep === 'function') this.goToStep(6);
+  };
 }
+
 
 sixiSetResetDisabled(disabled) {
   const resetBtn = this.modal.querySelector('#btn-reset-sixi');
@@ -1064,6 +1064,8 @@ sixiOnMainClick() {
     // 稍微延遲解除鎖，避免連點
     setTimeout(() => { this._sixi.locked = false; }, 200);
   });
+this.sixiSetNextButtonState();
+
 }
 
 /* 把 v(0..3) 映射成三枚硬幣正反組合 */
