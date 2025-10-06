@@ -98,37 +98,65 @@ const modalHTML = `
         }
     }
 
-    hideModal() {
-        const modal = document.getElementById(this.modalId);
-        if (modal) {
-            modal.classList.add('hidden');
-            // 恢復背景滾動
-            document.body.style.overflow = '';
-            
-            // 延遲移除DOM元素
-            setTimeout(() => {
-                modal.remove();
-            }, 300);
-        }
-    }
+/**
+ * 關閉歡迎 modal
+ * @param {boolean} remove 是否從 DOM 直接移除（預設 true）
+ */
+hideModal(remove = true) {
+  const el = document.getElementById(this.modalId);
+  if (!el) return;
 
-    selectOption(option) {
-        const checkbox = document.getElementById('no-show-checkbox');
-        
-        // 如果勾選了不再顯示，保存設定
-        if (checkbox && checkbox.checked) {
-            localStorage.setItem(this.storageKey, 'true');
-        }
+  // 若有 backdrop（有些版本會用 overlay）
+  const backdrop = document.getElementById(this.modalId + '-backdrop')
+                   || document.querySelector('.welcome-modal-backdrop');
 
-        // 根據選擇進行跳轉或關閉
-        if (option === 'divination') {
-            // 跳轉到求卦者頁面
-            window.location.href = 'divination';
-        } else if (option === 'professional') {
-            // 關閉Modal，繼續使用專業版
-            this.hideModal();
-        }
-    }
+  // 從 DOM 移除或隱藏
+  if (remove) {
+    el.remove();
+    if (backdrop) backdrop.remove();
+  } else {
+    el.style.display = 'none';
+    if (backdrop) backdrop.style.display = 'none';
+  }
+
+  // 還原 body 狀態（避免仍然 overflow:hidden 或 pointer-events:none）
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  document.body.style.pointerEvents = '';
+
+  // 安全：把遮罩層都關掉（即使 class 名稱不同）
+  document.querySelectorAll('.welcome-modal, .welcome-overlay, .modal-backdrop')
+    .forEach(n => { if (n !== el) n.style.display = 'none'; });
+
+  // 移除可能註冊在 window 的 keydown（若你有 ESC 關閉）
+  // 建議你在 createModal 裡用命名的 handler，這裡才能 removeEventListener
+  // 這裡先保守不移除，以免你其他地方也用到
+}
+
+
+selectOption(option) {
+  // 防多點
+  const root = document.getElementById(this.modalId);
+  if (!root) return;
+
+  if (option === 'divination') {
+    // 求卦者 → 走你原本的流程（如果是 /divination 或 /divination.html 請保持一致）
+    window.location.href = 'divination';
+    return;
+  }
+
+  if (option === 'professional') {
+    // 卦師 → 關閉 modal 並標記這次不再顯示
+    try {
+      // 本次瀏覽就不再顯示（你也可改成 localStorage）
+      sessionStorage.setItem(this.storageKey, '1');
+    } catch {}
+
+    this.hideModal(true); // 徹底移除
+    return;
+  }
+}
+
 
     toggleNoShowAgain() {
         const checkbox = document.getElementById('no-show-checkbox');
