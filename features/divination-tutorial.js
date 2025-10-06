@@ -742,24 +742,35 @@ sixiIsYang(v) { return v === 1 || v === 3; }      // 1/3 陽
 sixiIsMoving(v) { return v === 0 || v === 3; }    // 0 老陰、3 老陽
 
 /* 爻渲染：左邊顯示數字，右邊用字元條 */
-sixiRenderYao(slotIndex, v) {
+// faces 參數是 ['正'|'反','正'|'反','正'|'反']，由 sixiOnMainClick 傳入
+sixiRenderYao(slotIndex, v, faces){
   const slot = this.modal.querySelector(`.yao-slot[data-slot="${slotIndex}"]`);
   if (!slot) return;
 
-  const map = {
+  const sum = this.sixiSumFromV(v); // 6/7/8/9
+
+  // 圖片對應表（你給的 URL）
+  const imgMap = {
     6: '/assets/images/tutorial/red-ying.png', // 老陰
     7: '/assets/images/tutorial/yan.png',      // 少陽
     8: '/assets/images/tutorial/ying.png',     // 少陰
     9: '/assets/images/tutorial/red-yan.png'   // 老陽
   };
 
+  // 三枚硬幣的顯示文字 —— 預設用 (2、3、2) 這種；你要 (3、1、0) 也行（見下行備註）
+  const label =
+    (typeof window.SIXI_TRIPLET_FORMAT === 'function')
+      ? window.SIXI_TRIPLET_FORMAT(faces) // 你可以在外面客製化 (3、1、0) 格式
+      : faces.map(f => f==='正' ? 2 : 3).join('、'); // 預設：正=2、反=3
+
   slot.innerHTML = `
     <div class="yao-item">
-      <span class="yao-num">${slotIndex}</span>
-      <img src="${map[v]}" alt="爻" class="yao-img" style="height:24px;" />
+      <img src="${imgMap[sum]}" alt="爻" class="yao-img" style="height:24px;margin-right:8px;" />
+      <span class="yao-triplet">(${label})</span>
     </div>
   `;
 }
+
 
 
 
@@ -787,22 +798,31 @@ sixiComputeGuaNameByBits(bits /* 初→上, 1=陽,0=陰 */) {
   return '';
 }
 
-sixiRenderGuaNameIfReady() {
+sixiRenderGuaNameIfReady(){
   if (!this._sixi || this._sixi.n < 6) return;
 
+  // ↓ 反轉：如果你 GUA_64_COMPLETE 的 key 是「上→下」，就要 reverse()
+  // 若你的表是「下→上」，把 .reverse() 拿掉即可
   const bin = this._sixi.data
-    .map(v => (v===7||v===9 ? '1' : '0')) // 陽=1, 陰=0
+    .map(v => (v===1 || v===3 ? '1' : '0')) // 7、9 為陽=1；6、8 為陰=0
+    //.reverse()                              // ★ 這行是關鍵
     .join('');
 
-  const gua = (this.constructor.GUA_64_COMPLETE || {})[bin];
+  const table = this.constructor.GUA_64_COMPLETE || window.GUA_64_COMPLETE || {};
+  const gua = table[bin];
   const el = this.modal.querySelector('#sixi-gua-name');
 
   if (gua) {
-    el.textContent = gua.name + '（' + gua.type + '）';
+    el.textContent = `${gua.name}（${gua.type}）`;
   } else {
     console.warn('[GUA DEBUG] 未匹配到卦名', bin);
     if (el) el.textContent = '（未匹配到卦名）';
   }
+}
+
+sixiSumFromV(v){
+  // v: 0=6(老陰)、1=7(少陽)、2=8(少陰)、3=9(老陽)
+  return v===0 ? 6 : v===1 ? 7 : v===2 ? 8 : 9;
 }
 
 
@@ -928,7 +948,7 @@ sixiOnMainClick() {
 
     // 渲染本次爻（自下而上）：第 n 次落在 slotIndex = 7 - n
     const slotIndex = 7 - this._sixi.n;
-    this.sixiRenderYao(slotIndex, v);
+    this.sixiRenderYao(slotIndex, v, faces);
 
     // 首次擲到後，開放「重新起卦」按鈕並禁用「上一步」
     if (this._sixi.n === 1) {
