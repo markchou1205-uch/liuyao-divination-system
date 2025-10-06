@@ -148,44 +148,68 @@ ${customQuestion ? `具體問題：${customQuestion}` : ''}
             return '系統忙碌中，請稍後再試';
         }
     }
-// 修改這個函數，從直接調用 Google AI 改為調用自己的後端
+// 修改這個函數：ai-divination.js
 async callAIAPI(guaData, questionType) {
-    try {
-        const aiGuaData = extractAIGuaData(questionType, guaData.customQuestion);
-        if (!aiGuaData) {
-            throw new Error('無法提取解卦數據');
-        }
-        const prompt = generateAIPrompt(aiGuaData);
-        console.log('生成的 AI Prompt:', prompt);
-        
-        const response = await fetch('/api/ai-divination.js', {
+  try {
+    // 1) 先把 prompt 準備好（沿用你現有邏輯）
+    const aiGuaData = (typeof extractAIGuaData === 'function')
+      ? extractAIGuaData(questionType, guaData.customQuestion)
+      : null;
+    const prompt = (typeof generateAIPrompt === 'function')
+      ? generateAIPrompt(aiGuaData || guaData, questionType)
+      : (typeof this.generatePrompt === 'function'
+          ? this.generatePrompt(guaData, questionType)
+          : `請分析：${JSON.stringify(guaData)}`);
+
+    const endpoints = ['/api/ai-divination', '/api/ai-divination.js']; // 先試無 .js
+    const payloads = [
+      // 你現在的後端若吃 prompt，就第一個會成功
+      (p) => ({ body: JSON.stringify({ prompt: p }), desc: 'prompt-only' }),
+      // 另一種老 schema（如果你後端吃 questionType+data）
+      () => ({ body: JSON.stringify({ questionType, data: guaData }), desc: 'questionType+data' })
+    ];
+
+    let lastErr;
+    for (const ep of endpoints) {
+      for (const builder of payloads) {
+        const { body, desc } = builder(prompt);
+        try {
+          const res = await fetch(ep, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                prompt: prompt
-            })
-        });
+            headers: { 'Content-Type': 'application/json' },
+            body
+          });
 
-        console.log('API 回應狀態:', response.status);
-        console.log('API 回應 headers:', response.headers);
+          console.log('[AI DEBUG] POST', ep, desc, 'status=', res.status);
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.log('錯誤回應內容:', errorText);
-            throw new Error(`API 錯誤: ${response.status} - ${errorText}`);
+          const text = await res.text();
+          if (!res.ok) {
+            console.warn('[AI DEBUG] error body:', text);
+            throw new Error(`API 錯誤: ${res.status} - ${text}`);
+          }
+
+          // 後端可能回不同格式，以下做容錯
+          let json = {};
+          try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text }; }
+          // 兼容 {interpretation}, {content}, 或 {success:true, data:{...}}
+          const result =
+            json.interpretation || json.content || json?.data?.interpretation || json?.data?.content || text;
+
+          console.log('API 成功回應(摘要鍵):', Object.keys(json));
+          return result;
+        } catch (e) {
+          lastErr = e;
         }
-
-        const data = await response.json();
-        console.log('API 成功回應:', data);
-        return data.interpretation;
-
-    } catch (error) {
-        console.error('完整錯誤資訊:', error);
-        throw error;
+      }
     }
+    throw lastErr || new Error('AI API 呼叫失敗（未知原因）');
+
+  } catch (error) {
+    console.error('完整錯誤資訊:', error);
+    throw error;
+  }
 }
+
 
 // 輔助方法：獲取問題文字
 getQuestionText(questionType) {
