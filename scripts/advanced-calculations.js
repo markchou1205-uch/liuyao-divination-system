@@ -685,4 +685,4 @@ if (typeof module !== 'undefined' && module.exports) {
         AdvancedCalculator
     };
 }
-window.GUA_64_COMPLETE = AdvancedCalculations.GUA_64_COMPLETE;
+window.GUA_64_COMPLETE = AdvancedCalculation.GUA_64_COMPLETE;
