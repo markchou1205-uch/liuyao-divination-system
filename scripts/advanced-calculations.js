@@ -685,3 +685,5 @@ if (typeof module !== 'undefined' && module.exports) {
         AdvancedCalculator
     };
 }
+// 若類別中有 static GUA_64_COMPLETE，這行會讓它成為全域變數
+window.GUA_64_COMPLETE = DivinationTutorial.GUA_64_COMPLETE;
