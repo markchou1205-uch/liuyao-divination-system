@@ -201,7 +201,7 @@ checkIfNeedTutorial() {
     }
 
 showPreparation2Step() {
-  return this.showPreparation3Step();
+  this.showStep(4);
 }
 
     // 第四步：占卦準備3
@@ -2199,6 +2199,10 @@ nextStep() {
 
     // 上一步
     previousStep() {
+          if (this.currentStep === 4) {
+              this.showStep(2);
+              return;
+        }
         if (this.currentStep > 1) {
             this.showStep(this.currentStep - 1);
         }
