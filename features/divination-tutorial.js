@@ -102,10 +102,10 @@ checkIfNeedTutorial() {
                 this.showPreparation3Step();
                 break;
             case 5:
-                this.showMethodSelectionStep();
+                this.showQuestionSelectionStep(); // ← 原本是起卦，改成選類型+輸入
                 break;
             case 6:
-                this.showQuestionSelectionStep();
+                this.showMethodSelectionStep();   // ← 原本是選類型，改成起卦
                 break;
             case 7:
                 this.showDivinationOptionsStep();
@@ -166,7 +166,7 @@ checkIfNeedTutorial() {
     showPreparation1Step() {
         this.modal.innerHTML = `
             <div class="tutorial-content">
-                <h2>占卦準備 (1/3)</h2>
+                <h2>占卦準備 (1/2)</h2>
                 <div class="tutorial-text">
                     <p>1. 請簡單洗手洗臉、穿著整齊。</p>
                     <p>並選擇有桌椅且安靜不受打擾的場所。</p>
@@ -200,48 +200,15 @@ checkIfNeedTutorial() {
         this.removeHighlight();
     }
 
-    // 第三步：占卦準備2
-    showPreparation2Step() {
-        this.modal.innerHTML = `
-            <div class="tutorial-content">
-                <h2>占卦準備 (2/3)</h2>
-                <div class="tutorial-text">
-                    <p>請準備紙、筆、以及三枚面額、形式相同的硬幣置於桌上。</p>
-                    <p>同時請您放鬆自在的坐於桌前。</p>
-                </div>
-                <div class="tutorial-image-container">
-                    <div class="preparation-items">
-                        <div class="item">📝 紙筆</div>
-                        <div class="item">🪙 三枚硬幣</div>
-                        <div class="item">🪑 舒適座椅</div>
-                    </div>
-                </div>
-                ${this.createNavigationButtons()}
-            </div>
-            <style>
-                .preparation-items {
-                    display: flex;
-                    justify-content: space-around;
-                    margin: 30px 0;
-                }
-                .item {
-                    text-align: center;
-                    font-size: 18px;
-                    padding: 15px;
-                    background: #f8f9fa;
-                    border-radius: 8px;
-                    min-width: 100px;
-                }
-            </style>
-        `;
-        this.removeHighlight();
-    }
+showPreparation2Step() {
+  return this.showPreparation3Step();
+}
 
     // 第四步：占卦準備3
     showPreparation3Step() {
         this.modal.innerHTML = `
             <div class="tutorial-content">
-                <h2>占卦準備 (3/3)</h2>
+                <h2>占卦準備 (2/2)</h2>
                 <div class="tutorial-text">
                     <p><strong>在心中默唸您所要問的問題</strong></p>
                     <div class="preparation-note">
@@ -596,30 +563,12 @@ showQuestionSelectionStep() {
 
     // 第七步：解卦方式選擇
     showDivinationOptionsStep() {
-    const radioButtons = document.querySelectorAll('input[name="question-type"]');
-    const customQuestionElement = document.getElementById('custom-question');
-    const customQuestion = customQuestionElement ? customQuestionElement.value.trim() : '';
-    let selectedType = '';
-    radioButtons.forEach(radio => {
-        if (radio.checked) {
-            selectedType = radio.value;
-        }
-    });
-    // 檢查兩個都要填寫，但不清除已輸入的內容
-    if (!selectedType && !customQuestion) {
-        alert('請選擇問題類型並輸入問題內容');
-        return; // 直接返回，不執行 previousStep()
-    } else if (!selectedType) {
-        alert('請選擇問題類型');
-        return; // 直接返回，不執行 previousStep()
-    } else if (!customQuestion) {
-        alert('請輸入問題內容');
-        return; // 直接返回，不執行 previousStep()
-    }
-            // 驗證通過，保存數據
-    this.userData.questionType = selectedType;
-    this.userData.customQuestion = customQuestion;
-        // 執行起卦
+  const selectedType = this.userData?.questionType || '';
+  const customQuestion = (this.userData?.customQuestion || '').trim();
+
+  if (!selectedType && !customQuestion) { alert('請選擇問題類型並輸入問題內容'); return; }
+  if (!selectedType) { alert('請選擇問題類型'); return; }
+  if (!customQuestion) { alert('請輸入問題內容'); return; }
         this.performDivination();
 
         this.modal.innerHTML = `
@@ -989,7 +938,7 @@ sixiSetNextButtonState() {
     prevBtn.removeAttribute('disabled');
   }
   nextBtn.onclick = () => {
-    if (typeof this.goToStep === 'function') this.goToStep(6);
+    if (typeof this.goToStep === 'function') this.goToStep(7);
   };
 }
 
@@ -1209,7 +1158,7 @@ setupSixiListeners() {
 
   this._sixiKeyHandler = (e) => {
     // 只在「起卦（六次點擊）」步驟啟用
-    if (this.currentStep !== 5) return;
+    if (this.currentStep !== 6) return;
 
     const cd = this.modal ? this.modal.querySelector('#sixi-countdown') : null;
     const cf = this.modal ? this.modal.querySelector('#sixi-confirm') : null;
@@ -2235,13 +2184,18 @@ continueReading() {
     }
 
     // 下一步
-    nextStep() {
-        if (this.currentStep < this.totalSteps) {
-            this.showStep(this.currentStep + 1);
-        } else {
-            this.completeTutorial();
-        }
-    }
+nextStep() {
+  // 5/8 必須通過既有的 collectQuestionData() 檢查
+  if (this.currentStep === 5) {
+    if (!this.collectQuestionData()) return; // 沒通過就不往下
+  }
+  if (this.currentStep < this.totalSteps) {
+    this.showStep(this.currentStep + 1);
+  } else {
+    this.completeTutorial();
+  }
+}
+
 
     // 上一步
     previousStep() {
