@@ -2015,94 +2015,77 @@ async performAIDivination() {
   }
 }
 
-// 直接調用AI解卦 —— 強化版（記錄 lastAIDebugPayload，便於一鍵複製）
+// 直接調用AI解卦 —— 先送完整資料；若 500 再以最小 schema 重試（不改 ai-divination.js）
 async callAIDirectly(customQuestion) {
-  // 1) 基本來源
   const questionType = this.userData?.questionType || '';
-  const liuyaoDataRaw = Array.isArray(this.userData?.liuyaoData) ? this.userData.liuyaoData.slice() : [];
+  if (!customQuestion || !customQuestion.trim()) {
+    customQuestion = `關於${this.getQuestionTypeText()}的問題`;
+  }
 
-  // 2) 輔助資訊
-  let mainGuaName = '';
-  let changeGuaName = '';
-  try { if (typeof getMainGuaName === 'function') mainGuaName = getMainGuaName() || ''; } catch {}
-  try { if (typeof getChangeGuaName === 'function') changeGuaName = getChangeGuaName() || ''; } catch {}
-
-  // 3) extractHexagramData 優先
-  let hexagramData = null;
+  // 1) 取得完整 hexagramData（沿用舊版作法）
+  let full = {};
   let usedExtract = false;
   try {
     if (typeof extractHexagramData === 'function') {
-      hexagramData = extractHexagramData();
+      full = extractHexagramData() || {};
       usedExtract = true;
     }
   } catch (e) {
     console.warn('[AI DEBUG] extractHexagramData() 失敗：', e);
   }
-  if (!hexagramData || typeof hexagramData !== 'object') hexagramData = {};
+  full.customQuestion = customQuestion;
 
-  // 4) 補齊必要欄位
-  const ly = Array.isArray(hexagramData.liuyaoData) ? hexagramData.liuyaoData : liuyaoDataRaw;
-  hexagramData.liuyaoData = Array.isArray(ly) ? ly.slice() : [];
-
-  if (!hexagramData.customQuestion || !hexagramData.customQuestion.trim()) {
-    hexagramData.customQuestion = customQuestion && customQuestion.trim()
-      ? customQuestion.trim()
-      : `關於${this.getQuestionTypeText()}的問題`;
-  }
-  if (typeof hexagramData.mainGuaName !== 'string') hexagramData.mainGuaName = mainGuaName || '';
-  if (typeof hexagramData.changeGuaName !== 'string') hexagramData.changeGuaName = changeGuaName || '';
-  if (!hexagramData.meta) hexagramData.meta = {};
-  hexagramData.meta.timestamp = new Date().toISOString();
-  hexagramData.meta.questionType = questionType || 'unknown';
-  hexagramData.meta.fromExtract = !!usedExtract;
-
-  // 5) 除錯輸出（實值）
-  const lyCopy = Array.isArray(hexagramData.liuyaoData) ? [...hexagramData.liuyaoData] : [];
-  const issues = [];
-  if (lyCopy.length !== 6) issues.push(`liuyaoData 長度不是 6（實際 ${lyCopy.length}）`);
-  const invalidVals = lyCopy.filter(v => ![0,1,2,3].includes(v));
-  if (invalidVals.length) issues.push(`liuyaoData 含非法值: [${invalidVals.join(', ')}]`);
-  if (!hexagramData.customQuestion || !hexagramData.customQuestion.trim()) issues.push('customQuestion 為空');
-
-  // 組合並保存「送出前」除錯 payload（提供複製）
-  this.lastAIDebugPayload = {
-    endpoint: (typeof aiDivination?.endpoint === 'string') ? aiDivination.endpoint : '(由 ai-divination.js 內部決定)',
-    questionType,
-    body: hexagramData
+  // 2) 組最小 payload（僅保留伺服器一定用得到的欄位）
+  const ly = Array.isArray(full.liuyaoData) ? full.liuyaoData.slice() :
+             (Array.isArray(this.userData?.liuyaoData) ? this.userData.liuyaoData.slice() : []);
+  const minimal = {
+    liuyaoData: ly,
+    customQuestion: customQuestion
+    // 👉 如需卦名再加：mainGuaName: full.mainGuaName || '', changeGuaName: full.changeGuaName || ''
   };
 
-  console.groupCollapsed('%c[AI DEBUG] 準備送出 AI 請求 payload', 'color:#0b6');
-  console.log('endpoint =', this.lastAIDebugPayload.endpoint);
-  console.log('questionType =', questionType);
-  console.log('customQuestion =', hexagramData.customQuestion);
-  console.log('liuyaoData =', lyCopy);
-  console.log('mainGuaName =', hexagramData.mainGuaName, '| changeGuaName =', hexagramData.changeGuaName);
-  console.log('meta =', hexagramData.meta);
-  if (issues.length) console.warn('前置檢查警告：', issues);
-  try { console.log('payload bytes ≈', new Blob([JSON.stringify(hexagramData)]).size); } catch {}
-  console.groupEnd();
+  // 3) 記錄除錯資訊（可用「複製除錯資訊」鈕帶走）
+  this.lastAIDebugPayload = {
+    endpoint: (typeof aiDivination?.endpoint === 'string')
+      ? aiDivination.endpoint
+      : '(由 ai-divination.js 內部決定)',
+    questionType,
+    body_full: full,
+    body_minimal: minimal
+  };
 
-  // 6) 呼叫 API（不改 ai-divination.js）
-  if (typeof aiDivination?.callAIAPI !== 'function') {
-    throw new Error('aiDivination.callAIAPI 不存在');
-  }
+  // 4) 送出：完整 →（失敗且 500）→ 最小 schema
+  const tryCall = async (payload, label='full') => {
+    console.groupCollapsed(`%c[AI DEBUG] 呼叫（${label}）`, 'color:#0b6');
+    console.log('questionType =', questionType);
+    console.log('customQuestion =', payload.customQuestion);
+    console.log('liuyaoData =', payload.liuyaoData);
+    try { console.log('payload bytes ≈', new Blob([JSON.stringify(payload)]).size); } catch {}
+    console.groupEnd();
+    return aiDivination.callAIAPI(payload, questionType);
+  };
 
   try {
-    const resp = await aiDivination.callAIAPI(hexagramData, questionType);
-    console.groupCollapsed('%c[AI DEBUG] 伺服器回應（成功）', 'color:#06c');
-    console.log('keys:', resp && typeof resp === 'object' ? Object.keys(resp) : resp);
-    console.groupEnd();
+    const resp = await tryCall(full, 'full');
     return resp;
-  } catch (err) {
-    console.group('%c[AI DEBUG] 第一次呼叫失敗', 'color:#c00');
-    console.log('error:', err?.message || err);
-    // 這裡列出 ai-divination.js 目前可見的 endpoint（若無，代表那支檔案內部決定路徑）
-    const endpointNow = (typeof aiDivination?.endpoint === 'string') ? aiDivination.endpoint : '';
-    console.log('endpointNow =', endpointNow || '(ai-divination.js 內部 fetch)');
-    console.groupEnd();
-    throw err;
+  } catch (e1) {
+    // 非 500 的錯就直接丟出（例如 401/429）
+    if (!/API 錯誤:\s*500\b/.test(String(e1?.message || e1))) {
+      console.group('%c[AI DEBUG] 呼叫（full）失敗', 'color:#c00'); console.log(e1); console.groupEnd();
+      throw e1;
+    }
+    // 500 → 改以最小 schema 再試一次
+    console.warn('[AI DEBUG] 伺服器 500，改以最小 schema 重試');
+    try {
+      const resp2 = await tryCall(minimal, 'minimal');
+      return resp2;
+    } catch (e2) {
+      console.group('%c[AI DEBUG] 呼叫（minimal）仍失敗', 'color:#c00'); console.log(e2); console.groupEnd();
+      throw e2;
+    }
   }
 }
+
 
 
 
