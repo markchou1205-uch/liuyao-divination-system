@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>免費求卦｜文王卦系統</title>
+  <link rel="stylesheet" href="/assets/css/base.css" />
+  <style>
+    /* 讓整頁就是「引導精靈」容器，不再是疊在舊畫面上 */
+    body { margin:0; background:#fff; }
+    #tutorial-root { min-height:100vh; display:grid; place-items:center; }
+  </style>
+</head>
+<body>
+  <div id="tutorial-root"></div>
+
+  <script>
+    // 讓教學精靈知道：這是「整頁模式」，不是舊的 overlay modal
+    window.TUTORIAL_PAGE_MODE = true;
+  </script>
+
+  <!-- 先載卦理常數（方案A 全域掛載） -->
+  <script src="/scripts/advanced-calculations.js"></script>
+
+  <!-- 再載引導精靈 -->
+  <script src="/features/divination-tutorial.js"></script>
+
+  <script>
+    // 初始化：直接從「輸入問題」開始（新的 Step 5）
+    window.addEventListener('DOMContentLoaded', () => {
+      const tutorial = new DivinationTutorial({
+        root: document.getElementById('tutorial-root')
+      });
+      if (!window.GUA_64_COMPLETE && tutorial.constructor.GUA_64_COMPLETE) {
+        window.GUA_64_COMPLETE = tutorial.constructor.GUA_64_COMPLETE;
+      }
+      // 直接走引導，不顯示主站卦表
+      if (typeof tutorial.start === 'function') {
+        tutorial.start();
+      }
+      // 立刻切到「輸入問題」這一步
+      if (typeof tutorial.goToStep === 'function') {
+        tutorial.goToStep(5);
+      }
+    });
+  </script>
+</body>
+</html>
