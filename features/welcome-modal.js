@@ -13,11 +13,12 @@ class WelcomeModal {
         }
     }
 
-    shouldShowModal() {
-        // 檢查localStorage中的設定
-        return localStorage.getItem(this.storageKey) !== 'true';
-    }
-
+shouldShowModal() {
+  // 兩者任一為 'true' 都視為「不要顯示」
+  const hideLocal = localStorage.getItem(this.storageKey) === 'true';
+  const hideSession = sessionStorage.getItem(this.storageKey) === '1' || sessionStorage.getItem(this.storageKey) === 'true';
+  return !(hideLocal || hideSession);
+}
     createModal() {
         // 如果Modal已存在，直接返回
         if (document.getElementById(this.modalId)) {
@@ -106,11 +107,11 @@ hideModal(remove = true) {
   const el = document.getElementById(this.modalId);
   if (!el) return;
 
-  // 若有 backdrop（有些版本會用 overlay）
+  // 有些佈景會另外插 overlay/backdrop
   const backdrop = document.getElementById(this.modalId + '-backdrop')
-                   || document.querySelector('.welcome-modal-backdrop');
+                || document.querySelector('.welcome-modal-backdrop')
+                || document.querySelector('.welcome-overlay');
 
-  // 從 DOM 移除或隱藏
   if (remove) {
     el.remove();
     if (backdrop) backdrop.remove();
@@ -124,39 +125,49 @@ hideModal(remove = true) {
   document.body.style.overflow = '';
   document.body.style.pointerEvents = '';
 
-  // 安全：把遮罩層都關掉（即使 class 名稱不同）
+  // 再保險：把所有可能的遮罩都關掉
   document.querySelectorAll('.welcome-modal, .welcome-overlay, .modal-backdrop')
     .forEach(n => { if (n !== el) n.style.display = 'none'; });
-
-  // 移除可能註冊在 window 的 keydown（若你有 ESC 關閉）
-  // 建議你在 createModal 裡用命名的 handler，這裡才能 removeEventListener
-  // 這裡先保守不移除，以免你其他地方也用到
 }
 
+/** 最保險的強制關閉（徹底移除所有相關節點與樣式） */
+forceCloseModal() {
+  try {
+    const el = document.getElementById(this.modalId);
+    if (el) el.remove();
+    document.querySelectorAll('.welcome-modal, .welcome-overlay, .modal-backdrop, .welcome-modal-backdrop')
+      .forEach(n => n.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.pointerEvents = '';
+  } catch {}
+}
 
 selectOption(option) {
-  // 防多點
   const root = document.getElementById(this.modalId);
   if (!root) return;
 
   if (option === 'divination') {
-    // 求卦者 → 走你原本的流程（如果是 /divination 或 /divination.html 請保持一致）
+    // 求卦者 → 依你現有路由
     window.location.href = 'divination';
     return;
   }
 
   if (option === 'professional') {
-    // 卦師 → 關閉 modal 並標記這次不再顯示
-    try {
-      // 本次瀏覽就不再顯示（你也可改成 localStorage）
-      sessionStorage.setItem(this.storageKey, '1');
-    } catch {}
+    // 卦師 → 關閉 modal，並記錄本次不再顯示（session）
+    try { sessionStorage.setItem(this.storageKey, '1'); } catch {}
 
-    this.hideModal(true); // 徹底移除
+    // 若勾了「下次不用再顯示」，就記錄到 localStorage
+    const cb = document.getElementById('no-show-checkbox');
+    if (cb && cb.checked) {
+      try { localStorage.setItem(this.storageKey, 'true'); } catch {}
+    }
+
+    // 徹底關閉
+    this.forceCloseModal();
     return;
   }
 }
-
 
     toggleNoShowAgain() {
         const checkbox = document.getElementById('no-show-checkbox');
