@@ -14,19 +14,26 @@ class WelcomeModal {
     }
 
 shouldShowModal() {
-  // 兩者任一為 'true' 都視為「不要顯示」
   const hideLocal = localStorage.getItem(this.storageKey) === 'true';
   const hideSession = sessionStorage.getItem(this.storageKey) === '1' || sessionStorage.getItem(this.storageKey) === 'true';
-  return !(hideLocal || hideSession);
+  const result = !(hideLocal || hideSession);
+  console.log('[WELCOME] shouldShowModal', { hideLocal, hideSession, show: result });
+  return result;
 }
-    createModal() {
-        // 如果Modal已存在，直接返回
-        if (document.getElementById(this.modalId)) {
-            return;
-        }
+createModal() {
+  // 如果Modal已存在，直接返回
+  if (document.getElementById(this.modalId)) {
+    console.log('[WELCOME] createModal: already exists');
+    return;
+  }
 
-const modalHTML = `
-  <div id="\${this.modalId}" class="welcome-modal">
+  const modalHTML = `
+  <style>
+    /* 防止遮罩層攔截點擊（只影響本 modal） */
+    #${this.modalId} .bg-mask { pointer-events: none; }
+    #${this.modalId} .welcome-option { cursor: pointer; }
+  </style>
+  <div id="${this.modalId}" class="welcome-modal">
     <div class="welcome-modal-content">
       <div class="welcome-modal-header">
         <h2>歡迎來到命理教觀室 - 文王卦排卦系統</h2>
@@ -34,20 +41,10 @@ const modalHTML = `
 
       <div class="welcome-modal-body">
         <!-- 左：我要求卦 -->
-        <div id="welcome-ask" class="welcome-option" onclick="welcomeModal.selectOption('divination')">
-          <!-- 底圖用 <img> -->
-          <img
-            class="bg-img"
-            src="/public/img/pray.png"
-            alt="我要求卦"
-            loading="eager"
-            onload="this.style.display='block'"
-            onerror="this.style.display='none'"
-          />
-          <!-- 遮罩（紫調） -->
+        <div id="welcome-ask" class="welcome-option">
+          <img class="bg-img" src="/public/img/pray.png" alt="我要求卦" loading="eager"
+               onload="this.style.display='block'" onerror="this.style.display='none'" />
           <span class="bg-mask bg-mask--ask" aria-hidden="true"></span>
-
-          <!-- 文字 -->
           <div class="copy">
             <h4>我要求卦</h4>
             <p>有任何困惑都可以來這裡免費求卦，本站提供免費解卦的參考，也可以請老師為您解卦</p>
@@ -55,20 +52,10 @@ const modalHTML = `
         </div>
 
         <!-- 右：我是卦師 -->
-        <div id="welcome-master" class="welcome-option" onclick="welcomeModal.selectOption('professional')">
-          <!-- 底圖用 <img> -->
-          <img
-            class="bg-img"
-            src="/public/img/pro.png"
-            alt="我是卦師"
-            loading="eager"
-            onload="this.style.display='block'"
-            onerror="this.style.display='none'"
-          />
-          <!-- 遮罩（暖金調） -->
+        <div id="welcome-master" class="welcome-option">
+          <img class="bg-img" src="/public/img/pro.png" alt="我是卦師" loading="eager"
+               onload="this.style.display='block'" onerror="this.style.display='none'" />
           <span class="bg-mask bg-mask--master" aria-hidden="true"></span>
-
-          <!-- 文字 -->
           <div class="copy">
             <h4>我是卦師</h4>
             <p>提供專業的線上排卦程式，您可以在這裡得到市面上最詳細的解卦資訊，也可以透過本站批卦、列印專業解卦報告並管理您的批卦記錄</p>
@@ -77,27 +64,41 @@ const modalHTML = `
       </div>
 
       <div class="welcome-modal-footer">
-        <div class="no-show-again" onclick="welcomeModal.toggleNoShowAgain()">
+        <div class="no-show-again">
           <input type="checkbox" id="no-show-checkbox">
           <label for="no-show-checkbox">下次不用再顯示這個視窗</label>
         </div>
       </div>
     </div>
-  </div>
-`;
+  </div>`;
+
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  console.log('[WELCOME] createModal: inserted');
+
+  // 綁定事件（改用 JS 綁，便於記錄 target）
+  const askEl = document.getElementById('welcome-ask');
+  const masterEl = document.getElementById('welcome-master');
+
+  askEl?.addEventListener('click', (e) => {
+    console.log('[WELCOME] ask click', { target: e.target, currentTarget: e.currentTarget });
+    this.selectOption('divination');
+  });
+
+  masterEl?.addEventListener('click', (e) => {
+    console.log('[WELCOME] master click', { target: e.target, currentTarget: e.currentTarget });
+    this.selectOption('professional');
+  });
+}
 
 
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-    }
-
-    showModal() {
-        const modal = document.getElementById(this.modalId);
-        if (modal) {
-            modal.classList.remove('hidden');
-            // 防止背景滾動
-            document.body.style.overflow = 'hidden';
-        }
-    }
+showModal() {
+  const modal = document.getElementById(this.modalId);
+  console.log('[WELCOME] showModal', { hasModal: !!modal });
+  if (modal) {
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+}
 
 /**
  * 關閉歡迎 modal
@@ -105,69 +106,71 @@ const modalHTML = `
  */
 hideModal(remove = true) {
   const el = document.getElementById(this.modalId);
-  if (!el) return;
-
-  // 有些佈景會另外插 overlay/backdrop
   const backdrop = document.getElementById(this.modalId + '-backdrop')
-                || document.querySelector('.welcome-modal-backdrop')
-                || document.querySelector('.welcome-overlay');
+                  || document.querySelector('.welcome-modal-backdrop')
+                  || document.querySelector('.welcome-overlay');
+  console.log('[WELCOME] hideModal', { remove, hasEl: !!el, hasBackdrop: !!backdrop });
+
+  if (!el && !backdrop) return;
 
   if (remove) {
-    el.remove();
-    if (backdrop) backdrop.remove();
+    el?.remove();
+    backdrop?.remove();
   } else {
-    el.style.display = 'none';
+    if (el) el.style.display = 'none';
     if (backdrop) backdrop.style.display = 'none';
   }
-
-  // 還原 body 狀態（避免仍然 overflow:hidden 或 pointer-events:none）
   document.body.classList.remove('modal-open');
   document.body.style.overflow = '';
   document.body.style.pointerEvents = '';
 
-  // 再保險：把所有可能的遮罩都關掉
   document.querySelectorAll('.welcome-modal, .welcome-overlay, .modal-backdrop')
     .forEach(n => { if (n !== el) n.style.display = 'none'; });
+
+  console.log('[WELCOME] hideModal: done');
 }
 
-/** 最保險的強制關閉（徹底移除所有相關節點與樣式） */
 forceCloseModal() {
+  console.log('[WELCOME] forceCloseModal: start');
   try {
-    const el = document.getElementById(this.modalId);
-    if (el) el.remove();
+    document.getElementById(this.modalId)?.remove();
     document.querySelectorAll('.welcome-modal, .welcome-overlay, .modal-backdrop, .welcome-modal-backdrop')
       .forEach(n => n.remove());
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     document.body.style.pointerEvents = '';
-  } catch {}
+    console.log('[WELCOME] forceCloseModal: removed all');
+  } catch (e) {
+    console.warn('[WELCOME] forceCloseModal error', e);
+  }
 }
 
 selectOption(option) {
+  console.log('[WELCOME] selectOption called', { option });
   const root = document.getElementById(this.modalId);
+  console.log('[WELCOME] selectOption has modal?', !!root);
   if (!root) return;
 
   if (option === 'divination') {
-    // 求卦者 → 依你現有路由
+    console.log('[WELCOME] go to divination');
     window.location.href = 'divination';
     return;
   }
 
   if (option === 'professional') {
-    // 卦師 → 關閉 modal，並記錄本次不再顯示（session）
-    try { sessionStorage.setItem(this.storageKey, '1'); } catch {}
-
-    // 若勾了「下次不用再顯示」，就記錄到 localStorage
+    console.log('[WELCOME] professional branch');
+    try { sessionStorage.setItem(this.storageKey, '1'); console.log('[WELCOME] session set'); } catch {}
     const cb = document.getElementById('no-show-checkbox');
     if (cb && cb.checked) {
-      try { localStorage.setItem(this.storageKey, 'true'); } catch {}
+      try { localStorage.setItem(this.storageKey, 'true'); console.log('[WELCOME] local set'); } catch {}
     }
-
-    // 徹底關閉
     this.forceCloseModal();
     return;
   }
+
+  console.warn('[WELCOME] selectOption unknown option', option);
 }
+
 
     toggleNoShowAgain() {
         const checkbox = document.getElementById('no-show-checkbox');
@@ -195,7 +198,9 @@ let welcomeModal;
 
 // 當DOM載入完成時初始化
 document.addEventListener('DOMContentLoaded', function() {
-    welcomeModal = new WelcomeModal();
+  console.log('[WELCOME] DOMContentLoaded');
+  window.welcomeModal = new WelcomeModal();
+  console.log('[WELCOME] instance created', welcomeModal);
 });
 
 // 導出給設定頁面使用的函數
