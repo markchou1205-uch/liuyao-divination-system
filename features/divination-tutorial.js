@@ -1079,6 +1079,13 @@ sixiOnMainClick() {
     // 若滿六爻 → 切換為「開始解卦」
 if (this._sixi.n === 6) {
   this._sixi.mode = 'ready';
+  // 固化 userData，避免後續步驟切換造成資料遺失
+  this.userData.method = 'liuyao';
+  this.userData.liuyaoData = this._sixi.data.slice();
+  if (!Array.isArray(this.userData.liuyaoData) || this.userData.liuyaoData.length !== 6) {
+    console.warn('[AI DEBUG] 六爻完成但 userData.liuyaoData 異常：', this.userData.liuyaoData);
+  }
+
   if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
 
   // 直接切到解卦步（新的 Step 7）
@@ -1912,75 +1919,134 @@ selectMasterDivination() {
         guaInfoDiv.innerHTML = guaInfo;
     }
 
-    // 執行AI解卦
-    async performAIDivination() {
-        const aiContentDiv = document.getElementById('ai-content');
-        if (!aiContentDiv) return;
-        
-        try {
-            // 檢查AI解卦功能是否可用
-            if (typeof aiDivination === 'undefined') {
-                throw new Error('AI解卦功能未載入');
-            }
-            
-            // 增加使用次數
-            if (typeof aiDivination.incrementUsage === 'function') {
-                aiDivination.incrementUsage();
-            }
-            
-            // 調用現有的AI解卦功能
-            const aiResponse = await this.callAIDirectly(customQuestion);
-            if (typeof generateAIInterpretation === 'function') {
-                // 使用現有的AI解卦函數
-                const customQuestion = this.userData.customQuestion || 
-                                     `關於${this.getQuestionTypeText()}的問題`;
-                
-                // 模擬調用generateAIInterpretation但不顯示modal
-                this.displayAIResult(aiResponse);
-            } else {
-                throw new Error('AI解卦功能不可用');
-            }
-            
-        } catch (error) {
-            console.error('AI解卦失敗:', error);
-            aiContentDiv.innerHTML = `
-                <div class="error-message">
-                    <h4>AI分析暫時無法使用</h4>
-                    <p>系統暫時無法提供AI解卦服務，建議您選擇卦師親自解卦。</p>
-                </div>
-                <style>
-                    .error-message {
-                        text-align: center;
-                        padding: 30px;
-                        color: #666;
-                    }
-                    .error-message h4 {
-                        color: #dc3545;
-                        margin-bottom: 15px;
-                    }
-                </style>
-            `;
-        }
+// 執行AI解卦（非進度條版）— 修正版
+async performAIDivination() {
+  const aiContentDiv = document.getElementById('ai-content');
+  if (!aiContentDiv) return;
+
+  try {
+    if (typeof aiDivination === 'undefined') {
+      throw new Error('AI解卦功能未載入');
     }
 
-    // 直接調用AI解卦
-    async callAIDirectly(customQuestion) {
-        try {
-            if (typeof extractHexagramData === 'function' && typeof aiDivination.callAIAPI === 'function') {
-                const hexagramData = extractHexagramData();
-                hexagramData.customQuestion = customQuestion;
-                
-                const response = await aiDivination.callAIAPI(hexagramData, this.userData.questionType);
-                return response;
-            } else {
-                // 備用方案：調用簡化版AI分析
-                return this.generateSimpleAIResponse(customQuestion);
-            }
-        } catch (error) {
-            console.error('直接調用AI解卦失敗:', error);
-            throw error;
-        }
+    // 先備妥問題文字（這段舊程式原本在下面才宣告，會造成 customQuestion 未定義）
+    const customQuestion = this.userData.customQuestion ||
+                           `關於${this.getQuestionTypeText()}的問題`;
+
+    // 不在這裡扣額度；等成功後再扣（與進度條版一致）
+    const aiResponse = await this.callAIDirectly(customQuestion);
+
+    if (aiResponse && typeof aiDivination.incrementUsage === 'function') {
+      aiDivination.incrementUsage();
     }
+    this.displayAIResult(aiResponse);
+
+  } catch (error) {
+    console.error('AI解卦失敗:', error);
+    aiContentDiv.innerHTML = `
+      <div class="error-message">
+        <h4>AI分析暫時無法使用</h4>
+        <p>系統暫時無法提供AI解卦服務，建議您選擇卦師親自解卦。</p>
+      </div>
+      <style>
+        .error-message { text-align:center; padding:30px; color:#666; }
+        .error-message h4 { color:#dc3545; margin-bottom:15px; }
+      </style>
+    `;
+  }
+}
+
+
+    // 直接調用AI解卦
+// 直接調用AI解卦 — 加入前置驗證與除錯
+async callAIDirectly(customQuestion) {
+  // --- 收集目前可見的來源資料 ---
+  const qt = this.userData?.questionType || '';
+  const ly = Array.isArray(this.userData?.liuyaoData) ? this.userData.liuyaoData.slice() : [];
+
+  // 檢查六爻資料是否合規（0..3 六個值）
+  const issues = [];
+  if (!Array.isArray(ly) || ly.length !== 6) {
+    issues.push(`liuyaoData 長度不是 6（實際 ${Array.isArray(ly) ? ly.length : '非陣列'}）`);
+  } else {
+    const bad = ly.filter(v => ![0,1,2,3].includes(v));
+    if (bad.length) issues.push(`liuyaoData 含非法值: [${bad.join(', ')}]`);
+  }
+  if (!qt) issues.push('questionType 為空');
+  if (!customQuestion) issues.push('customQuestion 為空（將以預設文案補齊）');
+
+  // 嘗試從現有工具擷取完整卦象資料
+  let hexagramData = null;
+  let usedExtract = false;
+  try {
+    if (typeof extractHexagramData === 'function') {
+      hexagramData = extractHexagramData();
+      usedExtract = true;
+    }
+  } catch (e) {
+    console.warn('[AI DEBUG] extractHexagramData() 執行失敗：', e);
+  }
+
+  // 若 extract 失敗或資料缺料，就回退成最小可用 payload
+  if (!hexagramData || typeof hexagramData !== 'object') {
+    hexagramData = {};
+    issues.push('extractHexagramData 無資料 → 使用最小 payload');
+  }
+  if (!hexagramData.liuyaoData || !Array.isArray(hexagramData.liuyaoData) || hexagramData.liuyaoData.length !== 6) {
+    hexagramData.liuyaoData = ly.length === 6 ? ly : [];
+    if (hexagramData.liuyaoData.length !== 6) {
+      issues.push('hexagramData.liuyaoData 缺失，且 userData.liuyaoData 也無法補足');
+    }
+  }
+  // 附上輔助欄位（不影響後端 parsing，但利於紀錄）
+  hexagramData._debug = {
+    fromExtract: usedExtract,
+    step: this.currentStep,
+    ts: new Date().toISOString()
+  };
+  if (!hexagramData.customQuestion) {
+    hexagramData.customQuestion = customQuestion || `關於${this.getQuestionTypeText()}的問題`;
+  }
+
+  // --- 除錯輸出：送出前把關鍵資訊印出來 ---
+  console.groupCollapsed('%c[AI DEBUG] 將送出 AI 解卦請求', 'color:#0b6');
+  console.log('questionType:', qt);
+  console.log('customQuestion.len:', (hexagramData.customQuestion || '').length);
+  console.log('liuyaoData:', hexagramData.liuyaoData);
+  try {
+    const size = new Blob([JSON.stringify(hexagramData)]).size;
+    console.log('hexagramData bytes:', size);
+  } catch {}
+  if (issues.length) console.warn('前置檢查警告：', issues);
+  console.groupEnd();
+
+  // --- 呼叫 aiDivination.callAIAPI ---
+  try {
+    if (typeof aiDivination?.callAIAPI !== 'function') {
+      throw new Error('aiDivination.callAIAPI 不存在');
+    }
+
+    const resp = await aiDivination.callAIAPI(hexagramData, qt);
+
+    // 成功也印一次摘要
+    console.groupCollapsed('%c[AI DEBUG] 伺服器回應（成功）', 'color:#06c');
+    console.log('success:true, keys:', resp && typeof resp === 'object' ? Object.keys(resp) : resp);
+    console.groupEnd();
+
+    return resp;
+  } catch (error) {
+    // 把 500 的原文、送出 payload 的摘要都留檔
+    console.group('%c[AI DEBUG] 伺服器回應（失敗）', 'color:#c00');
+    console.log('error:', error?.message || error);
+    if (error?.response) console.log('error.response:', error.response);
+    console.log('送出 questionType:', qt);
+    console.log('送出 customQuestion.len:', (hexagramData.customQuestion || '').length);
+    console.log('送出 liuyaoData:', hexagramData.liuyaoData);
+    console.groupEnd();
+    throw error;
+  }
+}
+
 // 繼續起卦功能
 continueReading() {
     console.log('用戶選擇繼續起卦');
