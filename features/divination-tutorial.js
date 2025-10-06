@@ -434,6 +434,11 @@ this.modal.innerHTML = `
 
 // 第六步：選擇問題類型（修正版）
 showQuestionSelectionStep() {
+        // 進入輸入問題的步驟時，移除起卦空白鍵熱鍵
+    if (this._sixiKeyHandler) {
+        window.removeEventListener('keydown', this._sixiKeyHandler, { capture: true });
+        this._sixiKeyHandler = null;
+    }
     // ✅ 不再要求使用者手選起卦方式；若已有六爻資料，默認為六爻
     if (!this.userData.method) {
         if (this.userData.liuyaoData && this.userData.liuyaoData.length === 6) {
@@ -1189,23 +1194,52 @@ setupSixiListeners() {
   if (cancelBtn) cancelBtn.addEventListener('click', () => this.sixiCloseConfirm());
   if (okBtn) okBtn.addEventListener('click', () => { this.sixiCloseConfirm(); this.sixiOpenCountdown(); });
 
-  // Space 鍵（倒數/確認中停用）
-window.addEventListener('keydown', (e) => {
-  const cd = this.modal ? this.modal.querySelector('#sixi-countdown') : null;
-  const cf = this.modal ? this.modal.querySelector('#sixi-confirm') : null;
-
-  const cdOpen = cd && !cd.classList.contains('hidden');
-  const cfOpen = cf && !cf.classList.contains('hidden');
-  if (cdOpen || cfOpen) return;
-
-  if (e.code === 'Space') {
-    e.preventDefault();
-    if (typeof this.sixiOnMainClick === 'function') {
-      this.sixiOnMainClick();
-    }
+  // Space 鍵（僅 Step 5 起卦時啟用；輸入情境不攔截）
+  // 先移除舊的（保險）
+  if (this._sixiKeyHandler) {
+    window.removeEventListener('keydown', this._sixiKeyHandler, { capture: true });
   }
-}, { passive: false });
 
+  this._sixiKeyHandler = (e) => {
+    // 只在「起卦（六次點擊）」步驟啟用
+    if (this.currentStep !== 5) return;
+
+    const cd = this.modal ? this.modal.querySelector('#sixi-countdown') : null;
+    const cf = this.modal ? this.modal.querySelector('#sixi-confirm') : null;
+    const cdOpen = cd && !cd.classList.contains('hidden');
+    const cfOpen = cf && !cf.classList.contains('hidden');
+    if (cdOpen || cfOpen) return;
+
+    // 如果焦點在可輸入元素上，不攔截空白鍵
+    const ae = document.activeElement;
+    const isEditable =
+      (ae && (
+        ae.tagName === 'INPUT' ||
+        ae.tagName === 'TEXTAREA' ||
+        ae.isContentEditable ||
+        (ae.getAttribute && ae.getAttribute('contenteditable') === 'true')
+      )) ||
+      // 兼容事件目標（有時 activeElement 還沒切換）
+      (e.target && (
+        (e.target.tagName === 'INPUT') ||
+        (e.target.tagName === 'TEXTAREA') ||
+        e.target.isContentEditable ||
+        (e.target.getAttribute && e.target.getAttribute('contenteditable') === 'true')
+      ));
+
+    if (isEditable) return;
+
+    // 僅單純空白鍵（不含 Ctrl/Alt/Meta）
+    if (e.code === 'Space' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      if (typeof this.sixiOnMainClick === 'function') {
+        this.sixiOnMainClick();
+      }
+    }
+  };
+
+  // 用 capture:true 可優先攔截，但仍會在輸入情境早退
+  window.addEventListener('keydown', this._sixiKeyHandler, { capture: true, passive: false });
 
   // 保險：固定六爻
   this.userData.method = 'liuyao';
@@ -2177,8 +2211,10 @@ closeTutorial() {
     this.overlay = null;
     this.modal = null;
     this.isActive = false;
-    
-    console.log('引導精靈已完全關閉');
+    if (this._sixiKeyHandler) {
+      window.removeEventListener('keydown', this._sixiKeyHandler, { capture: true });
+      this._sixiKeyHandler = null;
+    }
 }
 
     // 重設功能
