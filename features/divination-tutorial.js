@@ -1632,6 +1632,10 @@ async performAIDivinationWithProgress() {
                              `關於${this.getQuestionTypeText()}的問題`;
         
         const aiResponse = await this.callAIDirectly(customQuestion);
+        // 只有成功才扣額度
+        if (aiResponse && typeof aiDivination.incrementUsage === 'function') {
+          aiDivination.incrementUsage();
+        }
         this.displayAIResult(aiResponse);
         
     } catch (error) {
@@ -1925,13 +1929,13 @@ selectMasterDivination() {
             }
             
             // 調用現有的AI解卦功能
+            const aiResponse = await this.callAIDirectly(customQuestion);
             if (typeof generateAIInterpretation === 'function') {
                 // 使用現有的AI解卦函數
                 const customQuestion = this.userData.customQuestion || 
                                      `關於${this.getQuestionTypeText()}的問題`;
                 
                 // 模擬調用generateAIInterpretation但不顯示modal
-                const aiResponse = await this.callAIDirectly(customQuestion);
                 this.displayAIResult(aiResponse);
             } else {
                 throw new Error('AI解卦功能不可用');
