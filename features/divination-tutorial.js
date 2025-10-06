@@ -828,22 +828,47 @@ sixiSumFromV(v){
 
 // 僅重置狀態與畫面（不啟動倒數）
 sixiResetStateOnly() {
-  if (!this._sixi) this.initSixiState();
-  this._sixi.n = 0; this._sixi.data = []; this._sixi.locked = false; this._sixi.mode = 'rolling';
+  // 確保全域卦表存在（方案 A 保險用）
+  if (!window.GUA_64_COMPLETE && this.constructor.GUA_64_COMPLETE) {
+    window.GUA_64_COMPLETE = this.constructor.GUA_64_COMPLETE;
+  }
+
+  // （可選）取出卦表供後續使用
+  const table =
+    this.constructor.GUA_64_COMPLETE
+    || (typeof window !== 'undefined' && window.GUA_64_COMPLETE)
+    || (typeof GUA_64_COMPLETE !== 'undefined' ? GUA_64_COMPLETE : null)
+    || {};
+
+  // 重置狀態
+  this._sixi.n = 0;
+  this._sixi.data = [];
+  this._sixi.locked = false;
+  this._sixi.mode = 'rolling';
+
   if (this.userData) this.userData.liuyaoData = [];
 
-  // 清 UI
+  // 清除 UI 顯示
   this.modal.querySelectorAll('.yao-slot').forEach(li => (li.innerHTML = ''));
-  const nameEl = this.modal.querySelector('#sixi-gua-name'); if (nameEl) nameEl.textContent = '';
-  const cnt = this.modal.querySelector('#sixi-count'); if (cnt) cnt.textContent = '0';
-  const main = this.modal.querySelector('#btn-sixi-main'); if (main) main.innerHTML = '擲一次（<span id="sixi-count">0</span>/6）';
-  // 重新起卦在第一擲之前不可點
-  const reset = this.modal.querySelector('#btn-reset-sixi'); if (reset) { reset.classList.add('disabled'); reset.setAttribute('disabled',''); }
+  const nameEl = this.modal.querySelector('#sixi-gua-name');
+  if (nameEl) nameEl.textContent = '';
+  const cnt = this.modal.querySelector('#sixi-count');
+  if (cnt) cnt.textContent = '0';
+  const main = this.modal.querySelector('#btn-sixi-main');
+  if (main) main.innerHTML = '擲一次（<span id="sixi-count">0</span>/6）';
+  
+  // 禁用「重新起卦」按鈕（第一擲前）
+  const reset = this.modal.querySelector('#btn-reset-sixi');
+  if (reset) {
+    reset.classList.add('disabled');
+    reset.setAttribute('disabled', '');
+  }
 
-  // 導覽鎖定（未滿 6 次禁用 Next；一開始允許 Prev）
+  // 導覽狀態
   this.sixiSetNextDisabled(true);
   this.sixiSetPrevDisabled(false);
 }
+
 // 倒數視窗
 sixiOpenCountdown() {
   const mask = this.modal.querySelector('#sixi-countdown');
