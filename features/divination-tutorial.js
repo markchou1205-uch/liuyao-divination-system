@@ -419,6 +419,7 @@ this.modal.innerHTML = `
 
   // 啟用六次點擊流程（含鎖定上一/下一步）
   this.setupSixiListeners();
+  this.sixiSetNextButtonState();
 }
 
 // 第六步：選擇問題類型（修正版）
@@ -867,6 +868,7 @@ sixiResetStateOnly() {
   // 導覽狀態
   this.sixiSetNextDisabled(true);
   this.sixiSetPrevDisabled(false);
+  this.sixiSetNextButtonState();
 }
 
 // 倒數視窗
@@ -912,6 +914,58 @@ sixiSetNextDisabled(disabled) {
   this._sixi.nav.next.toggleAttribute('disabled', !!disabled);
   this._sixi.nav.next.classList.toggle('disabled', !!disabled);
 }
+/**
+ * 控制「下一步」按鈕在起卦階段的顯示與行為
+ */
+sixiSetNextButtonState() {
+  const nextBtn = this.modal.querySelector('#btn-next');
+  const prevBtn = this.modal.querySelector('#btn-prev');
+  if (!nextBtn) return;
+
+  // 尚未擲滿六次
+  if (this._sixi.n < 6) {
+    nextBtn.textContent = '取消';
+    nextBtn.classList.remove('disabled');
+    nextBtn.removeAttribute('disabled');
+
+    // 禁用上一步
+    if (prevBtn) {
+      prevBtn.classList.add('disabled');
+      prevBtn.setAttribute('disabled', '');
+    }
+
+    // 點擊彈出確認框
+    nextBtn.onclick = () => {
+      if (confirm('確定取消問卦？')) {
+        // 重置卦象
+        this.sixiResetStateOnly();
+        // 可考慮跳回前一步（例如方法選擇步）
+        if (typeof this.goToStep === 'function') {
+          this.goToStep(4); // ← 回前一個步驟，可依你實際步驟號調整
+        }
+      }
+    };
+  } else {
+    // 六爻完成
+    nextBtn.textContent = '下一步';
+    nextBtn.classList.remove('disabled');
+    nextBtn.removeAttribute('disabled');
+
+    // 解鎖上一步
+    if (prevBtn) {
+      prevBtn.classList.remove('disabled');
+      prevBtn.removeAttribute('disabled');
+    }
+
+    // 恢復預設行為
+    nextBtn.onclick = () => {
+      if (typeof this.goToStep === 'function') {
+        this.goToStep(6);
+      }
+    };
+  }
+}
+
 sixiSetResetDisabled(disabled) {
   const resetBtn = this.modal.querySelector('#btn-reset-sixi');
   if (!resetBtn) return;
@@ -1000,6 +1054,7 @@ sixiOnMainClick() {
       this._sixi.mode = 'ready';
       if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
       if (main) main.textContent = '開始解卦';
+      this.sixiSetNextButtonState();
       if (typeof this.sixiSetNextDisabled === 'function') this.sixiSetNextDisabled(false);
     }
   }).catch(() => {
