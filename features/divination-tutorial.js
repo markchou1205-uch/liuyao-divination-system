@@ -1103,12 +1103,22 @@ setupSixiListeners() {
   if (okBtn) okBtn.addEventListener('click', () => { this.sixiCloseConfirm(); this.sixiOpenCountdown(); });
 
   // Space 鍵（倒數/確認中停用）
-  window.addEventListener('keydown', (e) => {
-    const cdOpen = !this.modal.querySelector('#sixi-countdown').classList.contains('hidden');
-    const cfOpen = !this.modal.querySelector('#sixi-confirm').classList.contains('hidden');
-    if (cdOpen || cfOpen) return;
-    if (e.code === 'Space') { e.preventDefault(); this.sixiOnMainClick(); }
-  }, { passive: false });
+window.addEventListener('keydown', (e) => {
+  const cd = this.modal ? this.modal.querySelector('#sixi-countdown') : null;
+  const cf = this.modal ? this.modal.querySelector('#sixi-confirm') : null;
+
+  const cdOpen = cd && !cd.classList.contains('hidden');
+  const cfOpen = cf && !cf.classList.contains('hidden');
+  if (cdOpen || cfOpen) return;
+
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (typeof this.sixiOnMainClick === 'function') {
+      this.sixiOnMainClick();
+    }
+  }
+}, { passive: false });
+
 
   // 保險：固定六爻
   this.userData.method = 'liuyao';
