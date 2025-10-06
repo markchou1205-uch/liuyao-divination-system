@@ -420,6 +420,16 @@ this.modal.innerHTML = `
   // 啟用六次點擊流程（含鎖定上一/下一步）
   this.setupSixiListeners();
   this.sixiSetNextButtonState();
+// Step 5（輸入問題）結尾：初始化導覽（這一步允許 Next）
+  if (this.currentStep === 5 && typeof this.sixiSetNextButtonState === 'function') {
+    this.sixiSetNextButtonState(); // 會把 Next 顯示為「取消」或「下一步」，依 _sixi 狀態
+  }
+
+  // Step 6（起卦）結尾：讓硬幣立刻出圖，並禁用 Next 直到滿六爻
+  if (this.currentStep === 6) {
+    try { this.sixiSetCoinFaces(['正','正','正']); } catch {}
+    if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
+  }
 }
 
 // 第六步：選擇問題類型（修正版）
@@ -566,6 +576,17 @@ showQuestionSelectionStep() {
     textarea.addEventListener('input', function() {
         charCount.textContent = this.value.length;
     });
+    // Step 5（輸入問題）結尾：初始化導覽（這一步允許 Next）
+     if (this.currentStep === 5 && typeof this.sixiSetNextButtonState === 'function') {
+       this.sixiSetNextButtonState(); // 會把 Next 顯示為「取消」或「下一步」，依 _sixi 狀態
+     }
+
+     // Step 6（起卦）結尾：讓硬幣立刻出圖，並禁用 Next 直到滿六爻
+     if (this.currentStep === 6) {
+       try { this.sixiSetCoinFaces(['正','正','正']); } catch {}
+       if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
+     }
+
 }
 
     // 第七步：解卦方式選擇
@@ -864,11 +885,13 @@ sixiResetStateOnly() {
     reset.classList.add('disabled');
     reset.setAttribute('disabled', '');
   }
+if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
 
   // 導覽狀態
   this.sixiSetNextDisabled(true);
   this.sixiSetPrevDisabled(false);
   this.sixiSetNextButtonState();
+    
 }
 
 // 倒數視窗
@@ -1042,21 +1065,28 @@ sixiOnMainClick() {
     // 更新主按鈕顯示計數
     const cnt = this.modal.querySelector('#sixi-count');
     if (cnt) cnt.textContent = String(this._sixi.n);
-
+    if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
     const main = this.modal.querySelector('#btn-sixi-main');
     const orderMap = ['第一次','第二次','第三次','第四次','第五次','第六次'];
     if (main && this._sixi.n < 6) {
       main.innerHTML = `擲${orderMap[this._sixi.n]}（${this._sixi.n}/6）`;
     }
-
     // 若滿六爻 → 切換為「開始解卦」
-    if (this._sixi.n === 6) {
-      this._sixi.mode = 'ready';
-      if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
-      if (main) main.textContent = '開始解卦';
-      this.sixiSetNextButtonState();
-      if (typeof this.sixiSetNextDisabled === 'function') this.sixiSetNextDisabled(false);
-    }
+if (this._sixi.n === 6) {
+  this._sixi.mode = 'ready';
+  if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
+
+  // 直接切到解卦步（新的 Step 7）
+  if (typeof this.showInterpretationStep === 'function') {
+    this.showInterpretationStep(); // 若你的函式名不同，改為實際名稱
+  } else if (typeof this.goToStep === 'function') {
+    this.goToStep(7);
+  }
+
+  // 若 UI 還在同頁等待 next 按鈕，也把 Next 狀態更新為「下一步」
+  if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
+}
+
   }).catch(() => {
     // 動畫若失敗，至少把面顯示出來，避免卡住
     try { this.sixiSetCoinFaces(faces); } catch {}
