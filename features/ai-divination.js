@@ -126,7 +126,8 @@ ${customQuestion ? `具體問題：${customQuestion}` : ''}
             const response = await fetch('/api/ai-divination-enhanced', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                     'Content-Type': 'application/json',
+                     'X-Client-Module': 'features/ai-divination.js'
                 },
                 body: JSON.stringify({
                     prompt: prompt,
