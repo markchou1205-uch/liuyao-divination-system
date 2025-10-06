@@ -677,6 +677,7 @@ static calculateAllAdvancedData(ganZhiData, divinationResult = null, divinationT
 // 導出為全局變量（兼容性）
 if (typeof window !== 'undefined') {
     window.AdvancedCalculator = AdvancedCalculator;
+    window.GUA_64_COMPLETE = AdvancedCalculator.GUA_64_COMPLETE;
 }
 
 // Node.js 模組導出
@@ -685,4 +686,3 @@ if (typeof module !== 'undefined' && module.exports) {
         AdvancedCalculator
     };
 }
-window.GUA_64_COMPLETE = AdvancedCalculation.GUA_64_COMPLETE;
