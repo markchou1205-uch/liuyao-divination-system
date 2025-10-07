@@ -86,6 +86,7 @@ checkIfNeedTutorial() {
 
     // 顯示指定步驟
     showStep(stepNumber) {
+        if (stepNumber === 4) { this.showStep(5); return; }
         this.currentStep = stepNumber;
         
         switch(stepNumber) {
@@ -201,7 +202,8 @@ checkIfNeedTutorial() {
     }
 
 showPreparation2Step() {
-  this.showStep(4);
+  this.currentStep = 3;
+  return this.showPreparation3Step();
 }
 
     // 第四步：占卦準備3
@@ -2199,6 +2201,7 @@ nextStep() {
 
     // 上一步
     previousStep() {
+        if (this.currentStep === 5) { this.showStep(3); return; }
           if (this.currentStep === 4) {
               this.showStep(2);
               return;
