@@ -1036,7 +1036,7 @@ if (!Array.isArray(this.userData.liuyaoData) || this.userData.liuyaoData.length 
 
   // 若 UI 還在同頁等待 next 按鈕，也把 Next 狀態更新為「下一步」
   if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
-//}
+})
   }).catch(() => {
     // 動畫若失敗，至少把面顯示出來，避免卡住
     try { this.sixiSetCoinFaces(faces); } catch {}
