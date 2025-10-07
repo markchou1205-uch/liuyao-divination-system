@@ -116,7 +116,9 @@ checkIfNeedTutorial() {
                 break;
         }
     }
-
+    goToStep(stepNumber) {
+      this.showStep(stepNumber);
+    }
     // 第一步：歡迎界面
     showWelcomeStep() {
         this.modal.innerHTML = `
@@ -951,10 +953,7 @@ sixiSetNextButtonState() {
   nextBtn.removeAttribute('disabled');
   nextBtn.classList.remove('disabled');
   if (prevBtn) this.sixiSetPrevDisabled(false);
-
-  nextBtn.onclick = () => {
-    if (typeof this.goToStep === 'function') this.goToStep(7); // 正確往 7/8
-  };
+  nextBtn.onclick = () => this.showStep(7);
 }
 
 sixiSetResetDisabled(disabled) {
@@ -978,18 +977,15 @@ sixiOnMainClick() {
         : null;
 
       const goNext = () => {
-        if (typeof this.goToStep === 'function') {
-          this.goToStep(7); // ← 修正：完成 6/6 後的下一步是 7（開始解卦）
-        } else if (typeof this.showQuestionSelectionStep === 'function') {
-          this.showQuestionSelectionStep();
-        }
-      };
+        if (typeof this.goToStep === 'function') this.goToStep(7);
+        else this.showStep(7);
+        };
 
-      if (ret && typeof ret.then === 'function') {
-        ret.then(goNext).catch(goNext);
-      } else {
-        goNext();
-      }
+        if (ret && typeof ret.then === 'function') {
+          ret.then(goNext).catch(goNext);
+        } else {
+          goNext();
+        }
     } catch (e) {
       // 出錯也盡量往下一步
       if (typeof this.showQuestionSelectionStep === 'function') this.showQuestionSelectionStep();
