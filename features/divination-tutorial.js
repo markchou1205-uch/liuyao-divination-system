@@ -28,7 +28,7 @@ checkIfNeedTutorial() {
     
     const tutorialStatus = localStorage.getItem('divination_tutorial_status');
     if (tutorialStatus !== 'never_show') {
-        this.startTutorial();
+        if (!this.isActive) (this.forceShowTutorial ? this.forceShowTutorial() : this.showStep(1));
     }
 }
 
