@@ -87,15 +87,15 @@ createModal() {
     z-index: 9999;
 
     /* 固定尺寸（桌機）；小螢幕會被 max-* 限制 */
-    width: 720px;
-    height: 580px;
+    width: 70%;
+    height: 630px;
     max-width: 90vw;
     max-height: 90vh;
 
     display: flex;           /* 讓 header/footer 固定，body 可滾動 */
     flex-direction: column;
     overflow: hidden;        /* 外框固定高度，不跟內容變 */
-    padding: 0;              /* 內距交由 header/body/footer 自己排 */
+    padding: 40px;              /* 內距交由 header/body/footer 自己排 */
   `;
   this.overlay.appendChild(this.modal);
 }
