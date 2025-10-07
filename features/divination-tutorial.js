@@ -2153,10 +2153,22 @@ continueReading() {
         URL.revokeObjectURL(link.href);
     }
 
-    // 創建導航按鈕
+// 導覽按鈕 HTML（只回傳字串，不要把其它方法塞進來）
 createNavigationButtons() {
+  const prevDisabled = this.currentStep <= 1 ? 'disabled' : '';
+  const nextText = this.currentStep >= this.totalSteps ? '完成' : '下一步';
+  return `
+    <div class="tutorial-navigation">
+      <button id="btn-prev" class="btn btn-secondary" ${prevDisabled}
+              onclick="divinationTutorial.previousStep()">上一步</button>
+      <span class="step-indicator">${this.currentStep} / ${this.totalSteps}</span>
+      <button id="btn-next" class="btn btn-primary"
+              onclick="divinationTutorial.nextStep()">${nextText}</button>
+    </div>
+  `;
+}
 
-    // 下一步
+// 下一步
 nextStep() {
   // 5/8 必須通過既有的 collectQuestionData() 檢查
   if (this.currentStep === 5) {
@@ -2169,108 +2181,104 @@ nextStep() {
   }
 }
 
+// 上一步
+previousStep() {
+  // 從 5（選擇問題類型）回到 3（占卦準備 2/2）
+  if (this.currentStep === 5) { this.showStep(3); return; }
+  // 如果仍保留第 4 步畫面（現在通常被跳過），回到 2
+  if (this.currentStep === 4) { this.showStep(2); return; }
 
-    // 上一步
-    previousStep() {
-        if (this.currentStep === 5) { this.showStep(3); return; }
-          if (this.currentStep === 4) {
-              this.showStep(2);
-              return;
-        }
-        if (this.currentStep > 1) {
-            this.showStep(this.currentStep - 1);
-        }
-    }
+  if (this.currentStep > 1) {
+    this.showStep(this.currentStep - 1);
+  }
+}
 
-    // 高亮指定元素
-    highlightElement(selector) {
-        this.removeHighlight();
-        
-        const element = document.querySelector(selector);
-        if (element) {
-            element.style.position = 'relative';
-            element.style.zIndex = '10000';
-            element.style.boxShadow = '0 0 0 4px rgba(74, 144, 226, 0.8)';
-            element.style.borderRadius = '4px';
-            element.classList.add('tutorial-highlight');
-        }
-    }
+// 高亮指定元素
+highlightElement(selector) {
+  this.removeHighlight();
+  const element = document.querySelector(selector);
+  if (element) {
+    element.style.position = 'relative';
+    element.style.zIndex = '10000';
+    element.style.boxShadow = '0 0 0 4px rgba(74, 144, 226, 0.8)';
+    element.style.borderRadius = '4px';
+    element.classList.add('tutorial-highlight');
+  }
+}
 
-    // 移除高亮
-    removeHighlight() {
-        const highlighted = document.querySelectorAll('.tutorial-highlight');
-        highlighted.forEach(el => {
-            el.style.position = '';
-            el.style.zIndex = '';
-            el.style.boxShadow = '';
-            el.style.borderRadius = '';
-            el.classList.remove('tutorial-highlight');
-        });
-    }
+// 移除高亮
+removeHighlight() {
+  const highlighted = document.querySelectorAll('.tutorial-highlight');
+  highlighted.forEach(el => {
+    el.style.position = '';
+    el.style.zIndex = '';
+    el.style.boxShadow = '';
+    el.style.borderRadius = '';
+    el.classList.remove('tutorial-highlight');
+  });
+}
 
-    // 臨時關閉（下次還會顯示）
-    closeTemporarily() {
-        this.closeTutorial();
-    }
+// 臨時關閉（下次還會顯示）
+closeTemporarily() {
+  this.closeTutorial();
+}
 
-    // 完成引導
-    completeTutorial() {
-        this.closeTutorial();
-    }
+// 完成引導
+completeTutorial() {
+  this.closeTutorial();
+}
 
-    // 跳過引導
-    skipTutorial() {
-        this.closeTutorial();
-    }
+// 跳過引導
+skipTutorial() {
+  this.closeTutorial();
+}
 
-    // 下次不再顯示
-    neverShowAgain() {
-        localStorage.setItem('divination_tutorial_status', 'never_show');
-        this.closeTutorial();
-    }
+// 下次不再顯示
+neverShowAgain() {
+  localStorage.setItem('divination_tutorial_status', 'never_show');
+  this.closeTutorial();
+}
 
 // 關閉引導
 closeTutorial() {
-    this.removeHighlight();
-        // 恢復原始的handleHiddenYongshen函數
-    if (this.originalHandleHiddenYongshen) {
-        window.handleHiddenYongshen = this.originalHandleHiddenYongshen;
-        this.originalHandleHiddenYongshen = null;
-        console.log('已恢復原始的用神伏藏警告函數');
+  this.removeHighlight();
+  // 恢復原始的 handleHiddenYongshen
+  if (this.originalHandleHiddenYongshen) {
+    window.handleHiddenYongshen = this.originalHandleHiddenYongshen;
+    this.originalHandleHiddenYongshen = null;
+    console.log('已恢復原始的用神伏藏警告函數');
+  }
+  // 強制移除所有可能的引導精靈元素
+  const overlays = document.querySelectorAll('#tutorial-overlay, [id*="tutorial"]');
+  overlays.forEach(overlay => {
+    if (overlay && overlay.parentNode) {
+      try {
+        overlay.parentNode.removeChild(overlay);
+        console.log('移除引導精靈元素:', overlay.id);
+      } catch (error) {
+        console.error('移除元素時發生錯誤:', error);
+      }
     }
-    // 強制移除所有可能的引導精靈元素
-    const overlays = document.querySelectorAll('#tutorial-overlay, [id*="tutorial"]');
-    overlays.forEach(overlay => {
-        if (overlay && overlay.parentNode) {
-            try {
-                overlay.parentNode.removeChild(overlay);
-                console.log('移除引導精靈元素:', overlay.id);
-            } catch (error) {
-                console.error('移除元素時發生錯誤:', error);
-            }
-        }
-    });
-    
-    // 清理引用
-    this.overlay = null;
-    this.modal = null;
-    this.isActive = false;
-    if (this._sixiKeyHandler) {
-      window.removeEventListener('keydown', this._sixiKeyHandler, { capture: true });
-      this._sixiKeyHandler = null;
-    }
+  });
+
+  // 清理引用
+  this.overlay = null;
+  this.modal = null;
+  this.isActive = false;
+  if (this._sixiKeyHandler) {
+    window.removeEventListener('keydown', this._sixiKeyHandler, { capture: true });
+    this._sixiKeyHandler = null;
+  }
 }
 
-    // 重設功能
-    resetTutorialSettings() {
-        localStorage.removeItem('divination_tutorial_status');
-        localStorage.removeItem('divination_tutorial_seen');
-        console.log('引導精靈設定已重設');
-        alert('引導精靈設定已重設，重新載入頁面後將會顯示引導');
-    }
-
-    
+// 重設功能
+resetTutorialSettings() {
+  localStorage.removeItem('divination_tutorial_status');
+  localStorage.removeItem('divination_tutorial_seen');
+  console.log('引導精靈設定已重設');
+  alert('引導精靈設定已重設，重新載入頁面後將會顯示引導');
 }
+
 
 // 創建全域實例
 const divinationTutorial = new DivinationTutorial();
