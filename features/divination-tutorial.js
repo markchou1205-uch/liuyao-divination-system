@@ -1036,8 +1036,7 @@ if (!Array.isArray(this.userData.liuyaoData) || this.userData.liuyaoData.length 
 
   // 若 UI 還在同頁等待 next 按鈕，也把 Next 狀態更新為「下一步」
   if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
-}
-
+//}
   }).catch(() => {
     // 動畫若失敗，至少把面顯示出來，避免卡住
     try { this.sixiSetCoinFaces(faces); } catch {}
@@ -1139,9 +1138,6 @@ setupSixiListeners() {
   if (resetBtn) resetBtn.addEventListener('click', () => this.sixiOpenConfirm());
   if (cancelBtn) cancelBtn.addEventListener('click', () => this.sixiCloseConfirm());
   if (okBtn) okBtn.addEventListener('click', () => { this.sixiCloseConfirm(); this.sixiOpenCountdown(); });
-
-  // Space 鍵（僅 Step 5 起卦時啟用；輸入情境不攔截）
-  // 先移除舊的（保險）
   if (this._sixiKeyHandler) {
     window.removeEventListener('keydown', this._sixiKeyHandler, { capture: true });
   }
