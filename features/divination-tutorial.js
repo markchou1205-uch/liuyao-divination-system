@@ -33,13 +33,16 @@ checkIfNeedTutorial() {
 }
 
     // 強制顯示引導精靈（無論設定如何）
-    forceShowTutorial() {
-        console.log('強制顯示引導精靈');
-        this.startTutorial();
-    }
+forceShowTutorial() {
+  if (this.isActive) return;   // 已開啟就不再開
+  this.isActive = true;
+  this.showStep(1);            // 保留你原本的開啟流程
+}
+
 
     // 開始引導流程
     startTutorial() {
+        if (this.isActive) return; 
         this.isActive = true;
         this.createOverlay();
         this.createModal();
@@ -2301,50 +2304,42 @@ resetTutorialSettings() {
 const divinationTutorial = new DivinationTutorial();
 
 // 頁面載入完成後檢查是否需要顯示引導
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOMContentLoaded - 檢查引導精靈');
-    
-    // 多重檢查確保腳本正確載入
-    if (typeof divinationTutorial === 'undefined') {
-        console.error('divinationTutorial 未定義');
-        return;
-    }
-    
-    // 檢查當前頁面是否為求卦頁面
-    const isDivinationPage = window.location.pathname.includes('divination.html') || 
-                            document.title.includes('免費求卦');
-    
-    console.log('是否為求卦頁面:', isDivinationPage);
-    
-    if (isDivinationPage) {
-        // 延遲一點時間確保其他腳本都載入完成
-        setTimeout(() => {
-            console.log('準備顯示引導精靈');
-            divinationTutorial.checkIfNeedTutorial();
-        }, 1500);
-    }
+// === 快速啟動引導（去除 1.5s / 2s 卡頓）===
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.divinationTutorial && typeof divinationTutorial.checkIfNeedTutorial === 'function') {
+    // 短延遲一個 tick，避免與其他初始化搶資源
+    setTimeout(() => {
+      if (!divinationTutorial.isActive) divinationTutorial.checkIfNeedTutorial();
+    }, 50);
+  }
 });
 
-// 備用初始化方法
-window.addEventListener('load', function() {
-    console.log('Window load - 備用初始化');
-    
-    if (typeof divinationTutorial !== 'undefined') {
-        const isDivinationPage = window.location.pathname.includes('divination.html') || 
-                               document.title.includes('免費求卦');
-        
-        if (isDivinationPage) {
-            setTimeout(() => {
-                const tutorialStatus = localStorage.getItem('divination_tutorial_status');
-                console.log('Tutorial status:', tutorialStatus);
-                
-                if (tutorialStatus !== 'never_show') {
-                    console.log('強制顯示引導精靈');
-                    divinationTutorial.forceShowTutorial();
-                }
-            }, 2000);
-        }
-    }
+window.addEventListener('load', () => {
+  if (window.divinationTutorial && !divinationTutorial.isActive) {
+    // 輕量備援，再檢一次，但不重複開窗
+    setTimeout(() => {
+      if (!divinationTutorial.isActive && typeof divinationTutorial.checkIfNeedTutorial === 'function') {
+        divinationTutorial.checkIfNeedTutorial();
+      }
+    }, 100);
+  }
+});
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button, a, [role="button"]');
+  if (!t) return;
+  const text = (t.textContent || '').trim();
+  const isStartDivination =
+    t.matches('#btn-welcome-start, [data-action="start-divination"], .btn-start-divination') ||
+    text === '我要求卦';
+  if (!isStartDivination) return;
+
+  e.preventDefault();
+  if (window.divinationTutorial?.forceShowTutorial) {
+    divinationTutorial.forceShowTutorial();
+  } else if (window.divinationTutorial) {
+    divinationTutorial.showStep(1);
+  }
 });
 
 // 全域函數，供外部調用
