@@ -87,7 +87,7 @@ createModal() {
     z-index: 9999;
 
     /* 固定尺寸（桌機）；小螢幕會被 max-* 限制 */
-    width: 680px;
+    width: 720px;
     height: 580px;
     max-width: 90vw;
     max-height: 90vh;
