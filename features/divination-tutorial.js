@@ -291,9 +291,9 @@ this.modal.innerHTML = `
       <!-- 主操作區 -->
       <div class="sixi-ops">
         <button id="btn-reset-sixi" class="ghost disabled" disabled>重新起卦</button>
-        <button id="btn-sixi-main" class="primary">
-          擲一次（<span id="sixi-count">0</span>/6）
-        </button>
+          <button id="btn-sixi-main" class="primary">
+          擲一次（<span id="sixi-count">1</span>/6）
+       </button>
       </div>
 
       <!-- 倒數與確認框（原樣保留） -->
@@ -379,6 +379,14 @@ this.modal.innerHTML = `
     .timer{ font-size:42px; font-weight:800; margin-top:10px; }
     .confirm-actions{ margin-top:16px; display:flex; gap:8px; justify-content:center; }
     .danger{ background:#ef4444; color:white; border:none; padding:10px 14px; border-radius:10px; }
+    /* 導覽按鈕配色（取消占卦＝黑、開始解卦＝紅） */
+    .btn-dark    { background:#111827; color:#fff; }
+    .btn-danger  { background:#ef4444; color:#fff; }
+    .btn-dark:hover, .btn-danger:hover { opacity:.9; }
+
+/* 六次已滿時，主按鈕變灰且不可點 */
+.primary.disabled { background:#9ca3af !important; color:#fff !important; cursor:not-allowed !important; }
+
   </style>
 `;
 
@@ -683,30 +691,22 @@ initSixiState() {
   };
 }
 sixiBindNavButtons() {
-  // 這兩個選擇器如與你專案不同，改成你的 ID / class
-  this._sixi.nav.prev = this.modal.querySelector('#tutorial-prev');
-  this._sixi.nav.next = this.modal.querySelector('#tutorial-next');
+  this._sixi.nav.prev = this.modal.querySelector('#btn-prev');
+  this._sixi.nav.next = this.modal.querySelector('#btn-next');
 
-  // 初始：未點擊前，允許 prev；禁用 next
+  // 初始：允許上一頁，下一步交由 sixiSetNextButtonState 控制
   this.sixiSetPrevDisabled(false);
-  this.sixiSetNextDisabled(true);
+  this.sixiSetNextButtonState();
 
-  // 在本步強制攔截點擊（防止外面沒理會 disabled）
+  // 一旦開始擲，禁止上一頁（避免中途返回）
   if (this._sixi.nav.prev) {
     this._sixi.nav.prev.addEventListener('click', (e) => {
-      if (this._sixi.n > 0) { // 一旦開始就禁止上一步
-        e.preventDefault(); e.stopPropagation();
-      }
+      if (this._sixi.n > 0) { e.preventDefault(); e.stopPropagation(); }
     }, true);
   }
-  if (this._sixi.nav.next) {
-    this._sixi.nav.next.addEventListener('click', (e) => {
-      if (this._sixi.n < 6) { // 未滿 6 次不給下一步
-        e.preventDefault(); e.stopPropagation();
-      }
-    }, true);
-  }
+  // 不再攔截 next（它會是「取消占卦」或「開始解卦」）
 }
+
 // 權重抽樣（0..3, weights 1:3:3:1）
 sixiWeightedPick() {
   // 0..3, 權重 1:3:3:1
@@ -831,9 +831,13 @@ sixiResetStateOnly() {
   const nameEl = this.modal.querySelector('#sixi-gua-name');
   if (nameEl) nameEl.textContent = '';
   const cnt = this.modal.querySelector('#sixi-count');
-  if (cnt) cnt.textContent = '0';
+  if (cnt) cnt.textContent = '1';
   const main = this.modal.querySelector('#btn-sixi-main');
-  if (main) main.innerHTML = '擲一次（<span id="sixi-count">0</span>/6）';
+  if (main) {
+    main.classList.remove('disabled');
+    main.removeAttribute('disabled');
+    main.innerHTML = '擲一次（<span id="sixi-count">1</span>/6）';
+  }
   
   // 禁用「重新起卦」按鈕（第一擲前）
   const reset = this.modal.querySelector('#btn-reset-sixi');
@@ -893,57 +897,44 @@ sixiSetNextDisabled(disabled) {
   this._sixi.nav.next.toggleAttribute('disabled', !!disabled);
   this._sixi.nav.next.classList.toggle('disabled', !!disabled);
 }
-/**
- * 起卦步驟的導覽按鈕狀態：
- * - n === 0：顯示「取消」，允許上一步
- * - 0 < n < 6：顯示「取消」，鎖住上一步
- * - n === 6：顯示「下一步」，解鎖上一步
- */
 sixiSetNextButtonState() {
   const nextBtn = this.modal.querySelector('#btn-next');
   const prevBtn = this.modal.querySelector('#btn-prev');
   if (!nextBtn) return;
 
-  // 未滿六次：顯示「取消」
+  // 未滿六次：顯示「取消占卦」（黑）
   if (this._sixi && this._sixi.n < 6) {
-    nextBtn.textContent = '取消';
+    nextBtn.textContent = '取消占卦';
+    nextBtn.classList.remove('btn-primary','btn-danger');
+    nextBtn.classList.add('btn-dark');
     nextBtn.classList.remove('disabled');
     nextBtn.removeAttribute('disabled');
 
-    // n===0 允許上一步；n>=1 鎖住上一步
+    // n===0 可回上一步；n>=1 鎖上一步
     if (prevBtn) {
-      if (this._sixi.n === 0) {
-        prevBtn.classList.remove('disabled');
-        prevBtn.removeAttribute('disabled');
-      } else {
-        prevBtn.classList.add('disabled');
-        prevBtn.setAttribute('disabled', '');
-      }
+      if (this._sixi.n === 0) { this.sixiSetPrevDisabled(false); }
+      else { this.sixiSetPrevDisabled(true); }
     }
 
-    // 點擊取消：確認後回到前一步（依你的實際步號調整 4）
     nextBtn.onclick = () => {
-      if (confirm('確定取消問卦？')) {
+      if (confirm('確定取消本次起卦嗎？')) {
         this.sixiResetStateOnly();
-        if (typeof this.goToStep === 'function') this.goToStep(4);
+        if (typeof this.goToStep === 'function') this.goToStep(5); // 回到問題類型/輸入
       }
     };
     return;
   }
 
-  // 滿六次：顯示「下一步」
-  nextBtn.textContent = '下一步';
+  // 已滿六次：顯示「開始解卦」（紅）
+  nextBtn.textContent = '開始解卦';
+  nextBtn.classList.remove('btn-primary','btn-dark');
+  nextBtn.classList.add('btn-danger');
   nextBtn.classList.remove('disabled');
   nextBtn.removeAttribute('disabled');
-  if (prevBtn) {
-    prevBtn.classList.remove('disabled');
-    prevBtn.removeAttribute('disabled');
-  }
-  nextBtn.onclick = () => {
-    if (typeof this.goToStep === 'function') this.goToStep(7);
-  };
-}
+  if (prevBtn) this.sixiSetPrevDisabled(false);
 
+  nextBtn.onclick = () => { if (typeof this.goToStep === 'function') this.goToStep(7); };
+}
 
 sixiSetResetDisabled(disabled) {
   const resetBtn = this.modal.querySelector('#btn-reset-sixi');
@@ -1018,15 +1009,14 @@ sixiOnMainClick() {
       if (typeof this.sixiSetPrevDisabled === 'function') this.sixiSetPrevDisabled(true);
     }
 
-    // 更新主按鈕顯示計數
-    const cnt = this.modal.querySelector('#sixi-count');
-    if (cnt) cnt.textContent = String(this._sixi.n);
-    if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
-    const main = this.modal.querySelector('#btn-sixi-main');
-    const orderMap = ['第一次','第二次','第三次','第四次','第五次','第六次'];
-    if (main && this._sixi.n < 6) {
-      main.innerHTML = `擲${orderMap[this._sixi.n]}（${this._sixi.n}/6）`;
-    }
+  // 更新主按鈕顯示計數：顯示「下一擲序號」，所以是 n+1（封頂 6）
+  const cnt = this.modal.querySelector('#sixi-count');
+  const displayCount = Math.min(this._sixi.n + 1, 6);
+  if (cnt) cnt.textContent = String(displayCount);
+  const main = this.modal.querySelector('#btn-sixi-main');
+  if (main && this._sixi.n < 6) {
+    main.innerHTML = `擲一次（<span id="sixi-count">${displayCount}</span>/6）`;
+  }
     // 若滿六爻 → 切換為「開始解卦」
 if (this._sixi.n === 6) {
   this._sixi.mode = 'ready';
@@ -1037,13 +1027,11 @@ if (!Array.isArray(this.userData.liuyaoData) || this.userData.liuyaoData.length 
   console.warn('[AI DEBUG] 六爻完成但 userData.liuyaoData 異常：', this.userData.liuyaoData);
 }
 
-  if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
-
-  // 直接切到解卦步（新的 Step 7）
-  if (typeof this.showInterpretationStep === 'function') {
-    this.showInterpretationStep(); // 若你的函式名不同，改為實際名稱
-  } else if (typeof this.goToStep === 'function') {
-    this.goToStep(7);
+   if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
+   // 主按鈕變灰，不可點
+   if (main) { main.classList.add('disabled'); main.setAttribute('disabled',''); }
+   // 導覽「開始解卦」變紅
+   if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
   }
 
   // 若 UI 還在同頁等待 next 按鈕，也把 Next 狀態更新為「下一步」
@@ -2168,22 +2156,7 @@ continueReading() {
     }
 
     // 創建導航按鈕
-    createNavigationButtons() {
-        const prevDisabled = this.currentStep <= 1 ? 'disabled' : '';
-        const nextText = this.currentStep >= this.totalSteps ? '完成' : '下一步';
-        
-        return `
-            <div class="tutorial-navigation">
-                <button class="btn btn-secondary" ${prevDisabled} onclick="divinationTutorial.previousStep()">
-                    上一步
-                </button>
-                <span class="step-indicator">${this.currentStep} / ${this.totalSteps}</span>
-                <button class="btn btn-primary" onclick="divinationTutorial.nextStep()">
-                    ${nextText}
-                </button>
-            </div>
-        `;
-    }
+createNavigationButtons() {
 
     // 下一步
 nextStep() {
