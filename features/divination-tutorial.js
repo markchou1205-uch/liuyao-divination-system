@@ -943,7 +943,6 @@ sixiSetResetDisabled(disabled) {
   resetBtn.classList.toggle('disabled', !!disabled);
 }
 // 主按鈕行為
-// 置於你的 DivinationTutorial 類別裡，直接覆蓋原本的 sixiOnMainClick()
 sixiOnMainClick() {
   // 確保狀態存在
   if (!this._sixi) this.initSixiState();
@@ -959,14 +958,14 @@ sixiOnMainClick() {
 
       const goNext = () => {
         if (typeof this.goToStep === 'function') {
-          this.goToStep(6);
+          this.goToStep(7); // ← 修正：完成 6/6 後的下一步是 7（開始解卦）
         } else if (typeof this.showQuestionSelectionStep === 'function') {
           this.showQuestionSelectionStep();
         }
       };
 
       if (ret && typeof ret.then === 'function') {
-        ret.then(goNext).catch(() => goNext());
+        ret.then(goNext).catch(goNext);
       } else {
         goNext();
       }
@@ -987,65 +986,68 @@ sixiOnMainClick() {
   const faces = this.sixiFacesFromV(v);
 
   // 先播放「翻轉＋滾動」動畫 → 再入帳並渲染本次爻
-  this.sixiAnimateCoins(faces).then(() => {
-    // 累積資料
-    this._sixi.data.push(v);
-    this._sixi.n += 1;
+  this.sixiAnimateCoins(faces)
+    .then(() => {
+      // 累積資料
+      this._sixi.data.push(v);
+      this._sixi.n += 1;
 
-    // 對外保留：給後續裝卦/用神計算使用
-    if (this.userData) this.userData.liuyaoData = this._sixi.data.slice();
+      // 對外保留：給後續裝卦/用神計算使用
+      if (this.userData) this.userData.liuyaoData = this._sixi.data.slice();
 
-    // 渲染本次爻（自下而上）：第 n 次落在 slotIndex = 7 - n
-    const slotIndex = 7 - this._sixi.n;
-    this.sixiRenderYao(slotIndex, v, faces);
+      // 渲染本次爻（自下而上）：第 n 次落在 slotIndex = 7 - n
+      const slotIndex = 7 - this._sixi.n;
+      this.sixiRenderYao(slotIndex, v, faces);
 
-    // 首次擲到後，開放「重新起卦」按鈕並禁用「上一步」
-    if (this._sixi.n === 1) {
-      const reset = this.modal.querySelector('#btn-reset-sixi');
-      if (reset) {
-        reset.classList.remove('disabled');
-        reset.removeAttribute('disabled');
+      // 首次擲到後，開放「重新起卦」按鈕並禁用「上一步」
+      if (this._sixi.n === 1) {
+        const reset = this.modal.querySelector('#btn-reset-sixi');
+        if (reset) {
+          reset.classList.remove('disabled');
+          reset.removeAttribute('disabled');
+        }
+        if (typeof this.sixiSetPrevDisabled === 'function') this.sixiSetPrevDisabled(true);
       }
-      if (typeof this.sixiSetPrevDisabled === 'function') this.sixiSetPrevDisabled(true);
-    }
 
-  // 更新主按鈕顯示計數：顯示「下一擲序號」，所以是 n+1（封頂 6）
-  const cnt = this.modal.querySelector('#sixi-count');
-  const displayCount = Math.min(this._sixi.n + 1, 6);
-  if (cnt) cnt.textContent = String(displayCount);
-  const main = this.modal.querySelector('#btn-sixi-main');
-  if (main && this._sixi.n < 6) {
-    main.innerHTML = `擲一次（<span id="sixi-count">${displayCount}</span>/6）`;
-  }
-    // 若滿六爻 → 切換為「開始解卦」
-if (this._sixi.n === 6) {
-  this._sixi.mode = 'ready';
-// 固化 userData，避免後續切換步驟導致送出空陣列
-this.userData.method = 'liuyao';
-this.userData.liuyaoData = this._sixi.data.slice();
-if (!Array.isArray(this.userData.liuyaoData) || this.userData.liuyaoData.length !== 6) {
-  console.warn('[AI DEBUG] 六爻完成但 userData.liuyaoData 異常：', this.userData.liuyaoData);
-}
+      // 更新主按鈕顯示計數：顯示「下一擲序號」，所以是 n+1（封頂 6）
+      const cnt = this.modal.querySelector('#sixi-count');
+      const displayCount = Math.min(this._sixi.n + 1, 6);
+      if (cnt) cnt.textContent = String(displayCount);
+      const main = this.modal.querySelector('#btn-sixi-main');
+      if (main && this._sixi.n < 6) {
+        main.innerHTML = `擲一次（<span id="sixi-count">${displayCount}</span>/6）`;
+      }
 
-   if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
-   // 主按鈕變灰，不可點
-   if (main) { main.classList.add('disabled'); main.setAttribute('disabled',''); }
-   // 導覽「開始解卦」變紅
-   if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
-  }
+      // 若滿六爻 → 切換為「開始解卦」
+      if (this._sixi.n === 6) {
+        this._sixi.mode = 'ready';
+        // 固化 userData，避免後續切換步驟導致送出空陣列
+        this.userData.method = 'liuyao';
+        this.userData.liuyaoData = this._sixi.data.slice();
+        if (!Array.isArray(this.userData.liuyaoData) || this.userData.liuyaoData.length !== 6) {
+          console.warn('[AI DEBUG] 六爻完成但 userData.liuyaoData 異常：', this.userData.liuyaoData);
+        }
 
-  // 若 UI 還在同頁等待 next 按鈕，也把 Next 狀態更新為「下一步」
+        if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
+        // 主按鈕變灰，不可點
+        if (main) { main.classList.add('disabled'); main.setAttribute('disabled',''); }
+      }
+
+      // 更新右下角按鈕（取消占卦 / 開始解卦）
+      if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
+    })
+    .catch(() => {
+      // 動畫若失敗，至少把面顯示出來，避免卡住
+      try { this.sixiSetCoinFaces(faces); } catch {}
+    })
+    .finally(() => {
+      // 稍微延遲解除鎖，避免連點
+      setTimeout(() => { this._sixi.locked = false; }, 200);
+    });
+
+  // （可留可刪）若想在動畫開始時就把 Next 顯示成「取消占卦」，保留這行；
+  // 若避免 UI flicker，可註解掉。
   if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
-})
-  }).catch(() => {
-    // 動畫若失敗，至少把面顯示出來，避免卡住
-    try { this.sixiSetCoinFaces(faces); } catch {}
-  }).finally(() => {
-    // 稍微延遲解除鎖，避免連點
-    setTimeout(() => { this._sixi.locked = false; }, 200);
-  });
-this.sixiSetNextButtonState();
-
 }
 
 /* 把 v(0..3) 映射成三枚硬幣正反組合 */
