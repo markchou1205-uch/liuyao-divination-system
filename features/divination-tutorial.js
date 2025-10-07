@@ -40,52 +40,52 @@ forceShowTutorial() {
 }
 
 
-    // 開始引導流程
-    startTutorial() {
-        if (this.isActive) return; 
-        this.isActive = true;
-        this.createOverlay();
-        this.createModal();
-        this.showStep(1);
-    }
+// 創建遮罩層（全黑不透明）
+createOverlay() {
+  this.overlay = document.createElement('div');
+  this.overlay.id = 'tutorial-overlay';
+  this.overlay.classList.add('tutorial-overlay'); // 讓外部 CSS 可以選到
+  this.overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: #000;            /* ← 全黑、不透明 */
+    z-index: 9998;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  `;
+  document.body.appendChild(this.overlay);
+}
 
-    // 創建遮罩層
-    createOverlay() {
-        this.overlay = document.createElement('div');
-        this.overlay.id = 'tutorial-overlay';
-        this.overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 9998;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        `;
-        document.body.appendChild(this.overlay);
-    }
+// 創建 Modal（固定尺寸；內容在 body 區滾動）
+createModal() {
+  this.modal = document.createElement('div');
+  this.modal.id = 'tutorial-modal';
 
-    // 創建Modal
-    createModal() {
-        this.modal = document.createElement('div');
-        this.modal.id = 'tutorial-modal';
-        this.modal.style.cssText = `
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 700px;
-            width: 95%;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 9999;
-        `;
-        this.overlay.appendChild(this.modal);
-    }
+  // 讓固定尺寸樣式能套用（若你有寺廟框，可再加 temple-frame）
+  this.modal.classList.add('sixi-modal');
+
+  this.modal.style.cssText = `
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+    position: relative;
+    z-index: 9999;
+
+    /* 固定尺寸（桌機）；小螢幕會被 max-* 限制 */
+    width: 720px;
+    height: 420px;
+    max-width: 90vw;
+    max-height: 90vh;
+
+    display: flex;           /* 讓 header/footer 固定，body 可滾動 */
+    flex-direction: column;
+    overflow: hidden;        /* 外框固定高度，不跟內容變 */
+    padding: 0;              /* 內距交由 header/body/footer 自己排 */
+  `;
+  this.overlay.appendChild(this.modal);
+}
+
 
     // 顯示指定步驟
     showStep(stepNumber) {
