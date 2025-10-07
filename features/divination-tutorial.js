@@ -18,6 +18,21 @@ class DivinationTutorial {
             divinationResult: null // 起卦結果
         };
     }
+    // 確保引導的 Overlay/Modal 已經建立（被移除或尚未建立時會補上）
+ensureTutorialUI() {
+  if (!this.overlay || !document.body.contains(this.overlay)) {
+    this.createOverlay();
+  }
+  if (!this.modal || !this.overlay.contains(this.modal)) {
+    this.createModal();
+  }
+}
+startTutorial() {
+  if (this.isActive) return;
+  this.isActive = true;
+  this.ensureTutorialUI();     // ← 先建立 UI
+  this.showStep(1);
+}
 
     // 檢查是否需要顯示引導
 checkIfNeedTutorial() {
@@ -32,13 +47,12 @@ checkIfNeedTutorial() {
     }
 }
 
-    // 強制顯示引導精靈（無論設定如何）
 forceShowTutorial() {
-  if (this.isActive) return;   // 已開啟就不再開
+  if (this.isActive) return;
   this.isActive = true;
-  this.showStep(1);            // 保留你原本的開啟流程
+  this.ensureTutorialUI();     // ← 先建立 UI
+  this.showStep(1);
 }
-
 
 // 創建遮罩層（全黑不透明）
 createOverlay() {
@@ -89,6 +103,7 @@ createModal() {
 
     // 顯示指定步驟
     showStep(stepNumber) {
+        this.ensureTutorialUI();
         if (stepNumber === 4) { this.showStep(5); return; }
         this.currentStep = stepNumber;
         
