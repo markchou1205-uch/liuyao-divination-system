@@ -69,7 +69,6 @@ const DIZHI_CHONGHE = {
     '亥': { chong: '巳', he: '寅' }
 };
 
-
 // ==================== 基本功能 ====================
 
 // 計算指定日期的干支
@@ -676,45 +675,34 @@ function updateGuaNames(guaNames) {
                 const colspan = cells[i].getAttribute('colspan');
                 
                 if (colspan === '6' && !gnUpdated) {
-                    console.log('更新GN為:', guaNames.gn);
-                    cells[i].textContent = guaNames.gn || 'GN';
+cells[i].textContent = guaNames.gn || 'GN';
                     cells[i].innerHTML = guaNames.gn || 'GN';
                     gnUpdated = true;
                 } else if (colspan === '4' && !bgnUpdated) {
-                    console.log('更新BGN為:', guaNames.bgn);
-                    cells[i].textContent = guaNames.bgn || 'BGN';
+cells[i].textContent = guaNames.bgn || 'BGN';
                     cells[i].innerHTML = guaNames.bgn || 'BGN';
                     bgnUpdated = true;
                 }
             }
             
-            console.log('卦名更新完成 - GN:', gnUpdated, 'BGN:', bgnUpdated);
-        } else {
-            console.error('GN/BGN行單元格數量不足，實際數量:', cells.length);
-        }
+} else {
+}
     } else {
-        console.error('表格行數不足，實際行數:', rows.length);
-    }
+}
     
-    console.log('=== updateGuaNames 結束 ===');
 }
 
 // 初始化事件監聽器
 function initializeEventListeners() {
-    console.log('initializeEventListeners 函數開始執行');
-    
-    // 基本元素
     const methodSelect = document.getElementById('divination-method');
     const dateMethodSelect = document.getElementById('date-method');
     
-    console.log('methodSelect:', methodSelect);
-    console.log('dateMethodSelect:', dateMethodSelect);
+console.log('dateMethodSelect:', dateMethodSelect);
     
     // 起卦方式選擇器
     if (methodSelect) {
         methodSelect.addEventListener('change', function() {
-            console.log('起卦方式改變為:', this.value);
-            const method = this.value;
+const method = this.value;
 
         if (method === 'record') {
             // 處理批卦記錄選擇
@@ -738,8 +726,7 @@ function initializeEventListeners() {
                     break;
                 case 'number':
                     if (resultText) resultText.textContent = '數字起卦 - 請點擊開始起卦';
-                    console.log('選擇了數字起卦，準備顯示模態視窗');
-                    setTimeout(() => {
+setTimeout(() => {
                         showNumberModal();
                     }, 100);
                     break;
@@ -749,8 +736,7 @@ function initializeEventListeners() {
                     break;
                 case 'liuyao':
                     if (resultText) resultText.textContent = '六爻起卦 - 請點擊開始起卦';
-                    console.log('選擇了六爻起卦，準備顯示模態視窗');
-                    setTimeout(() => {
+setTimeout(() => {
                         showLiuyaoModal();
                     }, 100);
                     break;
@@ -816,7 +802,6 @@ function initializeEventListeners() {
         });
     }
     
-    console.log('initializeEventListeners 函數執行完成');
 }
 
 // 顯示結果 - 修改為更新一行顯示
@@ -833,9 +818,6 @@ function showResult(text) {
 
 // 顯示六爻輸入模態視窗
 function showLiuyaoModal() {
-    console.log('showLiuyaoModal 函數被調用');
-    
-    // 移除已存在的模態視窗
     const existingModal = document.getElementById('liuyao-modal');
     if (existingModal) {
         existingModal.remove();
@@ -966,23 +948,17 @@ function showLiuyaoModal() {
     modalOverlay.appendChild(modalContent);
     document.body.appendChild(modalOverlay);
     
-    console.log('模態視窗已添加到頁面');
-    
-    // 添加事件監聽器
     document.getElementById('confirm-liuyao').onclick = function() {
-        console.log('確定送出被點擊');
-        confirmModalLiuyaoResults();
+confirmModalLiuyaoResults();
     };
     
     document.getElementById('reset-liuyao').onclick = function() {
-        console.log('重新輸入被點擊');
-        resetModalLiuyaoInputs();
+resetModalLiuyaoInputs();
     };
     
     // 右上角關閉按鈕
     document.getElementById('close-modal').onclick = function() {
-        console.log('關閉按鈕被點擊');
-        closeLiuyaoModal();
+closeLiuyaoModal();
     };
     
     // 點擊覆蓋層關閉模態視窗
@@ -1003,18 +979,12 @@ function closeLiuyaoModal() {
 
 // 確認模態視窗的六爻結果
 function confirmModalLiuyaoResults() {
-    console.log('確認模態視窗的六爻結果');
-    
-    // 收集六次擲幣結果
     const results = [];
     for (let i = 1; i <= 6; i++) {
         const diceValue = document.getElementById('modal-dice' + i).value;
         results.push(parseInt(diceValue));
     }
     
-    console.log('六爻擲幣結果:', results);
-    
-    // 存儲到全域變數 dice1~dice6
     window.dice1 = results[0];
     window.dice2 = results[1];
     window.dice3 = results[2];
@@ -1022,9 +992,6 @@ function confirmModalLiuyaoResults() {
     window.dice5 = results[4];
     window.dice6 = results[5];
     
-    console.log('存儲的dice值:', {dice1: window.dice1, dice2: window.dice2, dice3: window.dice3, dice4: window.dice4, dice5: window.dice5, dice6: window.dice6});
-    
-    // 建立Yinyuang1~Yinyuang6常數
     window.Yinyuang1 = (window.dice1 === 0 || window.dice1 === 2) ? 0 : 1;
     window.Yinyuang2 = (window.dice2 === 0 || window.dice2 === 2) ? 0 : 1;
     window.Yinyuang3 = (window.dice3 === 0 || window.dice3 === 2) ? 0 : 1;
@@ -1032,9 +999,6 @@ function confirmModalLiuyaoResults() {
     window.Yinyuang5 = (window.dice5 === 0 || window.dice5 === 2) ? 0 : 1;
     window.Yinyuang6 = (window.dice6 === 0 || window.dice6 === 2) ? 0 : 1;
     
-    console.log('Yinyuang值:', {Yinyuang1: window.Yinyuang1, Yinyuang2: window.Yinyuang2, Yinyuang3: window.Yinyuang3, Yinyuang4: window.Yinyuang4, Yinyuang5: window.Yinyuang5, Yinyuang6: window.Yinyuang6});
-    
-    // 建立guamap1~guamap6
     window.guamap1 = createGuaMap(window.dice1);
     window.guamap2 = createGuaMap(window.dice2);
     window.guamap3 = createGuaMap(window.dice3);
@@ -1042,9 +1006,6 @@ function confirmModalLiuyaoResults() {
     window.guamap5 = createGuaMap(window.dice5);
     window.guamap6 = createGuaMap(window.dice6);
     
-    console.log('guamap值:', {guamap1: window.guamap1, guamap2: window.guamap2, guamap3: window.guamap3, guamap4: window.guamap4, guamap5: window.guamap5, guamap6: window.guamap6});
-    
-    // 關閉模態視窗
     closeLiuyaoModal();
     
     const resultText = `六爻起卦完成：${results.join(', ')}`;
@@ -1062,9 +1023,6 @@ function resetModalLiuyaoInputs() {
 
 // 顯示數字起卦模態視窗
 function showNumberModal() {
-    console.log('showNumberModal 函數被調用');
-    
-    // 移除已存在的模態視窗
     const existingModal = document.getElementById('number-modal');
     if (existingModal) {
         existingModal.remove();
@@ -1151,23 +1109,17 @@ function showNumberModal() {
     modalOverlay.appendChild(modalContent);
     document.body.appendChild(modalOverlay);
     
-    console.log('數字起卦模態視窗已添加到頁面');
-    
-    // 添加事件監聽器
     document.getElementById('confirm-number').onclick = function() {
-        console.log('確定送出被點擊');
-        confirmNumberResults();
+confirmNumberResults();
     };
     
     document.getElementById('reset-number').onclick = function() {
-        console.log('重新輸入被點擊');
-        resetNumberInputs();
+resetNumberInputs();
     };
     
     // 右上角關閉按鈕
     document.getElementById('close-number-modal').onclick = function() {
-        console.log('關閉按鈕被點擊');
-        closeNumberModal();
+closeNumberModal();
     };
     
     // 點擊覆蓋層關閉模態視窗
@@ -1188,9 +1140,7 @@ function closeNumberModal() {
 
 // 確認數字起卦結果
 function confirmNumberResults() {
-    console.log('確認數字起卦結果');
-    
-    const x1 = document.getElementById('x1-input').value;
+const x1 = document.getElementById('x1-input').value;
     const x2 = document.getElementById('x2-input').value;
     const x3 = document.getElementById('x3-input').value;
     
@@ -1221,17 +1171,8 @@ function confirmNumberResults() {
         return;
     }
     
-    console.log('輸入驗證通過:', {x1: x1Num, x2: x2Num, x3: x3Num});
-    
-    // 計算動爻位置
     const dongYao = calculateDongYao(x3Num);
-    console.log('動爻位置:', dongYao);
-    
-    // 生成卦象
     const guaResult = generateNumberGua(x1Num, x2Num, dongYao);
-    console.log('卦象結果:', guaResult);
-    
-    // 存儲全域變數
     window.numberGuaResult = guaResult;
     
     // 關閉模態視窗
@@ -1270,8 +1211,7 @@ function generateNumberGua(x1, x2, dongYao) {
     // 組合成完整卦象 (從下到上：下卦 + 上卦)
     const fullGua = [...lowerGua, ...upperGua];
     
-    console.log('完整卦象:', fullGua);
-    console.log('動爻位置:', dongYao);
+console.log('動爻位置:', dongYao);
     
     // 處理動爻
     const finalGua = [...fullGua];
@@ -1284,9 +1224,6 @@ function generateNumberGua(x1, x2, dongYao) {
         }
     }
     
-    console.log('處理動爻後:', finalGua);
-    
-    // 生成 GuaMap
     const guaMaps = finalGua.map(code => createNumberGuaMap(code));
     
     return {
@@ -1308,13 +1245,7 @@ function resetNumberInputs() {
 
 // ==================== 時間起卦功能 ====================
 function timeBasedDivination() {
-    console.log('開始執行時間起卦');
-    
-    // 獲取當前干支
     const ganZhi = getCurrentGanZhi();
-    console.log('當前干支:', ganZhi);
-    
-    // 提取地支並轉換為數字
     const yearZhi = ganZhi.year.charAt(1);
     const monthZhi = ganZhi.month.charAt(1);
     const dayZhi = ganZhi.day.charAt(1);
@@ -1357,9 +1288,6 @@ function timeBasedDivination() {
     const upperGuaCode = GuaCode[upperGua]; // 上卦
     const fullGua = [...lowerGuaCode, ...upperGuaCode];
     
-    console.log('完整卦象:', fullGua);
-    
-    // 建立時間起卦的結果對象，使用與數字起卦相同的格式
     const finalGua = [...fullGua];
     
     // 處理動爻變化
@@ -1372,9 +1300,6 @@ function timeBasedDivination() {
         }
     }
     
-    console.log('處理動爻後:', finalGua);
-    
-    // 創建時間起卦結果對象
     window.timeGuaResult = {
         originalGua: fullGua,
         finalGua: finalGua,
@@ -1388,17 +1313,13 @@ function timeBasedDivination() {
     const resultText = `時間起卦完成 - 上卦：${GuaNames[upperGua]} 下卦：${GuaNames[lowerGua]} 動爻：第${dongYao}爻`;
     showResult(resultText);
     
-    console.log('時間起卦結果:', window.timeGuaResult);
 }
 
 // 時間起卦填表函數
 function fillTimeGuaTable() {
-    console.log('開始填入時間起卦結果到卦表');
-    
-    const table = document.querySelector('.main-table');
+const table = document.querySelector('.main-table');
     if (!table) {
-        console.error('找不到主表格');
-        return;
+return;
     }
     
     const rows = table.querySelectorAll('tr');
@@ -1439,22 +1360,12 @@ function fillTimeGuaTable() {
     if (typeof AdvancedCalculator !== 'undefined') {
         // 使用 calculateNumberGuaNames 來計算卦名
         guaNames = AdvancedCalculator.calculateNumberGuaNames(window.timeGuaResult);
-        console.log('計算得到的卦名:', guaNames);
-        
-        // 計算本卦詳細信息
         if (guaNames && guaNames.originalBinary) {
             guaDetails = AdvancedCalculator.calculateGuaComplete(guaNames.originalBinary);
-            console.log('計算得到的本卦詳細信息:', guaDetails);
-            
-            // 計算世應位置
             shiYingData = AdvancedCalculator.calculateShiYing(guaNames.originalBinary);
-            console.log('計算得到的世應位置:', shiYingData);
-            
-            // 計算伏神
             if (guaDetails.liuqin) {
                 fushenData = AdvancedCalculator.calculateFushen(guaNames.originalBinary, guaDetails.liuqin);
-                console.log('計算得到的伏神:', fushenData);
-            }
+}
         }
         
         // 計算六獸
@@ -1462,18 +1373,15 @@ function fillTimeGuaTable() {
         const dayGan = ganZhi.day.charAt(0);
         if (typeof GuaCalculator !== 'undefined') {
             liushenData = GuaCalculator.getLiushen(dayGan);
-            console.log('計算得到的六獸:', liushenData);
-        }
+}
         
         // 計算變卦詳細信息
         if (guaNames && guaNames.bianBinary) {
             bianGuaDetails = AdvancedCalculator.calculateGuaComplete(guaNames.bianBinary);
-            console.log('計算得到的變卦詳細信息:', bianGuaDetails);
-        }
+}
         
         updateGuaNames(guaNames);
-        console.log('時間起卦卦名已更新');
-    }
+}
     
     // 變卦卦象
     const bianGuamaps = [];
@@ -1576,7 +1484,6 @@ function fillTimeGuaTable() {
 setTimeout(() => {
     correctChangeGuaLiuqin();
 }, 200);
-    console.log('已將時間起卦結果填入卦表，包含動爻紅色標記、六獸、世應、伏神');
 }
 
 // ==================== 共用函數 ====================
@@ -1609,12 +1516,9 @@ function createNumberGuaMap(code) {
  * 修正：六爻起卦填表函數 - 正確的順序和世應顯示
  */
 function fillLiuyaoGuaTable() {
-    console.log('開始填入六爻起卦結果到卦表');
-    
-    const table = document.querySelector('.main-table');
+const table = document.querySelector('.main-table');
     if (!table) {
-        console.error('找不到主表格');
-        return;
+return;
     }
     
     const rows = table.querySelectorAll('tr');
@@ -1623,14 +1527,8 @@ function fillLiuyaoGuaTable() {
         return cells.length > 2 && /^[A-J][1-6]$/.test(cells[0].textContent.trim());
     });
     
-    console.log(`找到 ${dataRows.length} 個數據行`);
-    
-    // 檢查是否有動爻（老陰0或老陽3）
     const liuyaoResults = [window.dice1, window.dice2, window.dice3, window.dice4, window.dice5, window.dice6];
     const hasMovingYao = liuyaoResults.some(dice => dice === 0 || dice === 3);
-    console.log('是否有動爻:', hasMovingYao, '六爻結果:', liuyaoResults);
-    
-    // 修正：卦象順序應該正確對應
     // 表格從上到下對應上爻到初爻，所以要反轉guamap數組
     const guamaps = [window.guamap6, window.guamap5, window.guamap4, window.guamap3, window.guamap2, window.guamap1];
     
@@ -1643,35 +1541,20 @@ function fillLiuyaoGuaTable() {
     let shiYingData = null;
     
     if (typeof AdvancedCalculator !== 'undefined') {
-        console.log('重新計算六爻結果數組:', liuyaoResults);
-        
-        // 重新計算卦名
         guaNames = AdvancedCalculator.calculateGuaNames(liuyaoResults);
-        console.log('重新計算得到的卦名:', guaNames);
-        
-        // 重新計算本卦地支五行和六親
         if (guaNames && guaNames.originalBinary) {
             guaDetails = AdvancedCalculator.calculateGuaComplete(guaNames.originalBinary);
-            console.log('重新計算得到的本卦詳細信息:', guaDetails);
-            
-            // 計算世應位置
             shiYingData = AdvancedCalculator.calculateShiYing(guaNames.originalBinary);
-            console.log('計算得到的世應位置:', shiYingData);
-            
-            // 重新計算伏神
             if (guaDetails.liuqin) {
                 fushenData = AdvancedCalculator.calculateFushen(guaNames.originalBinary, guaDetails.liuqin);
-                console.log('重新計算得到的伏神:', fushenData);
-            }
+}
         }
         
         // 只有在有動爻時才計算變卦
         if (hasMovingYao && guaNames && guaNames.bianBinary) {
             bianGuaDetails = AdvancedCalculator.calculateGuaComplete(guaNames.bianBinary);
-            console.log('重新計算得到的變卦詳細信息:', bianGuaDetails);
-        } else {
-            console.log('無動爻，變卦數據設為空');
-            bianGuaDetails = null;
+} else {
+bianGuaDetails = null;
         }
         
         // 重新計算六神
@@ -1679,8 +1562,7 @@ function fillLiuyaoGuaTable() {
         const dayGan = ganZhi.day.charAt(0);
         if (typeof GuaCalculator !== 'undefined') {
             liushenData = GuaCalculator.getLiushen(dayGan);
-            console.log('重新計算得到的六神:', liushenData);
-        }
+}
         
         // 更新卦名
         if (guaNames) {
@@ -1691,8 +1573,7 @@ function fillLiuyaoGuaTable() {
                 bianBinary: guaNames.bianBinary
             };
             updateGuaNames(displayGuaNames);
-            console.log('六爻起卦卦名已更新, 有動爻:', hasMovingYao);
-        }
+}
     }
     
     // 生成變卦的卦象（只有在有動爻時）
@@ -1714,9 +1595,7 @@ function fillLiuyaoGuaTable() {
         bianGuamaps = Array(6).fill('');
     }
     
-    console.log('開始進行填入數據');
-    
-    dataRows.forEach((row, index) => {
+dataRows.forEach((row, index) => {
         if (index < 6) {
             const cells = row.querySelectorAll('td');
             
@@ -1726,13 +1605,9 @@ function fillLiuyaoGuaTable() {
                 // 表格index=5(最下行) -> 初爻(第1爻)
                 const yaoIndex = 5 - index; // 爻的實際索引：0=初爻, 5=上爻
                 const actualYaoPosition = yaoIndex + 1; // 爻位：1-6
-                console.log(`處理表格第 ${index + 1} 行，對應第 ${actualYaoPosition} 爻`);
-                
-                // A列：只顯示六神
                 if (liushenData && liushenData[yaoIndex]) {
                     cells[0].innerHTML = `<div style="text-align: center; font-size: 14px; font-weight: bold;">${liushenData[yaoIndex]}</div>`;
-                    console.log(`A列填入六神: ${liushenData[yaoIndex]}`);
-                } else {
+} else {
                     cells[0].textContent = `A${actualYaoPosition}`;
                 }
                 
@@ -1761,8 +1636,7 @@ function fillLiuyaoGuaTable() {
                     
                     guaDisplay += '</div>';
                     cells[2].innerHTML = guaDisplay;
-                    console.log(`C列填入卦象和世應，第${actualYaoPosition}爻`);
-                } else {
+} else {
                     cells[2].innerHTML = '';
                 }
                 
@@ -1770,8 +1644,7 @@ function fillLiuyaoGuaTable() {
                 if (guaDetails && guaDetails.dizhiWuxing && guaDetails.dizhiWuxing[yaoIndex]) {
                     cells[3].textContent = guaDetails.dizhiWuxing[yaoIndex];
                     cells[3].innerHTML = guaDetails.dizhiWuxing[yaoIndex];
-                    console.log(`D列填入地支五行: ${guaDetails.dizhiWuxing[yaoIndex]}`);
-                } else {
+} else {
                     cells[3].textContent = '--';
                     cells[3].innerHTML = '--';
                 }
@@ -1780,8 +1653,7 @@ function fillLiuyaoGuaTable() {
                 if (guaDetails && guaDetails.liuqin && guaDetails.liuqin[yaoIndex]) {
                     cells[4].textContent = guaDetails.liuqin[yaoIndex];
                     cells[4].innerHTML = guaDetails.liuqin[yaoIndex];
-                    console.log(`E列填入六親: ${guaDetails.liuqin[yaoIndex]}`);
-                } else {
+} else {
                     cells[4].textContent = '--';
                     cells[4].innerHTML = '--';
                 }
@@ -1823,29 +1695,25 @@ function fillLiuyaoGuaTable() {
                     cells[7].textContent = '';
                     cells[7].innerHTML = '';
                     cells[8].innerHTML = '';
-                    console.log('無動爻，變卦部分已清空');
-                }
+}
                 
                 // J列：卦變 - 暫時留空
                 cells[9].textContent = '';
                 cells[9].innerHTML = '';
                 
-                console.log(`第 ${index + 1} 行（第${actualYaoPosition}爻）數據填入完成`);
-            }
+}
         }
     });
 setTimeout(() => {
     correctChangeGuaLiuqin();
 }, 200);
-    console.log('已將六爻結果完全重新填入卦表，包括正確的顯示順序和世應位置');
 }
 
 // 將數字起卦結果填入卦表的C1-C6位置
 function fillNumberGuaTable() {
     const table = document.querySelector('.main-table');
     if (!table) {
-        console.error('找不到主表格');
-        return;
+return;
     }
     
     const rows = table.querySelectorAll('tr');
@@ -1887,24 +1755,13 @@ function fillNumberGuaTable() {
     let shiYingData = null; // 添加世應數據
     
     if (typeof AdvancedCalculator !== 'undefined' && window.numberGuaResult) {
-        console.log('數字起卦結果:', window.numberGuaResult);
-        guaNames = AdvancedCalculator.calculateNumberGuaNames(window.numberGuaResult);
-        console.log('計算得到的卦名:', guaNames);
-        
-        // 計算本卦地支五行和六親
+guaNames = AdvancedCalculator.calculateNumberGuaNames(window.numberGuaResult);
         if (guaNames && guaNames.originalBinary) {
             guaDetails = AdvancedCalculator.calculateGuaComplete(guaNames.originalBinary);
-            console.log('計算得到的本卦詳細信息:', guaDetails);
-            
-            // 計算世應位置
             shiYingData = AdvancedCalculator.calculateShiYing(guaNames.originalBinary);
-            console.log('計算得到的世應位置:', shiYingData);
-            
-            // 計算伏神
             if (guaDetails.liuqin) {
                 fushenData = AdvancedCalculator.calculateFushen(guaNames.originalBinary, guaDetails.liuqin);
-                console.log('計算得到的伏神:', fushenData);
-            }
+}
         }
         
         // 計算六獸（添加這部分）
@@ -1912,18 +1769,15 @@ function fillNumberGuaTable() {
         const dayGan = ganZhi.day.charAt(0);
         if (typeof GuaCalculator !== 'undefined') {
             liushenData = GuaCalculator.getLiushen(dayGan);
-            console.log('計算得到的六獸:', liushenData);
-        }
+}
         
         // 計算變卦地支五行和六親
         if (guaNames && guaNames.bianBinary) {
             bianGuaDetails = AdvancedCalculator.calculateGuaComplete(guaNames.bianBinary);
-            console.log('計算得到的變卦詳細信息:', bianGuaDetails);
-        }
+}
         
         updateGuaNames(guaNames);
-        console.log('數字起卦卦名已更新');
-    }
+}
     
     // 修正：變卦卦象完全使用 finalGua
     const bianGuamaps = [];
@@ -1951,8 +1805,7 @@ function fillNumberGuaTable() {
                 // A列：顯示六獸（修正）
                 if (liushenData && liushenData[yaoIndex]) {
                     cells[0].innerHTML = `<div style="text-align: center; font-size: 14px; font-weight: bold;">${liushenData[yaoIndex]}</div>`;
-                    console.log(`A列填入六獸: ${liushenData[yaoIndex]}`);
-                } else {
+} else {
                     cells[0].innerHTML = '';
                 }
                 
@@ -1961,8 +1814,7 @@ function fillNumberGuaTable() {
                     let updatedFushen = fushenData[yaoIndex];
                     updatedFushen = updatedFushen.replace(/font-size:\s*10px/g, 'font-size: 14px');
                     cells[1].innerHTML = updatedFushen;
-                    console.log(`B列填入伏神: ${fushenData[yaoIndex]}`);
-                } else {
+} else {
                     cells[1].innerHTML = '';
                 }
                 
@@ -1982,8 +1834,7 @@ function fillNumberGuaTable() {
                     
                     guaDisplay += '</div>';
                     cells[2].innerHTML = guaDisplay;
-                    console.log(`C列填入卦象和世應，第${actualYaoPosition}爻`);
-                } else {
+} else {
                     cells[2].innerHTML = '';
                 }
                 
@@ -2034,18 +1885,14 @@ function fillNumberGuaTable() {
 setTimeout(() => {
     correctChangeGuaLiuqin();
 }, 200);
-    console.log('已將數字起卦結果填入卦表，包含動爻紅色標記、六獸、世應、伏神');
 }
     
 // ==================== 其他功能函數 ====================
 
 // 顯示主卦表
 function showMainTable() {
-    console.log('showMainTable 函數被調用');
-    const mainTableSection = document.getElementById('main-table-section');
-    console.log('main-table-section 元素:', mainTableSection);
-    
-    if (mainTableSection) {
+const mainTableSection = document.getElementById('main-table-section');
+if (mainTableSection) {
         console.log('移除 hidden 類別前，元素狀態:', {
             classList: mainTableSection.className,
             display: window.getComputedStyle(mainTableSection).display,
@@ -2061,26 +1908,19 @@ function showMainTable() {
             visibility: window.getComputedStyle(mainTableSection).visibility
         });
         
-        console.log('主卦表已顯示');
-    } else {
-        console.error('找不到主卦表元素');
-    }
+} else {
+}
 }
 
 // 返回起卦界面
 // 修正版：返回起卦功能 - 直接重新載入頁面
 function backToSection1() {
-    console.log('返回起卦：重新載入頁面');
-    
-    // 直接重新載入頁面，這會清除所有變數和狀態
     window.location.reload();
 }
 
 // 開始起卦功能 - 修改為直接顯示卦表
 function startDivination() {
-    console.log('startDivination 函數被調用');
-    
-    const methodSelect = document.getElementById('divination-method');
+const methodSelect = document.getElementById('divination-method');
     if (!methodSelect) {
         alert('找不到起卦方式選擇器');
         return;
@@ -2097,9 +1937,6 @@ function startDivination() {
         alert('請先選擇用神');
         return;
     }
-    console.log('選擇的起卦方式:', method);
-    
-    // 隱藏起卦方式和起卦日期選擇行
     const methodRow = document.getElementById('method-selection-row');
     const dateRow = document.getElementById('date-selection-row');
     if (methodRow) methodRow.style.display = 'none';
@@ -2108,34 +1945,27 @@ function startDivination() {
     // 顯示五行旺衰表和神煞表
     const wuxingTable = document.getElementById('wuxing-table');
     const shenshaTable = document.getElementById('shensha-table');
-    console.log('五行旺衰表元素:', wuxingTable);
-    console.log('神煞表元素:', shenshaTable);
+console.log('神煞表元素:', shenshaTable);
     if (wuxingTable) {
         wuxingTable.classList.remove('hidden');
         // 強制設定樣式
         wuxingTable.style.visibility = 'visible';
         wuxingTable.style.opacity = '1';
         wuxingTable.style.display = 'table';
-        console.log('五行旺衰表已顯示');
-    }
+}
     if (shenshaTable) {
         shenshaTable.classList.remove('hidden');
         // 強制設定樣式
         shenshaTable.style.visibility = 'visible';
         shenshaTable.style.opacity = '1';
         shenshaTable.style.display = 'table';
-        console.log('神煞表已顯示');
-    }
+}
     
     // 如果是六爻起卦且已有擲幣結果，將guamap放入卦表並顯示
     if (method === 'liuyao' && window.guamap1) {
-        console.log('六爻起卦：開始填入卦表並顯示');
-        fillLiuyaoGuaTable();
+fillLiuyaoGuaTable();
         showResult('六爻起卦完成，已將結果放入卦表');
-        console.log('六爻起卦：即將調用 showMainTable()');
-        showMainTable(); // 直接顯示卦表
-        console.log('六爻起卦：showMainTable() 調用完成');
-        
+showMainTable(); // 直接顯示卦表
 setTimeout(() => {
     handleYongshenSelection();
     // 添加卦變分析
@@ -2174,9 +2004,6 @@ setTimeout(() => {
     
     // 時間起卦的處理
     if (method === 'time') {
-        console.log('開始處理時間起卦');
-        
-        // 執行時間起卦邏輯
         timeBasedDivination();
         
         // 填入卦表
@@ -2202,9 +2029,6 @@ setTimeout(() => {
     
     // 隨機起卦的處理
     if (method === 'random') {
-        console.log('開始處理隨機起卦');
-        
-        // 先執行隨機起卦邏輯
         randomDivination();
         
         // 然後使用六爻起卦的填表邏輯
@@ -2265,17 +2089,11 @@ triggerLearningModeAfterDivination();
 
 // 隨機起卦功能 - 調整機率版本
 function randomDivination() {
-    console.log('開始執行隨機起卦');
-    
-    // 生成有權重的隨機六爻結果
     const results = [];
     for (let i = 0; i < 6; i++) {
         results.push(generateWeightedRandom());
     }
     
-    console.log('隨機生成的六爻結果:', results);
-    
-    // 存儲到全域變數 - 與手動六爻起卦完全一致
     window.dice1 = results[0];
     window.dice2 = results[1];
     window.dice3 = results[2];
@@ -2298,9 +2116,7 @@ function randomDivination() {
     window.guamap5 = createGuaMap(window.dice5);
     window.guamap6 = createGuaMap(window.dice6);
     
-    console.log('隨機起卦數據準備完成');
-    
-    const hasMovingYao = results.some(dice => dice === 0 || dice === 3);
+const hasMovingYao = results.some(dice => dice === 0 || dice === 3);
     const resultText = `隨機起卦完成：${results.join(', ')}${hasMovingYao ? ' (有動爻)' : ' (無動爻)'}`;
     showResult(resultText);
 }
@@ -2383,9 +2199,6 @@ function updateGanzhiDate() {
 //=============================================爻變查詢
 // 新增：分析卦變關係並更新J欄
 function analyzeGuabian() {
-    console.log('開始分析卦變關係');
-    
-    // 獲取當前干支信息（用於旬空）
     const ganZhi = getCurrentGanZhi();
     let xunKong = [];
     
@@ -2395,20 +2208,15 @@ function analyzeGuabian() {
             const xunKongStr = GuaCalculator.getXunKongDisplay(ganZhi.day);
             // 修正：正確分割旬空字符串
             xunKong = xunKongStr.split('、').map(zhi => zhi.trim()); // 使用頓號分割並去除空格
-            console.log('旬空地支:', xunKong);
-            console.log('旬空原始字符串:', xunKongStr);
+console.log('旬空原始字符串:', xunKongStr);
         } catch (error) {
-            console.log('無法獲取旬空信息');
-        }
+}
     }
     
     // 獲取動爻信息
     const dongYaoList = getDongYaoList();
-    console.log('動爻列表:', dongYaoList);
-    
-    if (dongYaoList.length === 0) {
-        console.log('沒有動爻，跳過卦變分析');
-        return;
+if (dongYaoList.length === 0) {
+return;
     }
     
     // 分析每個動爻
@@ -2426,12 +2234,9 @@ function getDongYaoList() {
     if (window.dice1 !== undefined) {
         // 六爻起卦或隨機起卦
         const liuyaoResults = [window.dice1, window.dice2, window.dice3, window.dice4, window.dice5, window.dice6];
-        console.log('六爻結果檢查:', liuyaoResults);
-        
-        liuyaoResults.forEach((dice, index) => {
+liuyaoResults.forEach((dice, index) => {
             const yaoPosition = index + 1; // 第1爻到第6爻
-            console.log(`第${yaoPosition}爻值: ${dice}, 是否為動爻: ${dice === 0 || dice === 3}`);
-            if (dice === 0 || dice === 3) { // 老陰或老陽為動爻
+if (dice === 0 || dice === 3) { // 老陰或老陽為動爻
                 dongYaoList.push(yaoPosition);
             }
         });
@@ -2443,15 +2248,12 @@ function getDongYaoList() {
         dongYaoList.push(window.timeGuaResult.dongYao);
     }
     
-    console.log('最終動爻列表:', dongYaoList);
-    return dongYaoList;
+return dongYaoList;
 }
 
 // 獲取指定爻位的地支
 function getYaoDizhi(yaoPosition, type) {
-    console.log(`獲取第${yaoPosition}爻的${type === 'ben' ? '本卦' : '變卦'}地支`);
-    
-    const table = document.querySelector('.main-table');
+const table = document.querySelector('.main-table');
     if (!table) return null;
     
     const rows = Array.from(table.querySelectorAll('tr'));
@@ -2474,9 +2276,6 @@ function getYaoDizhi(yaoPosition, type) {
         }
     });
     
-    console.log(`getYaoDizhi找到${dataRows.length}個數據行`);
-    
-    // 找到目標爻位的行 - 修正：數據行順序是從第6爻到第1爻
     const targetIndex = 6 - yaoPosition; // 第6爻=0, 第5爻=1, ..., 第1爻=5
     
     if (targetIndex >= 0 && targetIndex < dataRows.length) {
@@ -2491,28 +2290,21 @@ function getYaoDizhi(yaoPosition, type) {
             result = cells[6].textContent.trim();
         }
         
-        console.log(`第${yaoPosition}爻${type === 'ben' ? '本卦' : '變卦'}地支: ${result}`);
-        
-        // 過濾掉無效數據
         if (result === '地支五行' || result === '--' || result === '') {
-            console.log(`第${yaoPosition}爻地支數據無效: ${result}`);
-            return null;
+return null;
         }
         
         return result;
     }
     
-    console.log(`無法定位第${yaoPosition}爻`);
-    return null;
+return null;
 }
 
 // 修正：更新J欄顯示 - 改善樣式
 function updateJColumn(yaoPosition, analysis) {
     if (!analysis) return;
     
-    console.log(`更新第${yaoPosition}爻的J欄: ${analysis}`);
-    
-    const table = document.querySelector('.main-table');
+const table = document.querySelector('.main-table');
     if (!table) return;
     
     const rows = Array.from(table.querySelectorAll('tr'));
@@ -2555,8 +2347,7 @@ function updateJColumn(yaoPosition, analysis) {
             jCell.style.whiteSpace = 'normal';
             jCell.style.overflow = 'hidden';
             
-            console.log(`第${yaoPosition}爻J欄已更新為: ${analysis}`);
-        }
+}
     }
 }
 
@@ -2590,28 +2381,18 @@ function getFColumnColor(analysis) {
 
 // 修正：分析單個爻的卦變關係 - 添加回頭沖判斷
 function analyzeYaoGuabian(yaoPosition, xunKong) {
-    console.log(`分析第${yaoPosition}爻的卦變關係`);
-    
-    // 獲取本卦和變卦的地支五行
     const benGuaDizhi = getYaoDizhi(yaoPosition, 'ben');
     const bianGuaDizhi = getYaoDizhi(yaoPosition, 'bian');
     
     if (!benGuaDizhi || !bianGuaDizhi) {
-        console.log(`第${yaoPosition}爻無法獲取地支信息`);
-        return '';
+return '';
     }
     
-    console.log(`第${yaoPosition}爻 - 本卦:${benGuaDizhi}, 變卦:${bianGuaDizhi}`);
-    
-    // 提取地支和五行
     const benGuaZhi = benGuaDizhi.charAt(0);
     const benGuaWuxing = benGuaDizhi.charAt(1);
     const bianGuaZhi = bianGuaDizhi.charAt(0);
     const bianGuaWuxing = bianGuaDizhi.charAt(1);
     
-    console.log(`第${yaoPosition}爻 - 本卦地支:${benGuaZhi}(${benGuaWuxing}), 變卦地支:${bianGuaZhi}(${bianGuaWuxing})`);
-    
-    // 收集所有符合的條件
     const conditions = [];
     
     // 1. 檢查化墓、化絕
@@ -2667,9 +2448,7 @@ function analyzeYaoGuabian(yaoPosition, xunKong) {
     
     // 用空格連接所有條件
     const result = conditions.join(' ');
-    console.log(`第${yaoPosition}爻卦變分析結果: ${result}`);
-    
-    return result;
+return result;
 }
 
 // 修正：根據分析結果設置顏色 - 添加回頭沖
@@ -2697,18 +2476,12 @@ function getAnalysisColor(analysis) {
 //====================分析本卦各爻與日月的關係=============
 // 新增：分析爻與日月的關係
 function analyzeYaoRiyue() {
-    console.log('開始分析爻與日月關係');
-    
-    // 獲取當前干支
     const ganZhi = getCurrentGanZhi();
     const dayZhi = ganZhi.day.charAt(1);
     const monthZhi = ganZhi.month.charAt(1);
     const dayWuxing = getDizhiWuxing(dayZhi);
     const monthWuxing = getDizhiWuxing(monthZhi);
     
-    console.log(`日支: ${dayZhi}(${dayWuxing}), 月支: ${monthZhi}(${monthWuxing})`);
-    
-    // 分析每一爻
     for (let yaoPosition = 1; yaoPosition <= 6; yaoPosition++) {
         const yaoInfo = getYaoInfo(yaoPosition);
         if (!yaoInfo) continue;
@@ -2752,9 +2525,7 @@ function getDizhiWuxing(zhi) {
 
 // 分析單個爻與日月的關係
 function analyzeYaoRiyueRelation(yaoPosition, yaoInfo, dayZhi, monthZhi, dayWuxing, monthWuxing) {
-    console.log(`分析第${yaoPosition}爻與日月關係: ${yaoInfo.zhi}(${yaoInfo.wuxing}), 動爻: ${yaoInfo.isDongYao}`);
-    
-    const conditions = [];
+const conditions = [];
     
     // 1. 檢查日建
     if (yaoInfo.zhi === dayZhi) {
@@ -2809,18 +2580,14 @@ function analyzeYaoRiyueRelation(yaoPosition, yaoInfo, dayZhi, monthZhi, dayWuxi
     }
     
     const result = conditions.join(' ');
-    console.log(`第${yaoPosition}爻日月關係分析結果: ${result}`);
-    
-    return result;
+return result;
 }
 
 // 修正：更新F欄顯示 - 分色顯示不同條件
 function updateFColumn(yaoPosition, analysis) {
     if (!analysis) return;
     
-    console.log(`更新第${yaoPosition}爻的F欄: ${analysis}`);
-    
-    const table = document.querySelector('.main-table');
+const table = document.querySelector('.main-table');
     if (!table) return;
     
     const rows = Array.from(table.querySelectorAll('tr'));
@@ -2866,8 +2633,7 @@ function updateFColumn(yaoPosition, analysis) {
             fCell.style.whiteSpace = 'normal';
             fCell.style.overflow = 'hidden';
             
-            console.log(`第${yaoPosition}爻F欄已更新為: ${analysis}`);
-        }
+}
     }
 }
 
@@ -2914,13 +2680,11 @@ function togglePiguaSection() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('pigua-date').value = today;
         
-        console.log('批卦區域已開啟');
-    } else {
+} else {
         // 隱藏批卦區域
         piguaSection.classList.add('hidden');
         piguaBtn.textContent = '批卦';
-        console.log('批卦區域已關閉');
-    }
+}
 }
 
 // 儲存批卦內容
@@ -3017,8 +2781,7 @@ function clearPiguaContent() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('pigua-date').value = today;
         
-        console.log('批卦內容已清除');
-    }
+}
 }
 
 // 顯示JSON下載對話框
@@ -3102,24 +2865,20 @@ modalContent.innerHTML = `
 function initializeLearningMode() {
     // 確保學習模式腳本已加載
     if (typeof showLearningModeModal !== 'function') {
-        console.warn('學習模式腳本未正確加載');
-        return;
+return;
     }
     
-    console.log('學習模式已初始化');
 }
 
 // 修改學習模式觸發函數
 function triggerLearningModeAfterDivination() {
     // 移除自動觸發，讓用戶主動從設定選單開啟
-    console.log('起卦完成，用戶可從右上角設定選單開啟學習模式');
 }
 
 // 錯誤處理
 function handleLearningModeErrors(error) {
     if (error && error.message && error.message.includes('learning')) {
-        console.warn('學習模式相關錯誤，功能可能受限:', error.message);
-        return true;
+return true;
     }
     return false;
 }
@@ -3133,9 +2892,7 @@ function handleLearningModeErrors(error) {
  * 適用於問卦界面和卦師界面
  */
 function correctChangeGuaLiuqin() {
-    console.log('=== 開始修正變卦六親 ===');
-    
-    try {
+try {
         // 1. 取得本卦的宮位五行 - 改用多種方法
         let mainGuaBinary = null;
         let mainGuaName = null;
@@ -3178,30 +2935,21 @@ function correctChangeGuaLiuqin() {
         }
         
         if (!mainGuaBinary) {
-            console.log('無法取得本卦資訊，跳過修正');
-            return;
+return;
         }
         
         const mainGuaData = AdvancedCalculator.GUA_64_COMPLETE[mainGuaBinary];
         if (!mainGuaData) {
-            console.error('無法取得本卦資料:', mainGuaBinary);
-            return;
+return;
         }
         
         const mainPalaceWuxing = mainGuaData.wuxing;
-        console.log(`本卦: ${mainGuaName || '未知'}, 宮位五行: ${mainPalaceWuxing}`);
-        
-        // 2. 找到 main-table 並處理變卦欄位
         const mainTable = document.querySelector('table.main-table');
         if (!mainTable) {
-            console.error('找不到 main-table');
-            return;
+return;
         }
         
         const rows = mainTable.querySelectorAll('tr');
-        console.log(`找到主表格，共 ${rows.length} 列`);
-        
-        // 3. 遍歷每一列，修正變卦六親（第8欄）
         let correctedCount = 0;
         rows.forEach((row, rowIndex) => {
             const cells = row.querySelectorAll('td, th');
@@ -3232,9 +2980,6 @@ function correctChangeGuaLiuqin() {
                     
                     const originalLiuqin = changeGuaLiuqinCell.textContent.trim();
                     
-                    console.log(`第 ${rowIndex} 爻變卦: ${dizhiWuxingText}(${yaoWuxing}) vs 本卦宮${mainPalaceWuxing} = ${correctLiuqin} (原為 ${originalLiuqin})`);
-                    
-                    // 更新六親顯示
                     changeGuaLiuqinCell.textContent = correctLiuqin;
                     
                     // 如果有變更，標記顏色
@@ -3248,11 +2993,8 @@ function correctChangeGuaLiuqin() {
             }
         });
         
-        console.log(`=== 變卦六親修正完成，共處理 ${correctedCount} 個爻 ===`);
-        
-    } catch (error) {
-        console.error('修正變卦六親時發生錯誤:', error);
-    }
+} catch (error) {
+}
 }
 /**
  * 根據卦名找到二進制代碼
@@ -3302,9 +3044,7 @@ function extractWuxingFromText(text) {
  * 提取 AI 解卦所需的完整數據
  */
 function extractAIGuaData(questionType, customQuestion) {
-    console.log('=== 開始提取 AI 解卦數據 ===');
-    
-    try {
+try {
         // 1. 基本信息
         const ganZhi = getCurrentGanZhi();
         const questionText = aiDivination.getQuestionText(questionType);
@@ -3336,8 +3076,7 @@ function extractAIGuaData(questionType, customQuestion) {
         };
         
     } catch (error) {
-        console.error('提取 AI 解卦數據時發生錯誤:', error);
-        return null;
+return null;
     }
 }
 
@@ -3358,26 +3097,18 @@ function getGuaNamesFromTable() {
     let benGuaName = '未知';
     let bianGuaName = '';
     
-    console.log('檢查第一行卦名格子數量:', cells.length);
-    
-    // 根據實際的 colspan 值來匹配
     for (let i = 0; i < cells.length; i++) {
         const cell = cells[i];
         const colspan = cell.getAttribute('colspan');
         const text = cell.textContent.trim();
         
-        console.log(`格子 ${i}: colspan=${colspan}, 內容="${text}"`);
-        
-        // 修正：本卦是 colspan=5
         if (colspan === '5' && text && text !== 'GN' && text !== '本卦') {
             benGuaName = text;
-            console.log('找到本卦名:', benGuaName);
-        } 
+} 
         // 修正：變卦是 colspan=3
         else if (colspan === '3' && text && text !== 'BGN' && text !== '變卦' && text !== '') {
             bianGuaName = text;
-            console.log('找到變卦名:', bianGuaName);
-        }
+}
     }
     
     // 如果沒找到變卦，檢查是否確實無動爻
@@ -3385,15 +3116,12 @@ function getGuaNamesFromTable() {
         const dongYaoList = getDongYaoList();
         if (dongYaoList.length === 0) {
             bianGuaName = ''; // 確實無變卦
-            console.log('無動爻，無變卦');
-        } else {
-            console.log('有動爻但沒找到變卦名，使用備用方法');
-            bianGuaName = getBianGuaNameAlternative();
+} else {
+bianGuaName = getBianGuaNameAlternative();
         }
     }
     
-    console.log('最終卦名結果:', { ben: benGuaName, bian: bianGuaName });
-    return { ben: benGuaName, bian: bianGuaName };
+return { ben: benGuaName, bian: bianGuaName };
 }
 function getBianGuaNameAlternative() {
     // 方法1：從全域變數獲取
@@ -3681,31 +3409,22 @@ function generateAIPrompt(guaData) {
 
 // 主程式初始化
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('頁面載入完成，開始初始化...');
-    console.log('typeof initializeEventListeners:', typeof initializeEventListeners);
-    console.log('typeof GanZhiCalculator:', typeof GanZhiCalculator);
-    
-    // 首先更新時間顯示
+console.log('typeof initializeEventListeners:', typeof initializeEventListeners);
     updateTimeDisplay();
     
     // 初始化事件監聽器
     if (typeof initializeEventListeners === 'function') {
-        console.log('initializeEventListeners 函數存在，開始調用');
-        initializeEventListeners();
+initializeEventListeners();
     } else {
-        console.error('initializeEventListeners 函數不存在');
-    }
+}
     
     // 檢查頁面元素
     const methodElement = document.getElementById('divination-method');
     const datePickerElement = document.getElementById('date-picker');
     const ganzhiPickerElement = document.getElementById('ganzhi-picker');
     
-    console.log('divination-method元素:', methodElement);
-    console.log('date-picker元素:', datePickerElement);
-    console.log('ganzhi-picker元素:', ganzhiPickerElement);
-
-    setTimeout(initializeLearningMode, 100);
+console.log('date-picker元素:', datePickerElement);
+setTimeout(initializeLearningMode, 100);
 });
 
 // 使常數可全域存取
