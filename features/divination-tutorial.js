@@ -691,10 +691,11 @@ initSixiState() {
   };
 }
 sixiBindNavButtons() {
+  this._sixi.nav = this._sixi.nav || {};
   this._sixi.nav.prev = this.modal.querySelector('#btn-prev');
   this._sixi.nav.next = this.modal.querySelector('#btn-next');
 
-  // 初始：允許上一頁，下一步交由 sixiSetNextButtonState 控制
+  // 初始：允許上一頁；下一步交由 sixiSetNextButtonState 控制
   this.sixiSetPrevDisabled(false);
   this.sixiSetNextButtonState();
 
@@ -704,7 +705,7 @@ sixiBindNavButtons() {
       if (this._sixi.n > 0) { e.preventDefault(); e.stopPropagation(); }
     }, true);
   }
-  // 不再攔截 next（它會是「取消占卦」或「開始解卦」）
+  // 不攔截 next；交由 sixiSetNextButtonState 決定取消/開始解卦
 }
 
 // 權重抽樣（0..3, weights 1:3:3:1）
@@ -888,32 +889,50 @@ sixiCloseConfirm() {
   if (dlg) dlg.classList.add('hidden');
 }
 sixiSetPrevDisabled(disabled) {
-  if (!this._sixi.nav.prev) return;
-  this._sixi.nav.prev.toggleAttribute('disabled', !!disabled);
-  this._sixi.nav.prev.classList.toggle('disabled', !!disabled);
+  // 允許在非 6/8 步驟呼叫而不報錯
+  const prev =
+    (this._sixi && this._sixi.nav && this._sixi.nav.prev) ||
+    (this.modal && this.modal.querySelector && this.modal.querySelector('#btn-prev'));
+  if (!prev) return;
+
+  if (disabled) {
+    prev.setAttribute('disabled', '');
+    prev.classList.add('disabled');
+  } else {
+    prev.removeAttribute('disabled');
+    prev.classList.remove('disabled');
+  }
 }
+
 sixiSetNextDisabled(disabled) {
   if (!this._sixi.nav.next) return;
   this._sixi.nav.next.toggleAttribute('disabled', !!disabled);
   this._sixi.nav.next.classList.toggle('disabled', !!disabled);
 }
 sixiSetNextButtonState() {
-  const nextBtn = this.modal.querySelector('#btn-next');
-  const prevBtn = this.modal.querySelector('#btn-prev');
+  // 只在 6/8（起卦步）生效；其他步驟直接忽略，避免 nav 未綁定而報錯
+  if (this.currentStep !== 6) return;
+
+  const nextBtn =
+    (this.modal && this.modal.querySelector && this.modal.querySelector('#btn-next')) || null;
+  const prevBtn =
+    (this._sixi && this._sixi.nav && this._sixi.nav.prev) ||
+    (this.modal && this.modal.querySelector && this.modal.querySelector('#btn-prev')) || null;
+
   if (!nextBtn) return;
 
-  // 未滿六次：顯示「取消占卦」（黑）
+  // 未滿 6 次：顯示「取消占卦」（黑）
   if (this._sixi && this._sixi.n < 6) {
     nextBtn.textContent = '取消占卦';
     nextBtn.classList.remove('btn-primary','btn-danger');
     nextBtn.classList.add('btn-dark');
-    nextBtn.classList.remove('disabled');
     nextBtn.removeAttribute('disabled');
+    nextBtn.classList.remove('disabled');
 
-    // n===0 可回上一步；n>=1 鎖上一步
     if (prevBtn) {
-      if (this._sixi.n === 0) { this.sixiSetPrevDisabled(false); }
-      else { this.sixiSetPrevDisabled(true); }
+      // n===0 可回上一步；n>=1 鎖上一步
+      if (this._sixi.n === 0) this.sixiSetPrevDisabled(false);
+      else this.sixiSetPrevDisabled(true);
     }
 
     nextBtn.onclick = () => {
@@ -925,15 +944,17 @@ sixiSetNextButtonState() {
     return;
   }
 
-  // 已滿六次：顯示「開始解卦」（紅）
+  // 已滿 6 次：顯示「開始解卦」（紅）
   nextBtn.textContent = '開始解卦';
   nextBtn.classList.remove('btn-primary','btn-dark');
   nextBtn.classList.add('btn-danger');
-  nextBtn.classList.remove('disabled');
   nextBtn.removeAttribute('disabled');
+  nextBtn.classList.remove('disabled');
   if (prevBtn) this.sixiSetPrevDisabled(false);
 
-  nextBtn.onclick = () => { if (typeof this.goToStep === 'function') this.goToStep(7); };
+  nextBtn.onclick = () => {
+    if (typeof this.goToStep === 'function') this.goToStep(7); // 正確往 7/8
+  };
 }
 
 sixiSetResetDisabled(disabled) {
