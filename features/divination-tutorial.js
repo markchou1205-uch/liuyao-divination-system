@@ -1053,23 +1053,28 @@ sixiOnMainClick() {
         main.innerHTML = `擲一次（<span id="sixi-count">${displayCount}</span>/6）`;
       }
 
-      // 若滿六爻 → 切換為「開始解卦」
-      if (this._sixi.n === 6) {
-        this._sixi.mode = 'ready';
-        // 固化 userData，避免後續切換步驟導致送出空陣列
-        this.userData.method = 'liuyao';
-        this.userData.liuyaoData = this._sixi.data.slice();
-        if (!Array.isArray(this.userData.liuyaoData) || this.userData.liuyaoData.length !== 6) {
-          console.warn('[AI DEBUG] 六爻完成但 userData.liuyaoData 異常：', this.userData.liuyaoData);
-        }
+// 若滿六爻 → 切換為「開始解卦」
+if (this._sixi.n === 6) {
+  this._sixi.mode = 'ready';
+  // 固化 userData
+  this.userData.method = 'liuyao';
+  this.userData.liuyaoData = this._sixi.data.slice();
+  if (!Array.isArray(this.userData.liuyaoData) || this.userData.liuyaoData.length !== 6) {
+    console.warn('[AI DEBUG] 六爻完成但 userData.liuyaoData 異常：', this.userData.liuyaoData);
+  }
 
-        if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
-        // 主按鈕變灰，不可點
-        if (main) { main.classList.add('disabled'); main.setAttribute('disabled',''); }
-      }
+  if (typeof this.sixiRenderGuaNameIfReady === 'function') this.sixiRenderGuaNameIfReady();
 
-      // 更新右下角按鈕（取消占卦 / 開始解卦）
-      if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
+  // ✅ 主按鈕本身變成「開始解卦」且可點（點了就走 ready 分支）
+  if (main) {
+    main.classList.remove('disabled');
+    main.removeAttribute('disabled');
+    main.textContent = '開始解卦';
+  }
+}
+
+// 更新右下角按鈕（取消占卦 / 開始解卦）
+if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
     })
     .catch(() => {
       // 動畫若失敗，至少把面顯示出來，避免卡住
