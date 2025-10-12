@@ -28,11 +28,48 @@ createModal() {
   }
 
   const modalHTML = `
-  <style>
-    /* 防止遮罩層攔截點擊（只影響本 modal） */
-    #${this.modalId} .bg-mask { pointer-events: none; }
-    #${this.modalId} .welcome-option { cursor: pointer; }
-  </style>
+<style>
+  /* === Overlay 可滾動、永遠鋪滿視窗 === */
+  #${this.modalId}.welcome-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    /* 大多數時置中，小螢幕/橫向窄高時我們會靠上（見 media） */
+    align-items: center;
+    justify-content: center;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)) 16px;
+    background: rgba(0,0,0,.45);
+    z-index: 1000;
+    overflow: auto; /* ← 重點：overlay 本身能滾動 */
+  }
+
+  /* === 固定尺寸（含最大寬高）且內容可滾動 === */
+  #${this.modalId} .welcome-modal-content {
+    width: 860px;                 /* 你的固定寬度 */
+    max-width: min(92vw, 860px);  /* 手機不超出螢幕寬 */
+    max-height: calc(100vh - 64px); /* 內容上限：視窗高 - overlay padding */
+    overflow: auto;                 /* ← 重點：內容區可滾動 */
+    -webkit-overflow-scrolling: touch; /* iOS 慣性滾動 */
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  }
+
+  /* 你原本的元素互動設定 */
+  #${this.modalId} .bg-mask { pointer-events: none; }
+  #${this.modalId} .welcome-option { cursor: pointer; }
+
+  /* 小高度螢幕：靠上顯示，避免被上下邊緣截掉 */
+  @media (max-height: 700px) {
+    #${this.modalId}.welcome-modal {
+      align-items: flex-start;
+    }
+    #${this.modalId} .welcome-modal-content {
+      margin-top: 16px;
+    }
+  }
+</style>
+
   <div id="${this.modalId}" class="welcome-modal">
     <div class="welcome-modal-content">
       <div class="welcome-modal-header">
@@ -98,6 +135,7 @@ showModal() {
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   }
+    modal.scrollTop = 0; // 讓 overlay 回到頂
 }
 
 /**
