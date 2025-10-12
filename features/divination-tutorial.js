@@ -18,57 +18,45 @@ class DivinationTutorial {
             divinationResult: null // 起卦結果
         };
     }
-// === 只注入一次引導精靈 modal 的 CSS（修正版） ===
+// === 只注入一次引導精靈 modal 的 CSS（最終版） ===
 ensureTutorialModalStyles() {
   if (document.getElementById('tutorial-modal-style')) return;
   const style = document.createElement('style');
   style.id = 'tutorial-modal-style';
   style.textContent = `
-  /* 覆蓋層：鋪滿視窗，可滾動；用 100dvh 解決 iOS / 行動瀏覽器 vh 失真 */
-  .tutorial-modal {
+  /* Overlay：鋪滿視窗、可滾動，用 100dvh 避免 iOS 裁切 */
+  .tutorial-overlay{
     position: fixed;
     inset: 0;
     display: flex;
-    align-items: center;                      /* 置中 */
+    align-items: center;
     justify-content: center;
     padding: max(16px, env(safe-area-inset-top)) 16px
              max(16px, env(safe-area-inset-bottom)) 16px;
     background: rgba(0,0,0,.45);
-    z-index: 1000;
-    overflow: auto;                           /* overlay 本身可滾動 */
-    height: 100dvh;                           /* 以動態視窗高避免被切半 */
+    z-index: 9998;
+    overflow: auto;
+    height: 100dvh;
     box-sizing: border-box;
   }
 
-  /* 卡片容器：固定寬，內容超出時在此滾動（而不是整頁） */
-  .tutorial-modal > .tutorial-content {
-    width: 860px;                             /* 你的固定寬 */
-    max-width: min(92vw, 860px);              /* 手機不超出螢幕寬 */
-    max-height: calc(100dvh - 64px);          /* 以 100dvh 計算可視高度 */
-    overflow: auto;                           /* 內容可滾動 */
-    -webkit-overflow-scrolling: touch;        /* iOS 慣性滾動 */
+  /* 內容卡片：固定寬；不設固定高度，改用 max-height + overflow:auto */
+  #tutorial-modal{
+    width: 860px;
+    max-width: min(92vw, 860px);
+    max-height: calc(100dvh - 64px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0,0,0,.25);
     box-sizing: border-box;
   }
 
-  /* ✅ 防「二層 modal」保險：
-     如果步驟模板裡又包一層 .tutorial-content，內層視為純內容，不再畫第二層卡片 */
-  .tutorial-modal > .tutorial-content .tutorial-content {
-    background: transparent !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    max-height: none !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-
-  /* 小高度螢幕：靠上，避免被上下邊緣截掉 */
-  @media (max-height: 700px) {
-    .tutorial-modal { align-items: flex-start; }
-    .tutorial-modal > .tutorial-content { margin-top: 16px; }
+  /* 小高度螢幕：靠上避免被上下邊界擠壓 */
+  @media (max-height: 700px){
+    .tutorial-overlay{ align-items: flex-start; }
+    #tutorial-modal{ margin-top: 16px; }
   }
   `;
   document.head.appendChild(style);
@@ -115,14 +103,19 @@ createOverlay() {
   this.overlay.id = 'tutorial-overlay';
   this.overlay.classList.add('tutorial-overlay'); // 讓外部 CSS 可以選到
   this.overlay.style.cssText = `
-    position: fixed;
-    inset: 0;
-    background: #000;            /* ← 全黑、不透明 */
-    z-index: 9998;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  `;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 9998;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px
+           max(16px, env(safe-area-inset-bottom)) 16px;
+  overflow: auto;           /* ← overlay 可滾動 */
+  height: 100dvh;           /* ← 防 iOS 裁切 */
+  box-sizing: border-box;
+`;
   document.body.appendChild(this.overlay);
 }
 
@@ -130,33 +123,31 @@ createOverlay() {
 createModal() {
   this.modal = document.createElement('div');
   this.modal.id = 'tutorial-modal';
-
-  // 讓固定尺寸樣式能套用（若你有寺廟框，可再加 temple-frame）
-  this.modal.classList.add('sixi-modal');
+  this.modal.classList.add('sixi-modal'); // 保留你原本需要的 class；不要再加 tutorial-modal
 
   this.modal.style.cssText = `
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.3);
     position: relative;
     z-index: 9999;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    box-sizing: border-box;
 
-    /* 固定尺寸（桌機）；小螢幕會被 max-* 限制 */
-    width: 70%;
-    height: 630px;
-    max-width: 90vw;
-    max-height: 90vh;
-
-    display: flex;           /* 讓 header/footer 固定，body 可滾動 */
-    flex-direction: column;
-    overflow: hidden;        /* 外框固定高度，不跟內容變 */
-    padding: 40px;              /* 內距交由 header/body/footer 自己排 */
+    /* 固定寬；高度不固定，交給 max-height 限制 */
+    width: 860px;
+    max-width: min(92vw, 860px);
+    max-height: calc(100dvh - 64px);
+    overflow: auto;                  /* ← 卡片內可捲動 */
+    -webkit-overflow-scrolling: touch;
+    padding: 24px;                   /* 你可依需求調整 */
+    display: block;                  /* 不需要 flex 切 header/body */
   `;
+
   this.overlay.appendChild(this.modal);
-  this.modal.classList.add('tutorial-modal');
+
+  // 只需注入一次 CSS
   this.ensureTutorialModalStyles();
 }
-
 
     // 顯示指定步驟
     showStep(stepNumber) {
