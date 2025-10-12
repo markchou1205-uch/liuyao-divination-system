@@ -19,6 +19,47 @@ class DivinationTutorial {
         };
     }
     // 確保引導的 Overlay/Modal 已經建立（被移除或尚未建立時會補上）
+    // 只注入一次引導精靈 modal 的 CSS
+ensureTutorialModalStyles() {
+  if (document.getElementById('tutorial-modal-style')) return;
+  const style = document.createElement('style');
+  style.id = 'tutorial-modal-style';
+  style.textContent = `
+  /* === Overlay：鋪滿視窗、可滾動 === */
+  .tutorial-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;                 /* 一般置中 */
+    justify-content: center;
+    padding: max(16px, env(safe-area-inset-top)) 16px
+             max(16px, env(safe-area-inset-bottom)) 16px;
+    background: rgba(0,0,0,.45);
+    z-index: 1000;
+    overflow: auto;                      /* 讓 overlay 本身也能滾動 */
+  }
+
+  /* === 內容：固定寬、最高不超出視窗；內容超出時在此滾動 === */
+  .tutorial-modal .tutorial-content {
+    width: 860px;                        /* 你的固定寬度，可調 */
+    max-width: min(92vw, 860px);         /* 手機不超出螢幕 */
+    max-height: calc(100vh - 64px);      /* 高度上限，避免被吃掉 */
+    overflow: auto;                      /* 內容可滾動 */
+    -webkit-overflow-scrolling: touch;   /* iOS 慣性滾動 */
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  }
+
+  /* 小高度螢幕：改成靠上，避免上下被截掉 */
+  @media (max-height: 700px) {
+    .tutorial-modal { align-items: flex-start; }
+    .tutorial-modal .tutorial-content { margin-top: 16px; }
+  }
+  `;
+  document.head.appendChild(style);
+}
+
 ensureTutorialUI() {
   if (!this.overlay || !document.body.contains(this.overlay)) {
     this.createOverlay();
@@ -98,6 +139,8 @@ createModal() {
     padding: 40px;              /* 內距交由 header/body/footer 自己排 */
   `;
   this.overlay.appendChild(this.modal);
+  this.modal.classList.add('tutorial-modal');
+  this.ensureTutorialModalStyles();
 }
 
 
