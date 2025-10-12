@@ -33,7 +33,7 @@ ensureTutorialModalStyles() {
     justify-content: center;
     padding: max(16px, env(safe-area-inset-top)) 16px
              max(16px, env(safe-area-inset-bottom)) 16px;
-    background: rgba(0,0,0,.45);
+    background: #000; /* 黑色、不透明 */
     z-index: 9998;
     overflow: auto;
     height: 100dvh;
@@ -125,23 +125,25 @@ createModal() {
   this.modal.id = 'tutorial-modal';
   this.modal.classList.add('sixi-modal'); // 保留你原本需要的 class；不要再加 tutorial-modal
 
-  this.modal.style.cssText = `
-    position: relative;
-    z-index: 9999;
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.25);
-    box-sizing: border-box;
+this.modal.style.cssText = `
+  position: relative;
+  z-index: 9999;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  box-sizing: border-box;
+  padding: 24px;
 
-    /* 固定寬；高度不固定，交給 max-height 限制 */
-    width: 860px;
-    max-width: min(92vw, 860px);
-    max-height: calc(100dvh - 64px);
-    overflow: auto;                  /* ← 卡片內可捲動 */
-    -webkit-overflow-scrolling: touch;
-    padding: 24px;                   /* 你可依需求調整 */
-    display: block;                  /* 不需要 flex 切 header/body */
-  `;
+  /* 固定大小（桌機），內容超出改在卡片內滾動 */
+  width: 860px;
+  height: 560px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+
+  /* 手機或小視窗時避免超出可視區：固定值與視窗高度/寬度取較小者 */
+  width: min(860px, 92vw);
+  height: min(560px, calc(100dvh - 64px));
+`;
 
   this.overlay.appendChild(this.modal);
 
