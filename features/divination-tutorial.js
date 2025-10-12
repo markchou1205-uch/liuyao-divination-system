@@ -18,43 +18,57 @@ class DivinationTutorial {
             divinationResult: null // 起卦結果
         };
     }
-    // 確保引導的 Overlay/Modal 已經建立（被移除或尚未建立時會補上）
-    // 只注入一次引導精靈 modal 的 CSS
+// === 只注入一次引導精靈 modal 的 CSS（修正版） ===
 ensureTutorialModalStyles() {
   if (document.getElementById('tutorial-modal-style')) return;
   const style = document.createElement('style');
   style.id = 'tutorial-modal-style';
   style.textContent = `
-  /* === Overlay：鋪滿視窗、可滾動 === */
+  /* 覆蓋層：鋪滿視窗，可滾動；用 100dvh 解決 iOS / 行動瀏覽器 vh 失真 */
   .tutorial-modal {
     position: fixed;
     inset: 0;
     display: flex;
-    align-items: center;                 /* 一般置中 */
+    align-items: center;                      /* 置中 */
     justify-content: center;
     padding: max(16px, env(safe-area-inset-top)) 16px
              max(16px, env(safe-area-inset-bottom)) 16px;
     background: rgba(0,0,0,.45);
     z-index: 1000;
-    overflow: auto;                      /* 讓 overlay 本身也能滾動 */
+    overflow: auto;                           /* overlay 本身可滾動 */
+    height: 100dvh;                           /* 以動態視窗高避免被切半 */
+    box-sizing: border-box;
   }
 
-  /* === 內容：固定寬、最高不超出視窗；內容超出時在此滾動 === */
-  .tutorial-modal .tutorial-content {
-    width: 860px;                        /* 你的固定寬度，可調 */
-    max-width: min(92vw, 860px);         /* 手機不超出螢幕 */
-    max-height: calc(100vh - 64px);      /* 高度上限，避免被吃掉 */
-    overflow: auto;                      /* 內容可滾動 */
-    -webkit-overflow-scrolling: touch;   /* iOS 慣性滾動 */
+  /* 卡片容器：固定寬，內容超出時在此滾動（而不是整頁） */
+  .tutorial-modal > .tutorial-content {
+    width: 860px;                             /* 你的固定寬 */
+    max-width: min(92vw, 860px);              /* 手機不超出螢幕寬 */
+    max-height: calc(100dvh - 64px);          /* 以 100dvh 計算可視高度 */
+    overflow: auto;                           /* 內容可滾動 */
+    -webkit-overflow-scrolling: touch;        /* iOS 慣性滾動 */
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    box-sizing: border-box;
   }
 
-  /* 小高度螢幕：改成靠上，避免上下被截掉 */
+  /* ✅ 防「二層 modal」保險：
+     如果步驟模板裡又包一層 .tutorial-content，內層視為純內容，不再畫第二層卡片 */
+  .tutorial-modal > .tutorial-content .tutorial-content {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  /* 小高度螢幕：靠上，避免被上下邊緣截掉 */
   @media (max-height: 700px) {
     .tutorial-modal { align-items: flex-start; }
-    .tutorial-modal .tutorial-content { margin-top: 16px; }
+    .tutorial-modal > .tutorial-content { margin-top: 16px; }
   }
   `;
   document.head.appendChild(style);
