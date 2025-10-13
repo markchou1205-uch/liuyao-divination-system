@@ -105,7 +105,7 @@ createOverlay() {
   this.overlay.style.cssText = `
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.45);
+  background: #000; /* 黑色、不透明 */
   z-index: 9998;
   display: flex;
   justify-content: center;
