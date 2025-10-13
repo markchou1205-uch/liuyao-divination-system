@@ -10,7 +10,17 @@
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
+    <style>
+      /* 覆蓋所有 modal overlay 為黑色不透明 */
+      .tutorial-overlay { background: #000 !important; }
+      #simple-interpretation-modal { background: #000 !important; }
+      /* 移除調試紅框（不影響正常邊線） */
+      #section1,
+      .section {
+      border: none !important;
+      outline: none !important;
+      }
+    </style>
 </head>
 <body>
 <!-- 右上角設定按鈕 -->
