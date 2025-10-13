@@ -8,10 +8,51 @@
     <link rel="stylesheet" href="/assets/learning-mode.css">
     <link rel="stylesheet" href="/assets/divination-page.css">
     <link rel="stylesheet" href="/assets/ai-divination.css">
+    <script>
+  // 關閉一般 log / debug / info（保留 error）
+  (function () {
+    const SILENCE = true;         // 想再打開就設為 false
+    const FILTER_PREFIXES = [
+      '[GUA DEBUG]', '[AI DEBUG]', 'initializeEventListeners', '學習模式已初始化',
+      'Google Drive API 初始化完成', '準備顯示引導精靈', 'Tutorial status:'
+    ];
+    if (!SILENCE) return;
+    const orig = { log: console.log, debug: console.debug, info: console.info, warn: console.warn };
+    function dropper(fn) {
+      return function () {
+        try {
+          const msg = arguments[0] + '';
+          // 只要以這些前綴開頭就抑制；你也可以直接全部靜音
+          if (FILTER_PREFIXES.some(p => msg && msg.indexOf && msg.indexOf(p) === 0)) return;
+        } catch(e) {}
+        // 全面靜音（如果你要全部關掉，把下一行也註解掉）
+        // return;
+        // 預設：全面關閉 log/debug/info，warn 視需要
+      };
+    }
+    console.log = dropper(orig.log);
+    console.debug = dropper(orig.debug);
+    console.info = dropper(orig.info);
+    // 若連 warn 也不想看，打開下一行；否則保留警告
+    // console.warn = dropper(orig.warn);
+  })();
+</script>
+
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+      /* 覆蓋所有 modal overlay 為黑色不透明 */
+      .tutorial-overlay { background: #000 !important; }
+      #simple-interpretation-modal { background: #000 !important; }
+      /* 移除調試紅框（不影響正常邊線） */
+      #section1,
+      .section {
+      border: none !important;
+      outline: none !important;
+      }
+    </style>
 </head>
 <body>
 <!-- 右上角連結到卦師頁面 -->
