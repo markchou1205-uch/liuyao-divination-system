@@ -58,6 +58,39 @@ ensureTutorialModalStyles() {
     .tutorial-overlay{ align-items: flex-start; }
     #tutorial-modal{ margin-top: 16px; }
   }
+  /* 讓內容區可以當作捲動容器（footer 會黏在底部） */
+.tutorial-overlay > #tutorial-modal {
+  display: block;           /* 你之前就是 block，這行只是明示 */
+  overflow: auto;           /* 內容在卡片內滾動 */
+}
+
+/* 底部控制列：黏在卡片內容區底部，不隨文字跑 */
+#tutorial-modal .tutorial-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;               /* 蓋過內容 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  /* 視覺與可讀性 */
+  margin: 0 -24px -24px;    /* 吃掉卡片 padding，貼齊卡片邊緣（依你的卡片 padding 調整） */
+  padding: 12px 24px;
+  background:
+    linear-gradient(to top, rgba(255,255,255,1) 70%, rgba(255,255,255,0.85) 100%);
+  border-top: 1px solid #e5e7eb;
+}
+
+/* 按鈕樣式（沿用你既有 class 名稱的話可省略） */
+#tutorial-modal .tutorial-footer .btn.primary {
+  padding: 10px 16px; border-radius: 10px; background:#2563eb; color:#fff; border:none; cursor:pointer;
+}
+#tutorial-modal .tutorial-footer .btn.ghost {
+  padding: 10px 16px; border-radius: 10px; background:#fff; border:1px solid #d1d5db; cursor:pointer;
+}
+#tutorial-modal .tutorial-footer .step-indicator { opacity:.8; }
+
   `;
   document.head.appendChild(style);
 }
@@ -2245,18 +2278,17 @@ continueReading() {
 
 // 導覽按鈕 HTML（只回傳字串，不要把其它方法塞進來）
 createNavigationButtons() {
-  const prevDisabled = this.currentStep <= 1 ? 'disabled' : '';
-  const nextText = this.currentStep >= this.totalSteps ? '完成' : '下一步';
+  const cur = this.currentStep ? this.currentStep : 1;
+  const total = this.totalSteps ? this.totalSteps : 8;
   return `
-    <div class="tutorial-navigation">
-      <button id="btn-prev" class="btn btn-secondary" ${prevDisabled}
-              onclick="divinationTutorial.previousStep()">上一步</button>
-      <span class="step-indicator">${this.currentStep} / ${this.totalSteps}</span>
-      <button id="btn-next" class="btn btn-primary"
-              onclick="divinationTutorial.nextStep()">${nextText}</button>
+    <div class="tutorial-footer" role="toolbar" aria-label="引導精靈控制列">
+      <button id="tutorial-prev" class="btn ghost">取消</button>
+      <div class="step-indicator" id="tutorial-step-indicator">${cur} / ${total}</div>
+      <button id="tutorial-next" class="btn primary">下一步</button>
     </div>
   `;
 }
+
 
 // 下一步
 nextStep() {
