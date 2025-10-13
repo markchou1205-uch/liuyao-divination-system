@@ -64,38 +64,6 @@ ensureTutorialModalStyles() {
   overflow: auto;           /* 內容在卡片內滾動 */
 }
 
-/* 底部控制列：黏在卡片內容區底部，不隨文字跑 */
-#tutorial-modal .tutorial-footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;               /* 蓋過內容 */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-
-  /* 視覺與可讀性 */
-  margin: 0 -24px -24px;    /* 吃掉卡片 padding，貼齊卡片邊緣（依你的卡片 padding 調整） */
-  padding: 12px 24px;
-  background:
-    linear-gradient(to top, rgba(255,255,255,1) 70%, rgba(255,255,255,0.85) 100%);
-  border-top: 1px solid #e5e7eb;
-}
-
-/* 按鈕樣式（沿用你既有 class 名稱的話可省略） */
-#tutorial-modal .tutorial-footer .btn.primary {
-  padding: 10px 16px; border-radius: 10px; background:#2563eb; color:#fff; border:none; cursor:pointer;
-}
-#tutorial-modal .tutorial-footer .btn.ghost {
-  padding: 10px 16px; border-radius: 10px; background:#fff; border:1px solid #d1d5db; cursor:pointer;
-}
-#tutorial-modal .tutorial-footer .step-indicator { opacity:.8; }
-/* 內容容器：預留底部空間給固定的 footer，避免重疊 */
-#tutorial-modal .tutorial-content{
-  position: relative;
-  padding-bottom: 80px;       /* 須 ≥ footer 高度 */
-}
-
 /* 固定在卡片底部的控制列（所有步驟一致位置） */
 #tutorial-modal .tutorial-footer{
   position: sticky;
@@ -259,15 +227,7 @@ this.modal.style.cssText = `
                     <p>歡迎您使用命理教觀室-免費排卦解卦系統。</p>
                     <p>以下將一步一步告訴您如何正確的起卦及取得解卦結果。</p>
                 </div>
-                <div class="tutorial-navigation welcome-navigation">
-                    <button class="btn btn-secondary" onclick="divinationTutorial.closeTemporarily()">
-                        關閉
-                    </button>
-                    <span class="step-indicator">${this.currentStep} / ${this.totalSteps}</span>
-                    <button class="btn btn-primary" onclick="divinationTutorial.nextStep()">
-                        下一步
-                    </button>
-                </div>
+              ${this.createNavigationButtons()}
             </div>
             <style>
                 .tutorial-content h2 { margin-bottom: 20px; text-align: center; color: #333; }
@@ -294,6 +254,7 @@ this.modal.style.cssText = `
             </style>
         `;
         this.removeHighlight();
+        this.bindFooterNavForCurrentStep();
     }
 
     // 第二步：占卦準備1（保持原樣，但優化版面）
@@ -332,6 +293,7 @@ this.modal.style.cssText = `
             </style>
         `;
         this.removeHighlight();
+        sthis.bindFooterNavForCurrentStep();
     }
 
 showPreparation2Step() {
@@ -382,6 +344,7 @@ showPreparation2Step() {
             </style>
         `;
         this.removeHighlight();
+        this.bindFooterNavForCurrentStep();
     }
 
 // 第五步：六次點擊起卦（單欄版；按鈕在下、爻象在上）
@@ -825,8 +788,8 @@ initSixiState() {
 }
 sixiBindNavButtons() {
   this._sixi.nav = this._sixi.nav || {};
-  this._sixi.nav.prev = this.modal.querySelector('#btn-prev');
-  this._sixi.nav.next = this.modal.querySelector('#btn-next');
+  this._sixi.nav.prev = this.modal.querySelector('#tutorial-prev');
+  this._sixi.nav.next = this.modal.querySelector('#tutorial-next');
 
   // 初始：允許上一頁；下一步交由 sixiSetNextButtonState 控制
   this.sixiSetPrevDisabled(false);
@@ -1046,11 +1009,8 @@ sixiSetNextButtonState() {
   // 只在 6/8（起卦步）生效；其他步驟直接忽略，避免 nav 未綁定而報錯
   if (this.currentStep !== 6) return;
 
-  const nextBtn =
-    (this.modal && this.modal.querySelector && this.modal.querySelector('#btn-next')) || null;
-  const prevBtn =
-    (this._sixi && this._sixi.nav && this._sixi.nav.prev) ||
-    (this.modal && this.modal.querySelector && this.modal.querySelector('#btn-prev')) || null;
+  const nextBtn = this.modal?.querySelector('#tutorial-next') || null;
+  const prevBtn = (this._sixi?.nav?.prev) || this.modal?.querySelector('#tutorial-prev') || null;
 
   if (!nextBtn) return;
 
@@ -2318,6 +2278,24 @@ createNavigationButtons() {
       <button id="tutorial-next" class="btn primary">下一步</button>
     </div>
   `;
+}
+bindFooterNavForCurrentStep() {
+  const prev = this.modal.querySelector('#tutorial-prev');
+  const next = this.modal.querySelector('#tutorial-next');
+
+  if (prev) {
+    prev.onclick = () => {
+      if (this.currentStep === 1) this.closeTemporarily();
+      else this.previousStep();
+    };
+  }
+
+  if (next) {
+    // 第 6 步由六爻流程自行控制（取消占卦 / 開始解卦）
+    if (this.currentStep !== 6) {
+      next.onclick = () => this.nextStep();
+    }
+  }
 }
 
 // 下一步
