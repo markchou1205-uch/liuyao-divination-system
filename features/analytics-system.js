@@ -4,23 +4,52 @@ class AnalyticsSystem {
         this.apiEndpoint = '/api/analytics';
     }
 
-    // 記錄用戶訪問
-    async trackUserVisit(userType = 'divination') {
-        try {
-            await fetch(`${this.apiEndpoint}/visit`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userType, // 'divination' 或 'professional'
-                    timestamp: new Date().toISOString(),
-                    userAgent: navigator.userAgent,
-                    referrer: document.referrer
-                })
-            });
-        } catch (error) {
-            console.error('記錄訪問失敗:', error);
-        }
+// 記錄用戶訪問（安靜模式：失敗不拋錯、不印 log）
+async trackUserVisit(userType = 'divination') {
+  try {
+    if (!this.apiEndpoint) return;
+
+    const payload = {
+      userType, // 'divination' 或 'professional'
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      referrer: document.referrer
+    };
+
+    // 2 秒逾時控制
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2000);
+
+    // 先嘗試 POST
+    let res = await fetch(`${this.apiEndpoint}/visit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+      cache: 'no-store'
+    });
+
+    clearTimeout(timer);
+
+    // 若不被允許（405/404），退回 GET（無 body）
+    if (!res.ok && (res.status === 405 || res.status === 404)) {
+      const qs = new URLSearchParams(payload).toString();
+      // GET 不需要逾時控制也可以，但我們保持一致
+      const controller2 = new AbortController();
+      setTimeout(() => controller2.abort(), 2000);
+      try {
+        await fetch(`${this.apiEndpoint}/visit?${qs}`, {
+          method: 'GET',
+          cache: 'no-store',
+          signal: controller2.signal
+        });
+      } catch (_) { /* 靜默 */ }
     }
+  } catch (_) {
+    // 靜默：不阻塞主流程、不輸出任何東西
+  }
+}
+
 
     // 記錄 AI 問卦使用
     async trackAIUsage(question, prompt, response, tokenCount) {
