@@ -293,7 +293,7 @@ this.modal.style.cssText = `
             </style>
         `;
         this.removeHighlight();
-        sthis.bindFooterNavForCurrentStep();
+        this.bindFooterNavForCurrentStep();
     }
 
 showPreparation2Step() {
