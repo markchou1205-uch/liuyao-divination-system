@@ -90,7 +90,37 @@ ensureTutorialModalStyles() {
   padding: 10px 16px; border-radius: 10px; background:#fff; border:1px solid #d1d5db; cursor:pointer;
 }
 #tutorial-modal .tutorial-footer .step-indicator { opacity:.8; }
+/* 內容容器：預留底部空間給固定的 footer，避免重疊 */
+#tutorial-modal .tutorial-content{
+  position: relative;
+  padding-bottom: 80px;       /* 須 ≥ footer 高度 */
+}
 
+/* 固定在卡片底部的控制列（所有步驟一致位置） */
+#tutorial-modal .tutorial-footer{
+  position: sticky;
+  bottom: 0;
+  z-index: 10;                /* 蓋過內容，確保可點擊 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin: 0;                  /* ❗ 不再使用負 margin，避免點不到 */
+  padding: 12px 24px;
+  background: #fff;           /* 讓底部有白底，不會透出內容 */
+  border-top: 1px solid #e5e7eb;
+  pointer-events: auto;       /* 保險：確保能接收點擊 */
+}
+
+/* 按鈕（沿用你現有樣式即可，這裡只是補一份保險） */
+#tutorial-modal .tutorial-footer .btn.primary{
+  padding:10px 16px;border-radius:10px;background:#2563eb;color:#fff;border:none;cursor:pointer;
+}
+#tutorial-modal .tutorial-footer .btn.ghost{
+  padding:10px 16px;border-radius:10px;background:#fff;border:1px solid #d1d5db;cursor:pointer;
+}
+#tutorial-modal .tutorial-footer .step-indicator{opacity:.8;}
   `;
   document.head.appendChild(style);
 }
@@ -2280,15 +2310,15 @@ continueReading() {
 createNavigationButtons() {
   const cur = this.currentStep ? this.currentStep : 1;
   const total = this.totalSteps ? this.totalSteps : 8;
+  const prevLabel = cur > 1 ? '上一步' : '關閉';
   return `
     <div class="tutorial-footer" role="toolbar" aria-label="引導精靈控制列">
-      <button id="tutorial-prev" class="btn ghost">取消</button>
+      <button id="tutorial-prev" class="btn ghost">${prevLabel}</button>
       <div class="step-indicator" id="tutorial-step-indicator">${cur} / ${total}</div>
       <button id="tutorial-next" class="btn primary">下一步</button>
     </div>
   `;
 }
-
 
 // 下一步
 nextStep() {
