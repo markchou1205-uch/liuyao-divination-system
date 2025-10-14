@@ -89,6 +89,20 @@ ensureTutorialModalStyles() {
   padding:10px 16px;border-radius:10px;background:#fff;border:1px solid #d1d5db;cursor:pointer;
 }
 #tutorial-modal .tutorial-footer .step-indicator{opacity:.8;}
+/* 固定 footer 兩顆鈕的樣式，避免被其他主題覆蓋 */
+#tutorial-modal .tutorial-footer .btn.ghost{
+  background:#fff;
+  border:1px solid #d1d5db;
+  color:#374151;            /* ← 修正：文字不再是白色 */
+}
+#tutorial-modal .tutorial-footer .btn.primary{
+  color:#fff;
+}
+#tutorial-modal .tutorial-footer .btn.disabled{
+  opacity:.5;
+  pointer-events:none;
+  cursor:not-allowed;
+}
   `;
   document.head.appendChild(style);
 }
@@ -505,168 +519,95 @@ this.modal.innerHTML = `
   }
 }
 
-// 第六步：選擇問題類型（修正版）
+// 第五步：選擇問題類型（含校驗與固定 footer 綁定）
 showQuestionSelectionStep() {
-        // 進入輸入問題的步驟時，移除起卦空白鍵熱鍵
-    if (this._sixiKeyHandler) {
-        window.removeEventListener('keydown', this._sixiKeyHandler, { capture: true });
-        this._sixiKeyHandler = null;
-    }
-    // ✅ 不再要求使用者手選起卦方式；若已有六爻資料，默認為六爻
-    if (!this.userData.method) {
-        if (this.userData.liuyaoData && this.userData.liuyaoData.length === 6) {
-            this.userData.method = 'liuyao';
-        } else {
-            // 仍在新流程下，預設就是六爻
-            this.userData.method = 'liuyao';
-        }
-    }
+  // 仍保險：若 method 未設定則固定為六爻
+  if (!this.userData.method) this.userData.method = 'liuyao';
 
-    // ✅ 舊流程的手動輸入保留容錯（若你不再用可移除）
-    if (this.userData.method === 'liuyao' && this.userData.liuyaoData.length === 0) {
-        this.collectLiuyaoData();
-        if (this.userData.liuyaoData.length === 0) {
-            // 這裡不跳回去、不警告，直接允許先選問題再回前一步補起卦
-            console.warn('尚未完成六爻輸入，允許先選問題內容');
-        }
-    }
+  // --- UI ---
+  this.modal.innerHTML = `
+    <div class="tutorial-content">
+      <h2 style="text-align:center; margin-bottom:16px;">選擇問題類型</h2>
 
-    this.modal.innerHTML = `
-        <div class="tutorial-content">
-            <h2>選擇問題類型</h2>
-            <div class="question-selection">
-                <div class="question-options">
-                    <h4>1. 請選擇問題類型：</h4>
-                    <div class="question-grid">
-                        <label class="question-option">
-                            <input type="radio" name="question-type" value="love-female">
-                            <span>感情/問女方</span>
-                        </label>
-                        <label class="question-option">
-                            <input type="radio" name="question-type" value="love-male">
-                            <span>感情/問男方</span>
-                        </label>
-                        <label class="question-option">
-                            <input type="radio" name="question-type" value="parents">
-                            <span>問父母</span>
-                        </label>
-                        <label class="question-option">
-                            <input type="radio" name="question-type" value="children">
-                            <span>問子女</span>
-                        </label>
-                        <label class="question-option">
-                            <input type="radio" name="question-type" value="career">
-                            <span>問事業</span>
-                        </label>
-                        <label class="question-option">
-                            <input type="radio" name="question-type" value="health">
-                            <span>問健康</span>
-                        </label>
-                        <label class="question-option">
-                            <input type="radio" name="question-type" value="wealth">
-                            <span>問財官</span>
-                        </label>
-                        <label class="question-option">
-                            <input type="radio" name="question-type" value="partnership">
-                            <span>問合作合夥</span>
-                        </label>
-                        <label class="question-option">
-                            <input type="radio" name="question-type" value="lawsuit">
-                            <span>問官司</span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="custom-question">
-                    <h4>2. 輸入問題內容，並儘量詳細：</h4>
-                    <textarea id="custom-question" 
-                             placeholder="請詳細描述您想問的問題..."
-                             rows="4" 
-                             maxlength="500"
-                             required></textarea>
-                    <div class="char-counter">
-                        <span id="char-count">0</span>/500 字
-                    </div>
-                    <p class="note">請先選擇上方的問題類型，然後在此處輸入您的具體問題內容。</p>
-                </div>
-            </div>
-            ${this.createNavigationButtons()}
-        </div>
-        <style>
-            .question-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
-                margin: 15px 0;
-            }
-            .question-option {
-                display: flex;
-                align-items: center;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                cursor: pointer;
-                transition: background-color 0.2s;
-            }
-            .question-option:hover {
-                background-color: #f0f0f0;
-            }
-            .question-option input {
-                margin-right: 8px;
-            }
-            .custom-question {
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 1px solid #eee;
-            }
-            .custom-question textarea {
-                width: 100%;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                font-family: inherit;
-                resize: vertical;
-                margin-top: 10px;
-            }
-            .custom-question textarea:focus {
-                border-color: #007bff;
-                outline: none;
-            }
-            .char-counter {
-                text-align: right;
-                font-size: 12px;
-                color: #666;
-                margin-top: 5px;
-            }
-            .note {
-                font-size: 14px;
-                color: #666;
-                margin-top: 10px;
-                line-height: 1.4;
-            }
-        </style>
-    `;
+      <div class="qtype-wrap" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+        ${[
+          '感情/問女方','感情/問男方','問父母',
+          '問子女','問事業','問健康',
+          '問財官','問合作合夥','問官司'
+        ].map((label,idx)=>`
+          <label style="display:flex;align-items:center;gap:8px;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;">
+            <input type="radio" name="question-type" value="${label}" id="qt-${idx}">
+            <span>${label}</span>
+          </label>
+        `).join('')}
+      </div>
 
-    // 添加字數計算
-    const textarea = document.getElementById('custom-question');
-    const charCount = document.getElementById('char-count');
-    
-    textarea.addEventListener('input', function() {
-        charCount.textContent = this.value.length;
-    });
-    // Step 5（輸入問題）結尾：初始化導覽（這一步允許 Next）
-     if (this.currentStep === 5 && typeof this.sixiSetNextButtonState === 'function') {
-       this.sixiSetNextButtonState(); // 會把 Next 顯示為「取消」或「下一步」，依 _sixi 狀態
-     }
+      <div style="margin-top:16px;">
+        <label for="question-text"><strong>2. 輸入問題內容，並儘量詳細：</strong></label>
+        <textarea id="question-text" rows="4" style="width:100%;margin-top:6px;border:1px solid #e5e7eb;border-radius:8px;padding:10px;" placeholder="輸入關於此事的時間、人物、地點、關鍵細節等…"></textarea>
+        <div id="qtip" style="margin-top:6px;font-size:12px;color:#6b7280;">請先選擇上方的問題類型，然後在此處輸入您的具體問題內容。</div>
+      </div>
 
-     // Step 6（起卦）結尾：讓硬幣立刻出圖，並禁用 Next 直到滿六爻
-     if (this.currentStep === 6) {
-       try { this.sixiSetCoinFaces(['正','正','正']); } catch {}
-       if (typeof this.sixiSetNextButtonState === 'function') this.sixiSetNextButtonState();
-     }
+      ${this.createNavigationButtons()}
+    </div>
+  `;
 
+  // --- 綁定 footer 的上一/下一步 ---
+  this.bindFooterNavForCurrentStep();
+
+  // --- 校驗與控制「下一步」可用性 ---
+  const nextBtn  = this.modal.querySelector('#tutorial-next');
+  const prevBtn  = this.modal.querySelector('#tutorial-prev');
+  const radios   = Array.from(this.modal.querySelectorAll('input[name="question-type"]'));
+  const textarea = this.modal.querySelector('#question-text');
+  const tip      = this.modal.querySelector('#qtip');
+
+  // 初始化（未填完前禁用下一步）
+  const setNextDisabled = (disabled) => {
+    if (!nextBtn) return;
+    nextBtn.classList.toggle('disabled', !!disabled);
+    nextBtn.toggleAttribute('disabled', !!disabled);
+  };
+
+  const isValid = () => {
+    const picked = radios.some(r => r.checked);
+    const textOk = (textarea.value || '').trim().length > 0; // 若想放寬，可改 >= 1 或直接 true
+    return picked && textOk;
+  };
+
+  const saveData = () => {
+    const picked = radios.find(r => r.checked);
+    this.userData.questionCategory = picked ? picked.value : '';
+    this.userData.questionText = (textarea.value || '').trim();
+  };
+
+  const update = () => {
+    const ok = isValid();
+    setNextDisabled(!ok);
+    if (tip) tip.style.color = ok ? '#6b7280' : '#ef4444';
+  };
+
+  // 事件
+  radios.forEach(r => r.addEventListener('change', update));
+  textarea.addEventListener('input', update);
+
+  // 下一步點擊：先保存，再前進
+  if (nextBtn) {
+    nextBtn.onclick = () => {
+      if (!isValid()) { update(); return; }
+      saveData();
+      this.nextStep();
+    };
+  }
+
+  // 上一步
+  if (prevBtn) {
+    prevBtn.onclick = () => this.previousStep();
+  }
+
+  // 首次刷新狀態
+  update();
 }
-
     // 第七步：解卦方式選擇
     showDivinationOptionsStep() {
   const selectedType = this.userData?.questionType || '';
