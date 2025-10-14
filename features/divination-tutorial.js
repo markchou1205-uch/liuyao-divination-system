@@ -577,8 +577,12 @@ showQuestionSelectionStep() {
 
   const saveData = () => {
     const picked = radios.find(r => r.checked);
-    this.userData.questionCategory = picked ? picked.value : '';
-    this.userData.questionText = (textarea.value || '').trim();
+    const category = picked ? picked.value : '';
+    const qtext    = (textarea.value || '').trim();
+    this.userData.questionType    = category;
+    this.userData.customQuestion  = qtext;
+    this.userData.questionCategory = category;
+    this.userData.questionText     = qtext;
   };
 
   const update = () => {
@@ -1289,23 +1293,23 @@ setupSixiListeners() {
 collectQuestionData() {
   try {
     const picked = document.querySelector('input[name="question-type"]:checked');
-    const type = picked ? picked.value : '';
+    const typeEl = picked ? picked.value : '';
     const textEl = document.getElementById('question-text');
-    const text = textEl ? textEl.value.trim() : '';
+    const text   = textEl ? textEl.value.trim() : '';
 
-    // 儲存結果
-    this.userData.questionType = type;
-    this.userData.questionText = text;
+    // 新命名
+    this.userData.questionType   = typeEl;
+    this.userData.customQuestion = text;
+    // 兼容舊欄位
+    this.userData.questionCategory = typeEl;
+    this.userData.questionText     = text;
 
-    // 若未填寫則不報錯，只記錄空值
-    if (!type || !text) {
-      console.warn('[DivinationTutorial] 未完整輸入問題類型或內容');
-    }
+    if (!typeEl || !text) return false;  // 沒填不往下
+    return true;
   } catch (e) {
-    console.error('collectQuestionData 錯誤:', e);
+    return false;
   }
 }
-
 
     // 執行起卦
     performDivination() {
