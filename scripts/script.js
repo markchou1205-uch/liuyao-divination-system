@@ -3405,6 +3405,323 @@ function generateAIPrompt(guaData) {
 
     return prompt;
 }
+/* ===========================
+ * AIPayloadBuilderPro (Advanced, Zero-DOM)
+ * — 不讀表格樣式，完全吃資料與你現有規則。
+ * — 全新新增，與現有函式互不衝突。
+ * 需用到（若存在就用）：AdvancedCalculator, GuaCalculator, getCurrentGanZhi,
+ *   analyzeYaoRiyueRelation, analyzeYaoGuabian, AdvancedCalculator.calculateFushen,
+ *   AdvancedCalculator.calculateGuaComplete, AdvancedCalculator.calculateShiYing,
+ *   GuaCalculator.getLiushen, GuaCalculator.getXunKongDisplay
+ * =========================== */
+const AIPayloadBuilderPro = (() => {
+  // --------- 小工具 ---------
+  const ZHI = '子丑寅卯辰巳午未申酉戌亥'.split('');
+  const WX  = ['金','木','水','火','土'];
+  const ZHI_TO_WX = { 子:'水', 丑:'土', 寅:'木', 卯:'木', 辰:'土', 巳:'火', 午:'火', 未:'土', 申:'金', 酉:'金', 戌:'土', 亥:'水' };
+  const CHONG = new Set(['子午','午子','丑未','未丑','寅申','申寅','卯酉','酉卯','辰戌','戌辰','巳亥','亥巳']);
+  const LIUHE = new Set(['子丑','丑子','寅亥','亥寅','卯戌','戌卯','辰酉','酉辰','巳申','申巳','午未','未午']);
+  const SHENG = { 金:'水', 水:'木', 木:'火', 火:'土', 土:'金' };
+  const KE    = { 金:'木', 木:'土', 土:'水', 水:'火', 火:'金' };
+
+  const wxRelWord = (a, b, prefix='') => {
+    if (!a || !b) return '';
+    if (SHENG[a] === b) return prefix + '生';
+    if (KE[a]    === b) return prefix + '剋';
+    if (a === b)        return prefix + '比和';
+    if (SHENG[b] === a) return prefix + '被生';
+    if (KE[b]    === a) return prefix + '被剋';
+    return prefix ? prefix + '無關' : '無關';
+  };
+  const zhiRelWord = (a, b) => {
+    if (!a || !b) return '';
+    const pair = a + b;
+    if (CHONG.has(pair)) return '沖';
+    if (LIUHE.has(pair)) return '合';
+    return '';
+  };
+  const parseZhiWX = (zwx) => {
+    if (!zwx) return { zhi:'', wuxing:'' };
+    const z = zwx.match(/[子丑寅卯辰巳午未申酉戌亥]/)?.[0] || '';
+    const w = zwx.match(/[金木水火土]/)?.[0] || '';
+    return { zhi: z, wuxing: w };
+  };
+
+  // --------- 取當前干支 / 旬空 / 六獸 ---------
+  function getCalendarContext() {
+    const gz = (typeof getCurrentGanZhi === 'function') ? getCurrentGanZhi() : null;
+    const day = gz?.day || '';   // 例：丙申
+    const month = gz?.month || '';// 例：乙酉
+    const dayGan = day ? day.charAt(0) : '';
+    const dayZhi = day ? day.charAt(1) : '';
+    const monthZhi = month ? month.charAt(1) : '';
+    let xunKongStr = '';
+    let xunKongArr = [];
+    if (typeof GuaCalculator !== 'undefined' && day) {
+      try {
+        xunKongStr = GuaCalculator.getXunKongDisplay(day) || '';
+        xunKongArr = xunKongStr.split('、').map(s => s.trim()).filter(Boolean);
+      } catch (e) {}
+    }
+    // 六獸（依日干），回傳為 [下→上]；我們後面轉為 [初→上]
+    let liushen = [];
+    try {
+      if (typeof GuaCalculator !== 'undefined') {
+        liushen = GuaCalculator.getLiushen(dayGan) || [];
+      }
+    } catch (e) {}
+    return { day, month, dayGan, dayZhi, monthZhi, xunKongStr, xunKongArr, liushen };
+  }
+
+  // --------- 取得主/變卦名與二進位（支援三種起卦） ---------
+  function getCurrentGuaNames() {
+    if (typeof AdvancedCalculator === 'undefined') return null;
+
+    // 六爻/擲幣
+    if (window.dice1 !== undefined) {
+      const arr = [dice1, dice2, dice3, dice4, dice5, dice6];
+      return AdvancedCalculator.calculateGuaNames(arr);
+    }
+    // 數字起卦
+    if (window.numberGuaResult) {
+      return AdvancedCalculator.calculateNumberGuaNames(window.numberGuaResult);
+    }
+    // 時間起卦
+    if (window.timeGuaResult) {
+      return AdvancedCalculator.calculateNumberGuaNames(window.timeGuaResult);
+    }
+    return null;
+  }
+
+  // 動爻（以原/變二進位逐位比較，若無變卦則用 dongYao）
+  function computeMovingLines(oriBin, bianBin) {
+    if (oriBin && bianBin) {
+      const res = [];
+      for (let i=0;i<6;i++) if (oriBin[i] !== bianBin[i]) res.push(i+1);
+      return res;
+    }
+    if (window.numberGuaResult?.dongYao) return [window.numberGuaResult.dongYao];
+    if (window.timeGuaResult?.dongYao)   return [window.timeGuaResult.dongYao];
+    if (window.dice1 !== undefined) {
+      return [dice1, dice2, dice3, dice4, dice5, dice6]
+        .map((v,i)=>(v===0||v===3)?(i+1):null).filter(Boolean);
+    }
+    return [];
+  }
+
+  // 以你現有規則計算：對日/月關係（優先使用你的 analyzeYaoRiyueRelation）
+  function calcRiYueUsingYourRules(pos, yaoInfo, dayZhi, monthZhi) {
+    if (typeof analyzeYaoRiyueRelation === 'function') {
+      try {
+        // 你的 analyzeYaoRiyueRelation(yaoPos, yaoInfo, dayZhi, monthZhi, dayWX, monthWX) 之類
+        const dayWX   = ZHI_TO_WX[dayZhi] || '';
+        const monthWX = ZHI_TO_WX[monthZhi] || '';
+        return analyzeYaoRiyueRelation(pos, yaoInfo, dayZhi, monthZhi, dayWX, monthWX) || '';
+      } catch (e) {}
+    }
+    // 備援：五行生剋 + 支沖合（進階需求已優先走你的函式）
+    const wz = yaoInfo?.dizhi || '';
+    const wx = yaoInfo?.wuxing || '';
+    const relMonth = [
+      wxRelWord(wx, ZHI_TO_WX[monthZhi], '月'),
+      zhiRelWord(wz, monthZhi)
+    ].filter(Boolean).join('/');
+    const relDay = [
+      wxRelWord(wx, ZHI_TO_WX[dayZhi], '日'),
+      zhiRelWord(wz, dayZhi)
+    ].filter(Boolean).join('/');
+    return [relMonth, relDay].filter(Boolean).join('；');
+  }
+
+  // 以你現有規則計算：動變（優先使用你的 analyzeYaoGuabian）
+  function calcChangeUsingYourRules(pos, xunKongArr) {
+    if (typeof analyzeYaoGuabian === 'function') {
+      try {
+        return analyzeYaoGuabian(pos, xunKongArr) || '';
+      } catch (e) {}
+    }
+    return ''; // 若你要，我可以再補一份完整的回頭/化墓/化絕/空等演算法
+  }
+
+  // 將主/變卦的完整資料（calculateGuaComplete）整合為每爻快照
+  function buildPerYaoSnapshot(ori, bian, movingLines, cal, liushenArr) {
+    const perYao = [];
+    for (let pos=1; pos<=6; pos++) {
+      const idx = pos - 1;
+      const zwx0 = ori.dizhiWuxing?.[idx] || '';
+      const { zhi, wuxing } = parseZhiWX(zwx0);
+      const liuqin0 = ori.liuqin?.[idx] || '';
+      const isMoving = movingLines.includes(pos);
+
+      const bzwx  = bian?.dizhiWuxing?.[idx] || '';
+      const blq   = bian?.liuqin?.[idx] || '';
+
+      const yaoInfo = {
+        dizhi: zhi, wuxing, liuqin: liuqin0,
+        isMoving, // 你原函式若需要
+        bian: { dizhi: parseZhiWX(bzwx).zhi, wuxing: parseZhiWX(bzwx).wuxing, liuqin: blq }
+      };
+
+      const riYue = calcRiYueUsingYourRules(pos, yaoInfo, cal.dayZhi, cal.monthZhi);
+      const change = isMoving ? calcChangeUsingYourRules(pos, cal.xunKongArr) : '';
+
+      // 六獸：你原本回傳[下→上]，這裡轉為[初→上]：index 0=初 → liushenArr[5-idx]
+      const liushen = liushenArr?.length ? (liushenArr[5-idx] || '') : '';
+
+      // 伏神（若你的 calcFushen 有，取文本化）
+      let fushenText = '';
+      try {
+        if (typeof AdvancedCalculator?.calculateFushen === 'function' && ori.liuqin) {
+          // 直接在外層呼叫一次即可；這裡為單爻展示使用
+          // 交由上層統一生成以節省計算；保留欄位
+        }
+      } catch (e) {}
+
+      perYao.push({
+        position: pos,                 // 初=1 … 上=6
+        liushen,                       // 六獸
+        fushen: '',                    // 外層統一填（避免多次算）
+        liuqin: liuqin0,               // 六親
+        dizhi: zhi,                    // 地支
+        wuxing: wuxing,                // 五行
+        riYueRelation: riYue,          // 對月/對日（走你的規則）
+        moving: isMoving,              // 動靜
+        bian_dizhiWuxing: bzwx || '',  // 變卦地支五行（文本）
+        bian_liuqin: blq || '',        // 變卦六親
+        changeAnalysis: change || ''   // 動化狀態（走你的規則）
+      });
+    }
+    return perYao;
+  }
+
+  // 把 calculateFushen 的 HTML/markup 轉純文字
+  function plainFushen(html) {
+    if (!html) return '';
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
+  }
+
+  // 對外：建立 JSON 與文字 Prompt
+  function build(question /* 可直接傳使用者問題字串 */) {
+    if (typeof AdvancedCalculator === 'undefined' || typeof GuaCalculator === 'undefined') {
+      console.warn('[AIPayloadBuilderPro] 缺少 AdvancedCalculator 或 GuaCalculator');
+      return { json: null, prompt: '' };
+    }
+
+    const guaNames = getCurrentGuaNames();
+    if (!guaNames || !guaNames.originalBinary) {
+      console.warn('[AIPayloadBuilderPro] 無主卦資訊，請先完成起卦。');
+      return { json: null, prompt: '' };
+    }
+
+    // 主/變卦完整結構（含 dizhiWuxing, liuqin 等）
+    const ori  = AdvancedCalculator.calculateGuaComplete(guaNames.originalBinary) || {};
+    const bian = guaNames.bianBinary ? AdvancedCalculator.calculateGuaComplete(guaNames.bianBinary) : null;
+
+    const cal = getCalendarContext();
+    const liushenArr = cal.liushen || [];
+
+    const movingLines = computeMovingLines(guaNames.originalBinary, guaNames.bianBinary);
+
+    // 每爻快照（含：六獸、六親、地支五行、對日月（你的規則）、動化狀態（你的規則））
+    const perYao = buildPerYaoSnapshot(ori, bian, movingLines, cal, liushenArr);
+
+    // 伏神：統一算一次，然後分配到每爻
+    let fushenList = [];
+    try {
+      if (typeof AdvancedCalculator.calculateFushen === 'function' && ori.liuqin) {
+        const raw = AdvancedCalculator.calculateFushen(guaNames.originalBinary, ori.liuqin) || [];
+        fushenList = raw.map(plainFushen);
+      }
+    } catch (e) {}
+    if (fushenList.length === perYao.length) {
+      perYao.forEach((y, i) => { y.fushen = fushenList[i] || ''; });
+    }
+
+    // 世應（若有）
+    let shiYing = null;
+    try {
+      if (typeof AdvancedCalculator.calculateShiYing === 'function') {
+        shiYing = AdvancedCalculator.calculateShiYing(guaNames.originalBinary);
+      }
+    } catch (e) {}
+
+    // JSON 輸出（提供後端 AI）
+    const payload = {
+      meta: {
+        question: (question || '').toString().trim(),
+        monthBranch: cal.month ? cal.month.charAt(1) : '',
+        dayBranch: cal.day ? cal.day.charAt(1) : '',
+        xunKong: cal.xunKongStr
+      },
+      hexagrams: {
+        main: guaNames.gn || '',
+        change: guaNames.bgn || '',
+        movingLines
+      },
+      lines: perYao,
+      shiying: shiYing || null
+    };
+
+    // 文字 prompt（你要丟「文字」就用這條；要丟 JSON+指示則取 payload 即可）
+    const yaoNames = ['初爻','二爻','三爻','四爻','五爻','上爻'];
+    const header = [
+      `使用者問題：${payload.meta.question || '(未提供)'}`,
+      `日干支：${cal.day || '(未知)'}，月支：${cal.month ? cal.month.charAt(1) : ''}`,
+      `旬空：${cal.xunKongStr || '(無)'}`,
+      `本卦：${payload.hexagrams.main || '(未知)'}${payload.hexagrams.change ? `　變卦：${payload.hexagrams.change}` : ''}`,
+      shiYing ? `世爻：第${shiYing.shi}爻　應爻：第${shiYing.ying}爻` : ''
+    ].filter(Boolean).join('\n');
+
+    const perYaoText = perYao.map(y => {
+      const flags = [];
+      if (y.moving) flags.push('動爻');
+      if (y.changeAnalysis) flags.push(y.changeAnalysis);
+      const flagStr = flags.length ? `【${flags.join(' / ')}】` : '';
+      const riYue = y.riYueRelation ? `（日月：${y.riYueRelation}）` : '';
+      const bianTxt = (y.bian_dizhiWuxing || y.bian_liuqin)
+        ? ` ⇒ 變：${y.bian_dizhiWuxing || ''}${y.bian_liuqin ? ' ' + y.bian_liuqin : ''}`
+        : '';
+      const fs = y.fushen ? ` 伏神：${y.fushen}` : '';
+      return `${yaoNames[y.position-1]} ${flagStr}
+  六獸：${y.liushen || '--'}　六親：${y.liuqin || '--'}
+  本：${y.dizhi || ''}${y.wuxing || ''}${riYue}${fs}${bianTxt}`.replace(/\s+\n/g,'\n');
+    }).join('\n');
+
+    const task = [
+      `任務：請根據使用者問題自行選定最恰當的用神（不限於世/應或單一六親），`,
+      `並嚴格依據逐爻提供的客觀狀態（動靜、對日/月生剋沖合、旬空、動化：化墓/化絕/化空/回頭生/回頭克/進退神等）進行論斷。`,
+      `請輸出 JSON（yongshen, yongshen_reason, key_signals[], analysis, conclusion, advice, confidence），避免冗詞。`
+    ].join('\n');
+
+    const prompt = `${header}\n\n逐爻狀態：\n${perYaoText}\n\n${task}`;
+
+    return { json: payload, prompt };
+  }
+
+  function buildAndLog(question) {
+    const { json, prompt } = build(question);
+    console.group('[AIPayloadBuilderPro]');
+    if (!json) { console.groupEnd(); return { json, prompt }; }
+    console.log('Meta:', json.meta);
+    console.log('Hexagrams:', json.hexagrams);
+    if (json.shiying) console.log('世應:', json.shiying);
+    console.table(json.lines.map(l => ({
+      index: l.position, 六獸: l.liushen, 伏神: l.fushen,
+      六親: l.liuqin, 地支: l.dizhi, 五行: l.wuxing,
+      動爻: l.moving, 對日月: l.riYueRelation,
+      變地支五行: l.bian_dizhiWuxing, 變六親: l.bian_liuqin,
+      動化: l.changeAnalysis
+    })));
+    console.log('Prompt:\n' + prompt);
+    console.groupEnd();
+    return { json, prompt };
+  }
+
+  return { build, buildAndLog };
+})();
+
 // ==================== 初始化 ====================
 
 // 主程式初始化
