@@ -3700,13 +3700,25 @@ const AIPayloadBuilderPro = (() => {
     return { json: payload, prompt };
   }
 
-  function buildAndLog(question) {
-    const { json, prompt } = build(question);
-    console.group('[AIPayloadBuilderPro]');
-    if (!json) { console.groupEnd(); return { json, prompt }; }
-    console.log('Meta:', json.meta);
-    console.log('Hexagrams:', json.hexagrams);
-    if (json.shiying) console.log('世應:', json.shiying);
+function buildAndLog(question) {
+  const { json, prompt } = build(question);
+
+  console.group('[AIPayloadBuilderPro]');
+  if (!json) {
+    console.warn('[AIPayloadBuilderPro] 無法建立快照或 prompt 為空。');
+    console.groupEnd();
+    // 仍把（可能的）prompt 放到全域，方便你檢查
+    try { window.__AI_PROMPT__ = prompt || ''; } catch {}
+    return { json, prompt };
+  }
+
+  // 基本資訊
+  console.log('Meta:', json.meta);
+  console.log('Hexagrams:', json.hexagrams);
+  if (json.shiying) console.log('世應:', json.shiying);
+
+  // 逐爻表格
+  try {
     console.table(json.lines.map(l => ({
       index: l.position, 六獸: l.liushen, 伏神: l.fushen,
       六親: l.liuqin, 地支: l.dizhi, 五行: l.wuxing,
@@ -3714,14 +3726,39 @@ const AIPayloadBuilderPro = (() => {
       變地支五行: l.bian_dizhiWuxing, 變六親: l.bian_liuqin,
       動化: l.changeAnalysis
     })));
-    console.groupCollapsed('%c【AI PROMPT - 點我展開】', 'color:#0b6;font-weight:bold;');
-    console.log(prompt);
-    console.groupEnd();  
-    window.__AI_PROMPT__ = prompt;
-    console.log('Prompt:\n' + prompt);
-    console.groupEnd();
-    return { json, prompt };
+  } catch (e) {
+    console.log('Lines (raw):', json.lines);
   }
+
+  // ---- Prompt 顯示（穩健版） ----
+  // 小工具：預覽前 400 字
+  const safePreview = (str) => {
+    try {
+      const s = String(str ?? '');
+      const head = s.slice(0, 400);
+      return head + (s.length > 400 ? `\n...（共 ${s.length} 字）` : '');
+    } catch { return '(prompt 不可序列化)'; }
+  };
+
+  // 1) 立即印出前 400 字，確保看得到
+  console.log('【AI PROMPT 預覽（前 400 字）】\n' + safePreview(prompt));
+
+  // 2) groupCollapsed 供展開查看完整版（某些環境若不支援會 fallback）
+  try {
+    console.groupCollapsed('【AI PROMPT - 點我展開完整版】');
+    console.log('%s', prompt ?? '(空字串)');
+    console.groupEnd();
+  } catch (e) {
+    console.log('【AI PROMPT 完整版】\n' + (prompt ?? '(空字串)'));
+  }
+
+  // 3) 放到全域方便你在 Console 輸入 __AI_PROMPT__ 直接拿
+  try { window.__AI_PROMPT__ = prompt || ''; } catch {}
+
+  console.groupEnd();
+  return { json, prompt };
+}
+
 
   return { build, buildAndLog };
 })();
