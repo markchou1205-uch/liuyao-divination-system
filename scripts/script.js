@@ -3714,6 +3714,10 @@ const AIPayloadBuilderPro = (() => {
       變地支五行: l.bian_dizhiWuxing, 變六親: l.bian_liuqin,
       動化: l.changeAnalysis
     })));
+    console.groupCollapsed('%c【AI PROMPT - 點我展開】', 'color:#0b6;font-weight:bold;');
+    console.log(prompt);
+    console.groupEnd();  
+    window.__AI_PROMPT__ = prompt;
     console.log('Prompt:\n' + prompt);
     console.groupEnd();
     return { json, prompt };
