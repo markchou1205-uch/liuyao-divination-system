@@ -1286,34 +1286,26 @@ setupSixiListeners() {
         this.userData.liuyaoData = data;
     }
 
-    // 收集問題數據
-// 收集問題數據（加入驗證）
 collectQuestionData() {
-    const radioButtons = document.querySelectorAll('input[name="question-type"]');
-    const customQuestion = document.getElementById('custom-question').value.trim();
-    
-    let selectedType = '';
-    radioButtons.forEach(radio => {
-        if (radio.checked) {
-            selectedType = radio.value;
-        }
-    });
-    
-    // 檢查兩個都要填寫
-    if (!selectedType) {
-        alert('請選擇問題類型');
-        return false;
+  try {
+    const picked = document.querySelector('input[name="question-type"]:checked');
+    const type = picked ? picked.value : '';
+    const textEl = document.getElementById('question-text');
+    const text = textEl ? textEl.value.trim() : '';
+
+    // 儲存結果
+    this.userData.questionType = type;
+    this.userData.questionText = text;
+
+    // 若未填寫則不報錯，只記錄空值
+    if (!type || !text) {
+      console.warn('[DivinationTutorial] 未完整輸入問題類型或內容');
     }
-    
-    if (!customQuestion) {
-        alert('請輸入問題內容');
-        return false;
-    }
-    
-    this.userData.questionType = selectedType;
-    this.userData.customQuestion = customQuestion;
-    return true;
+  } catch (e) {
+    console.error('collectQuestionData 錯誤:', e);
+  }
 }
+
 
     // 執行起卦
     performDivination() {
