@@ -519,70 +519,51 @@ this.modal.innerHTML = `
   }
 }
 
-// 第五步：選擇問題類型（含校驗與固定 footer 綁定）
+// 第五步：輸入問題（移除問題類型，僅保留自由文字）
 showQuestionSelectionStep() {
-  // 仍保險：若 method 未設定則固定為六爻
+  // 固定六爻
   if (!this.userData.method) this.userData.method = 'liuyao';
 
-  // --- UI ---
   this.modal.innerHTML = `
     <div class="tutorial-content">
-      <h2 style="text-align:center; margin-bottom:16px;">選擇問題類型</h2>
+      <h2 style="text-align:center; margin-bottom:16px;">輸入您的問題</h2>
 
-      <div class="qtype-wrap" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
-        ${[
-          '感情/問女方','感情/問男方','問父母',
-          '問子女','問事業','問健康',
-          '問財官','問合作合夥','問官司'
-        ].map((label,idx)=>`
-          <label style="display:flex;align-items:center;gap:8px;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;">
-            <input type="radio" name="question-type" value="${label}" id="qt-${idx}">
-            <span>${label}</span>
-          </label>
-        `).join('')}
-      </div>
-
-      <div style="margin-top:16px;">
-        <label for="question-text"><strong>2. 輸入問題內容，並儘量詳細：</strong></label>
-        <textarea id="question-text" rows="4" style="width:100%;margin-top:6px;border:1px solid #e5e7eb;border-radius:8px;padding:10px;" placeholder="輸入關於此事的時間、人物、地點、關鍵細節等…"></textarea>
-        <div id="qtip" style="margin-top:6px;font-size:12px;color:#6b7280;">請先選擇上方的問題類型，然後在此處輸入您的具體問題內容。</div>
+      <div style="margin-top:4px;">
+        <label for="question-text"><strong>請用一句話清楚描述此卦要問的重點：</strong></label>
+        <textarea id="question-text" rows="5"
+          style="width:100%;margin-top:6px;border:1px solid #e5e7eb;border-radius:8px;padding:10px;"
+          placeholder="例如：『這份新工作三個月內能否順利轉正並加薪？』或『某某對我是否真心，近期可否進一步發展？』"></textarea>
+        <div id="qtip" style="margin-top:6px;font-size:12px;color:#6b7280;">
+          小提醒：問題要單一、明確；避免同時問多個目標（如「好不好」）以免訊息混雜。
+        </div>
       </div>
 
       ${this.createNavigationButtons()}
     </div>
   `;
 
-  // --- 綁定 footer 的上一/下一步 ---
+  // 綁定 footer
   this.bindFooterNavForCurrentStep();
 
-  // --- 校驗與控制「下一步」可用性 ---
+  // 校驗：僅需文字非空
   const nextBtn  = this.modal.querySelector('#tutorial-next');
   const prevBtn  = this.modal.querySelector('#tutorial-prev');
-  const radios   = Array.from(this.modal.querySelectorAll('input[name="question-type"]'));
   const textarea = this.modal.querySelector('#question-text');
   const tip      = this.modal.querySelector('#qtip');
 
-  // 初始化（未填完前禁用下一步）
   const setNextDisabled = (disabled) => {
     if (!nextBtn) return;
     nextBtn.classList.toggle('disabled', !!disabled);
     nextBtn.toggleAttribute('disabled', !!disabled);
   };
-
-  const isValid = () => {
-    const picked = radios.some(r => r.checked);
-    const textOk = (textarea.value || '').trim().length > 0; // 若想放寬，可改 >= 1 或直接 true
-    return picked && textOk;
-  };
+  const isValid = () => (textarea.value || '').trim().length > 0;
 
   const saveData = () => {
-    const picked = radios.find(r => r.checked);
-    const category = picked ? picked.value : '';
-    const qtext    = (textarea.value || '').trim();
-    this.userData.questionType    = category;
-    this.userData.customQuestion  = qtext;
-    this.userData.questionCategory = category;
-    this.userData.questionText     = qtext;
+    const qtext = (textarea.value || '').trim();
+    this.userData.customQuestion = qtext;     // 新版只用這個欄位
+    this.userData.questionText   = qtext;     // 兼容舊欄位
+    this.userData.questionType   = '';        // 清空舊欄位
+    this.userData.questionCategory = '';
   };
 
   const update = () => {
@@ -591,34 +572,24 @@ showQuestionSelectionStep() {
     if (tip) tip.style.color = ok ? '#6b7280' : '#ef4444';
   };
 
-  // 事件
-  radios.forEach(r => r.addEventListener('change', update));
   textarea.addEventListener('input', update);
 
-  // 下一步點擊：先保存，再前進
   if (nextBtn) {
     nextBtn.onclick = () => {
       if (!isValid()) { update(); return; }
       saveData();
-      this.nextStep();
+      this.nextStep();        // 進入第6步：擲幣
     };
   }
+  if (prevBtn) prevBtn.onclick = () => this.previousStep();
 
-  // 上一步
-  if (prevBtn) {
-    prevBtn.onclick = () => this.previousStep();
-  }
-
-  // 首次刷新狀態
-  update();
+  update(); // 初始化狀態
 }
+
     // 第七步：解卦方式選擇
     showDivinationOptionsStep() {
   const selectedType = this.userData?.questionType || '';
   const customQuestion = (this.userData?.customQuestion || '').trim();
-
-  if (!selectedType && !customQuestion) { alert('請選擇問題類型並輸入問題內容'); return; }
-  if (!selectedType) { alert('請選擇問題類型'); return; }
   if (!customQuestion) { alert('請輸入問題內容'); return; }
         this.performDivination();
 
@@ -982,14 +953,37 @@ sixiSetNextButtonState() {
     return;
   }
 
-  // 已滿 6 次：顯示「開始解卦」（紅）
-  nextBtn.textContent = '開始解卦';
-  nextBtn.classList.remove('btn-primary','btn-dark');
-  nextBtn.classList.add('btn-danger');
-  nextBtn.removeAttribute('disabled');
-  nextBtn.classList.remove('disabled');
-  if (prevBtn) this.sixiSetPrevDisabled(false);
-  nextBtn.onclick = () => this.showStep(7);
+// 已滿 6 次：顯示「開始解卦」（紅）
+nextBtn.textContent = '開始解卦';
+nextBtn.classList.remove('btn-primary','btn-dark');
+nextBtn.classList.add('btn-danger');
+nextBtn.removeAttribute('disabled');
+nextBtn.classList.remove('disabled');
+if (prevBtn) this.sixiSetPrevDisabled(false);
+
+nextBtn.onclick = () => {
+  // ① 完成起卦環境（填表、分析）
+  this.performDivination(); // 只建表與分析，不再設定用神
+
+  // ② 以「輸入的問題」建立 AI prompt（零 DOM 進階版）
+  try {
+    const q = (this.userData?.customQuestion || '').trim();
+    if (typeof AIPayloadBuilderPro?.buildAndLog === 'function') {
+      const { json, prompt } = AIPayloadBuilderPro.buildAndLog(q);
+      this.userData.aiPayload = json;
+      this.userData.aiPrompt  = prompt;
+      // 也放到全域以便後端或其它模組需要
+      window.__AI_DIVINATION_LAST__ = { payload: json, prompt, question: q };
+    } else {
+      console.warn('[AI] AIPayloadBuilderPro 未載入，略過預建 prompt');
+    }
+  } catch (e) {
+    console.warn('[AI] 建立 prompt 發生例外：', e);
+  }
+
+  // ③ 進入第 7 步：選擇解卦方式（AI/卦師）
+  this.showStep(7);
+};
 }
 
 sixiSetResetDisabled(disabled) {
@@ -1290,25 +1284,17 @@ setupSixiListeners() {
         this.userData.liuyaoData = data;
     }
 
+// 只驗證「自訂問題」是否有填；去掉類型依賴
 collectQuestionData() {
   try {
-    const picked = document.querySelector('input[name="question-type"]:checked');
-    const typeEl = picked ? picked.value : '';
     const textEl = document.getElementById('question-text');
     const text   = textEl ? textEl.value.trim() : '';
-
-    // 新命名
-    this.userData.questionType   = typeEl;
     this.userData.customQuestion = text;
-    // 兼容舊欄位
-    this.userData.questionCategory = typeEl;
-    this.userData.questionText     = text;
-
-    if (!typeEl || !text) return false;  // 沒填不往下
-    return true;
-  } catch (e) {
-    return false;
-  }
+    this.userData.questionText   = text;
+    this.userData.questionType   = '';
+    this.userData.questionCategory = '';
+    return !!text;
+  } catch (e) { return false; }
 }
 
     // 執行起卦
@@ -1363,25 +1349,9 @@ collectQuestionData() {
     }
 
     // 獲取問題類型文字
-    getQuestionTypeText() {
-        const typeMap = {
-            'love-female': '感情/問女方',
-            'love-male': '感情/問男方',
-            'parents': '問父母',
-            'children': '問子女',
-            'career': '問事業',
-            'health': '問健康',
-            'wealth': '問財官',
-            'partnership': '問合作合夥',
-            'lawsuit': '問官司'
-        };
-        
-        if (this.userData.customQuestion) {
-            return '自定義問題';
-        }
-        
-        return typeMap[this.userData.questionType] || '未選擇';
-    }
+getQuestionTypeText() {
+  return this.userData.customQuestion ? '自定義問題' : '未填';
+}
 
     // 選擇AI解卦
 // 選擇AI解卦（修改版 - 加入使用限制）
@@ -1891,36 +1861,12 @@ selectMasterDivination() {
         }, 500);
     }
 
-    // 設置用神
-    setupYongshen() {
-        const yongshenSelect = document.getElementById('yongshen-method');
-        if (yongshenSelect && this.userData.questionType) {
-            // 根據問題類型設置用神
-            const yongshenMapping = {
-                'love-female': 'qicai',
-                'love-male': 'guanGui',
-                'parents': 'fumu',
-                'children': 'zisun',
-                'career': 'guanGui',
-                'health': 'shi',
-                'wealth': 'qicai',
-                'partnership': 'xiongdi',
-                'lawsuit': 'guanGui'
-            };
-            
-            const yongshen = yongshenMapping[this.userData.questionType];
-            if (yongshen) {
-                yongshenSelect.value = yongshen;
-                
-                // 觸發用神選擇處理
-                setTimeout(() => {
-                    if (typeof handleYongshenSelection === 'function') {
-                        handleYongshenSelection();
-                    }
-                }, 100);
-            }
-        }
-    }
+// 移除「依問題類型→用神」的自動對表；改成 no-op（AI 自行判定）
+setupYongshen() {
+  // 什麼都不做（保留函式介面，避免其它地方呼叫報錯）
+  console.log('[Info] 已停用「問題類型→用神」自動對表；改由 AI 依題意選用神。');
+}
+
 
     // 生成卦象顯示
     generateGuaDisplay() {
@@ -2002,76 +1948,82 @@ async performAIDivination() {
   }
 }
 
-// 直接調用AI解卦 —— 先送完整資料；若 500 再以最小 schema 重試（不改 ai-divination.js）
+// 直接調用 AI：優先用 AIPayloadBuilderPro 建好的 prompt/payload；失敗再退回舊 extractHexagramData()
 async callAIDirectly(customQuestion) {
-  const questionType = this.userData?.questionType || '';
-  if (!customQuestion || !customQuestion.trim()) {
-    customQuestion = `關於${this.getQuestionTypeText()}的問題`;
-  }
+  const q = (customQuestion || this.userData?.customQuestion || '').trim();
 
-  // 1) 取得完整 hexagramData（沿用舊版作法）
-  let full = {};
-  let usedExtract = false;
-  try {
-    if (typeof extractHexagramData === 'function') {
-      full = extractHexagramData() || {};
-      usedExtract = true;
-    }
-  } catch (e) {
-    console.warn('[AI DEBUG] extractHexagramData() 失敗：', e);
-  }
-  full.customQuestion = customQuestion;
-
-  // 2) 組最小 payload（僅保留伺服器一定用得到的欄位）
-  const ly = Array.isArray(full.liuyaoData) ? full.liuyaoData.slice() :
-             (Array.isArray(this.userData?.liuyaoData) ? this.userData.liuyaoData.slice() : []);
-  const minimal = {
-    liuyaoData: ly,
-    customQuestion: customQuestion
-    // 👉 如需卦名再加：mainGuaName: full.mainGuaName || '', changeGuaName: full.changeGuaName || ''
+  // 優先使用已建立的 payload & prompt
+  const built = {
+    payload: this.userData?.aiPayload || null,
+    prompt:  this.userData?.aiPrompt  || ''
   };
 
-  // 3) 記錄除錯資訊（可用「複製除錯資訊」鈕帶走）
+  // 備援：若尚未建立，臨時建一次（理論上不會走到這）
+  if ((!built.payload || !built.prompt) && typeof AIPayloadBuilderPro?.buildAndLog === 'function') {
+    try {
+      const { json, prompt } = AIPayloadBuilderPro.buildAndLog(q);
+      built.payload = json; built.prompt = prompt;
+      this.userData.aiPayload = json;
+      this.userData.aiPrompt  = prompt;
+    } catch(e) {
+      console.warn('[AI] 臨時建立prompt失敗：', e);
+    }
+  }
+
+  // 再備援（最舊的 DOM 版 extract）
+  let legacyFull = {};
+  try {
+    if (typeof extractHexagramData === 'function') {
+      legacyFull = extractHexagramData() || {};
+    }
+  } catch (e) { /* ignore */ }
+
+  // 整理要送的 body（盡量包含 prompt + payload）
+  const body_full = built.payload ? {
+    prompt: built.prompt,
+    payload: built.payload,
+    customQuestion: q
+  } : {
+    // 沒有新 payload 時，把舊結構也帶著
+    prompt: built.prompt || '',
+    payload: null,
+    customQuestion: q,
+    legacy: legacyFull
+  };
+
+  // 最小重試包（真的 500 再用）
+  const body_minimal = {
+    prompt: built.prompt || `使用者問題：${q}`,
+    customQuestion: q
+  };
+
+  // 除錯資訊（可用「複製除錯資訊」）
   this.lastAIDebugPayload = {
     endpoint: (typeof aiDivination?.endpoint === 'string')
       ? aiDivination.endpoint
       : '(由 ai-divination.js 內部決定)',
-    questionType,
-    body_full: full,
-    body_minimal: minimal
+    body_full, body_minimal
   };
 
-  // 4) 送出：完整 →（失敗且 500）→ 最小 schema
+  // 送出：完整 →（500）→ 最小
   const tryCall = async (payload, label='full') => {
     console.groupCollapsed(`%c[AI DEBUG] 呼叫（${label}）`, 'color:#0b6');
-    console.log('questionType =', questionType);
-    console.log('customQuestion =', payload.customQuestion);
-    console.log('liuyaoData =', payload.liuyaoData);
     try { console.log('payload bytes ≈', new Blob([JSON.stringify(payload)]).size); } catch {}
+    console.log(payload);
     console.groupEnd();
-    return aiDivination.callAIAPI(payload, questionType);
+    // 若你的 ai-divination.js 接收 (payload, questionType) 之類，第二參數給空字串即可
+    return aiDivination.callAIAPI(payload, '');
   };
 
   try {
-    const resp = await tryCall(full, 'full');
-    return resp;
+    return await tryCall(body_full, 'full');
   } catch (e1) {
-    // 非 500 的錯就直接丟出（例如 401/429）
-    if (!/API 錯誤:\s*500\b/.test(String(e1?.message || e1))) {
-      console.group('%c[AI DEBUG] 呼叫（full）失敗', 'color:#c00'); console.log(e1); console.groupEnd();
-      throw e1;
-    }
-    // 500 → 改以最小 schema 再試一次
+    if (!/API 錯誤:\s*500\b/.test(String(e1?.message || e1))) throw e1;
     console.warn('[AI DEBUG] 伺服器 500，改以最小 schema 重試');
-    try {
-      const resp2 = await tryCall(minimal, 'minimal');
-      return resp2;
-    } catch (e2) {
-      console.group('%c[AI DEBUG] 呼叫（minimal）仍失敗', 'color:#c00'); console.log(e2); console.groupEnd();
-      throw e2;
-    }
+    return await tryCall(body_minimal, 'minimal');
   }
 }
+
 
 
 
@@ -2237,9 +2189,8 @@ bindFooterNavForCurrentStep() {
 
 // 下一步
 nextStep() {
-  // 5/8 必須通過既有的 collectQuestionData() 檢查
   if (this.currentStep === 5) {
-    if (!this.collectQuestionData()) return; // 沒通過就不往下
+    if (!this.collectQuestionData()) return;
   }
   if (this.currentStep < this.totalSteps) {
     this.showStep(this.currentStep + 1);
