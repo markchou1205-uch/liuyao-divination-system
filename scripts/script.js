@@ -3706,9 +3706,9 @@ function buildAndLog(question) {
   console.group('[AIPayloadBuilderPro]');
   if (!json) {
     console.warn('[AIPayloadBuilderPro] 無法建立快照或 prompt 為空。');
-    console.groupEnd();
-    // 仍把（可能的）prompt 放到全域，方便你檢查
+    // 無論如何，把 prompt 丟到全域給你查
     try { window.__AI_PROMPT__ = prompt || ''; } catch {}
+    console.groupEnd();
     return { json, prompt };
   }
 
@@ -3717,7 +3717,7 @@ function buildAndLog(question) {
   console.log('Hexagrams:', json.hexagrams);
   if (json.shiying) console.log('世應:', json.shiying);
 
-  // 逐爻表格
+  // 逐爻表（失敗就印 raw）
   try {
     console.table(json.lines.map(l => ({
       index: l.position, 六獸: l.liushen, 伏神: l.fushen,
@@ -3730,8 +3730,7 @@ function buildAndLog(question) {
     console.log('Lines (raw):', json.lines);
   }
 
-  // ---- Prompt 顯示（穩健版） ----
-  // 小工具：預覽前 400 字
+  // ---- Prompt 顯示（穩健版）----
   const safePreview = (str) => {
     try {
       const s = String(str ?? '');
@@ -3740,26 +3739,27 @@ function buildAndLog(question) {
     } catch { return '(prompt 不可序列化)'; }
   };
 
-  // 1) 立即印出前 400 字，確保看得到
+  // 1) 立即印出前 400 字，確保你直接看到內容
   console.log('【AI PROMPT 預覽（前 400 字）】\n' + safePreview(prompt));
+  console.log('【AI PROMPT 長度】', (prompt || '').length, '字');
 
-  // 2) groupCollapsed 供展開查看完整版（某些環境若不支援會 fallback）
+  // 2) groupCollapsed（完整內容）
   try {
     console.groupCollapsed('【AI PROMPT - 點我展開完整版】');
+    // 這行一定會把字串本體寫進 group，避免被吃掉
     console.log('%s', prompt ?? '(空字串)');
     console.groupEnd();
   } catch (e) {
+    // 某些環境不支援 groupCollapsed 就直接印
     console.log('【AI PROMPT 完整版】\n' + (prompt ?? '(空字串)'));
   }
 
-  // 3) 放到全域方便你在 Console 輸入 __AI_PROMPT__ 直接拿
+  // 3) 丟到全域，方便在 Console 直接輸入 __AI_PROMPT__ 取用
   try { window.__AI_PROMPT__ = prompt || ''; } catch {}
 
   console.groupEnd();
   return { json, prompt };
 }
-
-
   return { build, buildAndLog };
 })();
 
@@ -3788,3 +3788,12 @@ setTimeout(initializeLearningMode, 100);
 // 使常數可全域存取
 window.GuaCode = GuaCode;
 window.GuaNames = GuaNames;
+window.showPrompt = function () {
+  const p = (window.__AI_PROMPT__ || '').toString();
+  if (!p) { alert('目前沒有可用的 prompt。請先按「開始解卦」產生。'); return; }
+  const w = window.open('', '_blank', 'width=720,height=600');
+  if (!w) { alert('被瀏覽器攔截了；請允許彈窗或改用 console 的 __AI_PROMPT__。'); return; }
+  w.document.write('<pre style="white-space:pre-wrap;word-wrap:break-word;font-family:ui-monospace,monospace;font-size:12px;padding:12px;margin:0;">'
+    + p.replace(/[<&>]/g, s => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[s])) + '</pre>');
+  w.document.close();
+};
