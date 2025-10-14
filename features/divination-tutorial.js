@@ -2018,9 +2018,20 @@ async callAIDirectly(customQuestion) {
   try {
     return await tryCall(body_full, 'full');
   } catch (e1) {
-    if (!/API 錯誤:\s*500\b/.test(String(e1?.message || e1))) throw e1;
-    console.warn('[AI DEBUG] 伺服器 500，改以最小 schema 重試');
-    return await tryCall(body_minimal, 'minimal');
+  const msg = String(e1?.message || e1 || '');
+  // 405 = 後端沒開 POST；這種情況不要一直重試，直接把 prompt/payload dump 出來給你
+  if (/405\b|Method Not Allowed/i.test(msg)) {
+    console.error('[AI DEBUG] 405 Method Not Allowed：後端路由未允許 POST。');
+    console.log('[AI DEBUG] 將 prompt 與 payload 輸出供你複製檢查：');
+    console.log(this.userData?.aiPrompt || '(no prompt)');
+    console.log(this.userData?.aiPayload || '(no payload)');
+    alert('AI 路由不接受 POST（HTTP 405）。請先修後端，再按一次「AI 智能解卦」。');
+    throw e1;
+  }
+  // 其它錯再走最小包重試
+  if (!/API 錯誤:\s*500\b/.test(msg)) throw e1;
+  console.warn('[AI DEBUG] 伺服器 500，改以最小 schema 重試');
+  return await tryCall(body_minimal, 'minimal');
   }
 }
 
