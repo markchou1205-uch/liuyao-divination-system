@@ -1,3 +1,12 @@
+// === 統一設定：AI 後端端點 ===
+// 同網域就用相對路徑；如果你有外部 API，改成完整網址即可。
+const AI_DIVINATION_ENDPOINT = '/api/ai-divination';
+
+// 若你的程式有 this.endpoint 之類，也同步設定一下：
+const aiDivination = window.aiDivination || {};
+aiDivination.endpoint = AI_DIVINATION_ENDPOINT;
+window.aiDivination = aiDivination;
+
 // AI 解卦功能
 class AIDivination {
     constructor() {
@@ -150,65 +159,59 @@ ${customQuestion ? `具體問題：${customQuestion}` : ''}
         }
     }
 // 修改這個函數：ai-divination.js
-async callAIAPI(guaData, questionType) {
+// 強化版：送出 AI 請求（印出完整 payload，對 405/500 有清楚訊息）
+async function callAIAPI(body, questionType /* 兼容舊參數，可忽略 */) {
+  const endpoint = (typeof aiDivination !== 'undefined' && aiDivination.endpoint)
+    ? aiDivination.endpoint
+    : AI_DIVINATION_ENDPOINT;
+
+  // 送出前先印一次（方便你即時複製）
   try {
-    // 1) 先把 prompt 準備好（沿用你現有邏輯）
-    const aiGuaData = (typeof extractAIGuaData === 'function')
-      ? extractAIGuaData(questionType, guaData.customQuestion)
-      : null;
-    const prompt = (typeof generateAIPrompt === 'function')
-      ? generateAIPrompt(aiGuaData || guaData, questionType)
-      : (typeof this.generatePrompt === 'function'
-          ? this.generatePrompt(guaData, questionType)
-          : `請分析：${JSON.stringify(guaData)}`);
+    console.groupCollapsed('[AI DEBUG] 將送出到 ' + endpoint);
+    console.log('Prompt length:', (body?.prompt || '').length);
+    console.log('Payload snapshot:', body?.payload || body?.data || null);
+    console.log('Full request body:', body);
+    console.groupEnd();
+  } catch {}
 
-    const endpoints = ['/api/ai-divination', '/api/ai-divination.js']; // 先試無 .js
-    const payloads = [
-      // 你現在的後端若吃 prompt，就第一個會成功
-      (p) => ({ body: JSON.stringify({ prompt: p }), desc: 'prompt-only' }),
-      // 另一種老 schema（如果你後端吃 questionType+data）
-      () => ({ body: JSON.stringify({ questionType, data: guaData }), desc: 'questionType+data' })
-    ];
+  const fetchOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {})
+  };
 
-    let lastErr;
-    for (const ep of endpoints) {
-      for (const builder of payloads) {
-        const { body, desc } = builder(prompt);
-        try {
-          const res = await fetch(ep, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body
-          });
-
-          console.log('[AI DEBUG] POST', ep, desc, 'status=', res.status);
-
-          const text = await res.text();
-          if (!res.ok) {
-            console.warn('[AI DEBUG] error body:', text);
-            throw new Error(`API 錯誤: ${res.status} - ${text}`);
-          }
-
-          // 後端可能回不同格式，以下做容錯
-          let json = {};
-          try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text }; }
-          // 兼容 {interpretation}, {content}, 或 {success:true, data:{...}}
-          const result =
-            json.interpretation || json.content || json?.data?.interpretation || json?.data?.content || text;
-
-          console.log('API 成功回應(摘要鍵):', Object.keys(json));
-          return result;
-        } catch (e) {
-          lastErr = e;
-        }
-      }
-    }
-    throw lastErr || new Error('AI API 呼叫失敗（未知原因）');
-
-  } catch (error) {
-    console.error('完整錯誤資訊:', error);
-    throw error;
+  let res;
+  try {
+    res = await fetch(endpoint, fetchOptions);
+  } catch (netErr) {
+    console.error('[AI DEBUG] 網路/跨域錯誤：', netErr);
+    throw new Error('AI 請求失敗（無法連線端點）。');
   }
+
+  // 嘗試讀 response body，便於 405/500 調試
+  let text = '';
+  try { text = await res.text(); } catch {}
+
+  if (!res.ok) {
+    if (res.status === 405) {
+      // 後端沒有允許 POST：直接把 prompt/payload dump 出來
+      console.error('[AI DEBUG] 405 Method Not Allowed：後端沒有允許 POST /api/ai-divination。');
+      console.log('[AI DEBUG] 伺服器回應：', text || '(無內容)');
+      console.log('[AI DEBUG] PROMPT >>>\n' + (body?.prompt || '(空)'));
+      console.log('[AI DEBUG] PAYLOAD >>>\n', body?.payload || body?.data || null);
+      throw new Error('後端未開放 POST /api/ai-divination（405）。請新增 pages/api/ai-divination.js。');
+    }
+    console.error('[AI DEBUG] 非 2xx 回應：', res.status, res.statusText);
+    console.log('[AI DEBUG] 伺服器回應：', text || '(無內容)');
+    throw new Error(`AI 後端錯誤：HTTP ${res.status}`);
+  }
+
+  // 解析 JSON（後端回什麼就照實吃）
+  let json;
+  try { json = text ? JSON.parse(text) : {}; } catch {
+    json = { ok: true, raw: text };
+  }
+  return json;
 }
 
 
